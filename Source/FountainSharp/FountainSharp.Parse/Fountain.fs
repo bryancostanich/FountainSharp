@@ -8,7 +8,7 @@
 // --------------------------------------------------------------------------------------
 // f# Notes:
 //  'type Name = | x | y | z' - is a discriminated union. http://fsharpforfunandprofit.com/posts/discriminated-unions/
-//  'and' - is needed when you can't forward declare a type, but you have a cyclic dependency (needed because f#'s compiler sucks
+//  'and' - is needed when you can't forward declare a type, but you have a cyclic dependency (needed because f#'s compiler sucks)
 //  '| Section of int * FountainSpans' - a tuple! so in this case, a section/heading has an integer level and the actual text
 // --------------------------------------------------------------------------------------
 
@@ -31,7 +31,7 @@ open System.Collections.Generic
 //  | AlignDefault
 
 /// Represents inline formatting inside a paragraph. This can be literal (with text), various
-/// formattings (string, emphasis, etc.), hyperlinks, images, inline maths etc.
+/// formattings (string, emphasis, etc.), hyperlinks, etc.
 type FountainSpan =
   | Literal of string
   | Strong of FountainSpans
@@ -50,8 +50,7 @@ and FountainSpans = list<FountainSpan>
 //  abstract Render : unit -> FountainSpans
 
 /// A paragraph represents a (possibly) multi-line element of a Markdown document.
-/// Paragraphs are headings, inline paragraphs, code blocks, lists, quotations, tables and
-/// also embedded LaTeX blocks.
+/// Paragraphs are headings, inline paragraphs, 
 type FountainParagraph = 
   | Section of int * FountainSpans
   | Character of string
