@@ -3,10 +3,10 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{5C25E5F6-6E91-4497-9DA0-CC5F6A1083B7}</ProjectGuid>
-    <OutputType>Library</OutputType>
-    <RootNamespace>FountainSharp.Parse</RootNamespace>
-    <AssemblyName>FountainSharp.Parse</AssemblyName>
+    <ProjectGuid>{53A87A1F-1756-43C3-BF8A-BB1696439DC7}</ProjectGuid>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>FountainSharp.Parse.Tests</RootNamespace>
+    <AssemblyName>FountainSharp.Parse.Tests</AssemblyName>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -14,7 +14,7 @@
     <OutputPath>bin\Debug</OutputPath>
     <DefineConstants>DEBUG</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
-    <ConsolePause>false</ConsolePause>
+    <Externalconsole>true</Externalconsole>
     <PlatformTarget>
     </PlatformTarget>
   </PropertyGroup>
@@ -25,7 +25,7 @@
     <DefineConstants>
     </DefineConstants>
     <ErrorReport>prompt</ErrorReport>
-    <ConsolePause>false</ConsolePause>
+    <Externalconsole>true</Externalconsole>
     <GenerateTailCalls>true</GenerateTailCalls>
     <PlatformTarget>
     </PlatformTarget>
@@ -39,23 +39,20 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AssemblyInfo.fs" />
-    <Compile Include="..\..\..\..\..\pub_code\FSharp.Formatting\src\Common\Collections.fs">
-      <Link>Common\Collections.fs</Link>
-    </Compile>
-    <Compile Include="..\..\..\..\..\pub_code\FSharp.Formatting\src\Common\StringParsing.fs">
-      <Link>Common\StringParsing.fs</Link>
-    </Compile>
-    <Compile Include="Fountain.fs" />
+    <Compile Include="Exec.fs" />
+    <Compile Include="Program.fs" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\..\Microsoft SDKs\F#\3.1\Framework\v4.0\Microsoft.FSharp.Targets" />
   <ItemGroup>
-    <Folder Include="Common\" />
+    <ProjectReference Include="..\..\FountainSharp.Parse\FountainSharp.Parse.fsproj">
+      <Project>{5C25E5F6-6E91-4497-9DA0-CC5F6A1083B7}</Project>
+      <Name>FountainSharp.Parse</Name>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="FountainParser.fs" />
-    <Compile Include="Script.fsx" />
-    <None Include="Fountain Syntax Reference.txt" />
-    <None Include="Fountain Syntax Support TODO.md" />
-    <None Include="Test_Script.txt" />
+    <EmbeddedResource Include="TestFiles\SimpleTest.fountain" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="TestFiles\" />
   </ItemGroup>
 </Project>

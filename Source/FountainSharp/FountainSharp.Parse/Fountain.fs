@@ -97,7 +97,8 @@ module Matching =
   type ParagraphLeafInfo = private PL of FountainParagraph
   type ParagraphNestedInfo = private PN of FountainParagraph
 
-  let (|ParagraphLeaf|ParagraphNested|ParagraphSpans|) par =
+//  let (|ParagraphLeaf|ParagraphNested|ParagraphSpans|) par =
+  let (|ParagraphLeaf|ParagraphSpans|) par =
     match par with  
     | Section(_, spans)
     | Paragraph(spans)
