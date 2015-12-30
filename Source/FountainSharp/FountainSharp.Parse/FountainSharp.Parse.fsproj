@@ -36,23 +36,25 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Common\AssemblyInfo.fs" />
-    <Compile Include="..\..\..\..\..\pub_code\FSharp.Formatting\src\Common\Collections.fs">
-      <Link>Common\Collections.fs</Link>
-    </Compile>
-    <Compile Include="..\..\..\..\..\pub_code\FSharp.Formatting\src\Common\StringParsing.fs">
-      <Link>Common\StringParsing.fs</Link>
-    </Compile>
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\..\Microsoft SDKs\F#\3.1\Framework\v4.0\Microsoft.FSharp.Targets" />
   <ItemGroup>
     <Folder Include="Common\" />
+    <Folder Include="Old Code for Reference\" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\..\..\..\..\pub_code\FSharp.Formatting\src\Common\Collections.fs">
+      <Link>Collections.fs</Link>
+    </Compile>
+    <Compile Include="..\..\..\..\..\pub_code\FSharp.Formatting\src\Common\StringParsing.fs">
+      <Link>StringParsing.fs</Link>
+    </Compile>
     <Compile Include="FountainSyntax.fs" />
-    <None Include="Fountain_reference.fs" />
-    <None Include="Fountain Syntax Reference.txt" />
     <Compile Include="FountainParser.fs" />
     <None Include="Fountain Syntax Support TODO.md" />
+    <None Include="Fountain Syntax Reference.txt" />
     <None Include="Test_Script.txt" />
+    <None Include="Old Code for Reference\Fountain_reference.fs" />
+    <None Include="Old Code for Reference\FountainParser_reference.fs" />
   </ItemGroup>
 </Project>
