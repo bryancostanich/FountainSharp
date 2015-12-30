@@ -29,6 +29,8 @@ let inline (|EscapedChar|_|) input =
             | '(' | ')' | '>' | '#' | '.' | '!' | '+' | '-' | '$') as c) ::rest -> Some(c, rest)
   | _ -> None
 
+// TODO: I shouldn't need this. there are no lists in fountain, but need to re-write
+// the next function to not use it.
 /// Matches a list if it starts with a sub-list that is delimited
 /// using the specified delimiters. Returns a wrapped list and the rest.
 ///
@@ -38,6 +40,7 @@ let (|DelimitedMarkdown|_|) bracket input =
   // Like List.partitionUntilEquals, but skip over escaped characters
   let rec loop acc = function
     | EscapedChar(x, xs) -> loop (x::'\\'::acc) xs
+
     //TODO: wtf, autocomplete tells me that there is a Pascal case version (StartsWith)
     // but isn't finding that one, or the `startsWith` version in Collections.fs
     | input when List.startsWith endl input -> Some(List.rev acc, input)
@@ -55,17 +58,26 @@ let (|DelimitedMarkdown|_|) bracket input =
 /// TODO: This does not handle nested emphasis well.
 // TODO: this calls DelimitedMarkdown, but i don't think i need that.
 // so how do i rewrite this?
+// TODO: underscores should now be underline. fountain != markdown
+// TODO; rename "Emphasised" to "Decorated," because Emphasised is too
+// easy to confuse with Emphasis
 let (|Emphasised|_|) = function
   | (('_' | '*') :: tail) as input ->
     match input with
     | DelimitedMarkdown ['_'; '_'; '_'] (body, rest) 
+    // the *** case in which it is both italic and strong
     | DelimitedMarkdown ['*'; '*'; '*'] (body, rest) -> 
         Some(body, Emphasis >> List.singleton >> Strong, rest)
+    // is this a fall-through case?? e.g. does it go to the next line??
+    // TOOD: get rid of "__" anyway
     | DelimitedMarkdown ['_'; '_'] (body, rest) 
     | DelimitedMarkdown ['*'; '*'] (body, rest) -> 
         Some(body, Strong, rest)
-    | DelimitedMarkdown ['_'] (body, rest) 
+    | DelimitedMarkdown ['_'] (body, rest) ->
+        Some(body, Underline, rest)
     | DelimitedMarkdown ['*'] (body, rest) -> 
         Some(body, Emphasis, rest)
     | _ -> None
   | _ -> None
+
+let (
