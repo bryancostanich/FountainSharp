@@ -64,7 +64,6 @@ let (|DelimitedMarkdown|_|) bracket input =
 let (|Emphasised|_|) = function
   | (('_' | '*') :: tail) as input ->
     match input with
-    | DelimitedMarkdown ['_'; '_'; '_'] (body, rest) 
     // the *** case in which it is both italic and strong
     | DelimitedMarkdown ['*'; '*'; '*'] (body, rest) -> 
         Some(body, Emphasis >> List.singleton >> Strong, rest)
@@ -80,4 +79,3 @@ let (|Emphasised|_|) = function
     | _ -> None
   | _ -> None
 
-let (
