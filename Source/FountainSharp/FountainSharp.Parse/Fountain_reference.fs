@@ -12,7 +12,6 @@
 //  '| Section of int * FountainSpans' - a tuple! so in this case, a section/heading has an integer level and the actual text
 // --------------------------------------------------------------------------------------
 
-
 namespace FountainSharp.Parse
 
 open System
@@ -97,8 +96,9 @@ module Matching =
   type ParagraphLeafInfo = private PL of FountainParagraph
   type ParagraphNestedInfo = private PN of FountainParagraph
 
+// TODO: really wish i understood what was happenign here.
 //  let (|ParagraphLeaf|ParagraphNested|ParagraphSpans|) par =
-  let (|ParagraphLeaf|ParagraphSpans|) par =
+  let (|ParagraphSpans|) par =
     match par with  
     | Section(_, spans)
     | Paragraph(spans)

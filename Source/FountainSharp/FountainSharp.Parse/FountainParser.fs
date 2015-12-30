@@ -114,14 +114,6 @@ let (|Heading|_|) = function
   | rest ->
       None
 
-/// Matches when the input starts with a number. Returns the
-/// rest of the input, following the last number.
-let (|SkipSomeNumbers|_|) (input:string) = 
-  match List.ofSeq input with
-  | x::xs when Char.IsDigit x -> 
-      let _, rest = List.partitionUntil (Char.IsDigit >> not) xs
-      Some(input.Length - rest.Length, rest)
-  | _ -> None
 
 /// Splits input into lines until whitespace or starting of a list and the rest.
 let (|LinesUntilListOrWhite|) = 
@@ -152,6 +144,7 @@ let (|LinesUntilBlockquoteOrWhite|) =
     | BlockquoteStart _ | String.WhiteSpace -> true | _ -> false)
 
 /// Defines a context for the main `parseParagraphs` function
+// Q: why "Links" name? and why the weird type definition?
 type ParsingContext = 
   { Links : Dictionary<string, string * option<string>> 
     Newline : string }
@@ -162,7 +155,7 @@ let rec parseParagraphs (ctx:ParsingContext) lines = seq {
 
   // Recognize remaining types of paragraphs
   | Heading(n, body, Lines.TrimBlankStart lines) ->
-      yield Heading(n, parseSpans body)
+      yield Section(n, parseSpans body)
       yield! parseParagraphs ctx lines 
   | TakeParagraphLines(lines, Lines.TrimBlankStart rest) ->      
       yield Paragraph (parseSpans (String.concat ctx.Newline lines))

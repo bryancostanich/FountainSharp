@@ -3,4 +3,4 @@
 
 [<EntryPoint>]
 let main argv = 
-    Exec(argv).Run()
+    FountainSharp.Parse.Tests.Exec(argv).Run()
