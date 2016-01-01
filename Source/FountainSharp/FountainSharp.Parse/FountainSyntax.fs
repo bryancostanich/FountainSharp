@@ -11,7 +11,7 @@ open System.Collections.Generic
 type FountainSpan =
   | Literal of string
   | Strong of FountainSpans
-  | Emphasis of FountainSpans
+  | Italic of FountainSpans
   | Underline of FountainSpans
   | HardLineBreak
 
@@ -47,7 +47,7 @@ module Matching =
     | HardLineBreak ->
         SpanLeaf(SL span) //SpanLeafInfo or (SpanNodeInfo * FountainSpans)
     | Strong spans 
-    | Emphasis spans ->   
+    | Italic spans ->   
         SpanNode(SN span, spans)
     | Underline spans ->
         SpanNode(SN span, spans)
@@ -61,7 +61,7 @@ module Matching =
   let SpanNode (SN(span), spans) =
     match span with
     | Strong _ -> Strong spans 
-    | Emphasis _ -> Emphasis spans
+    | Italic _ -> Italic spans
     | Underline _ -> Underline spans
     | _ -> invalidArg "" "Incorrect SpanNodeInfo"
 

@@ -56,25 +56,29 @@ let (|DelimitedMarkdown|_|) bracket input =
 /// Recognizes some form of emphasis using `**bold**` or `*italic*`
 /// (both can be also marked using underscore).
 /// TODO: This does not handle nested emphasis well.
+
 // TODO: this calls DelimitedMarkdown, but i don't think i need that.
 // so how do i rewrite this?
 // TODO: underscores should now be underline. fountain != markdown
 // TODO; rename "Emphasised" to "Decorated," because Emphasised is too
 // easy to confuse with Emphasis
 let (|Emphasised|_|) = function
+  // if it starts with either `_` or `*`
+  //   1) the code `(('_' | '*')` :: tail)` deconstructs the input into a sequence of either `_::tail` or `*::tail`
+  //   2) `as input` binds that sequence to a variable 
   | (('_' | '*') :: tail) as input ->
     match input with
     // the *** case in which it is both italic and strong
-    | DelimitedMarkdown ['*'; '*'; '*'] (body, rest) -> 
+    | ['*'; '*'; '*'] as (body, rest) -> 
         Some(body, Emphasis >> List.singleton >> Strong, rest)
     // is this a fall-through case?? e.g. does it go to the next line??
     // TOOD: get rid of "__" anyway
-    | DelimitedMarkdown ['_'; '_'] (body, rest) 
-    | DelimitedMarkdown ['*'; '*'] (body, rest) -> 
+    | ['_'; '_'] (body, rest) 
+    | ['*'; '*'] (body, rest) -> 
         Some(body, Strong, rest)
-    | DelimitedMarkdown ['_'] (body, rest) ->
+    | ['_'] (body, rest) ->
         Some(body, Underline, rest)
-    | DelimitedMarkdown ['*'] (body, rest) -> 
+    | ['*'] (body, rest) -> 
         Some(body, Emphasis, rest)
     | _ -> None
   | _ -> None
