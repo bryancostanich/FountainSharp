@@ -256,9 +256,6 @@ module FountainTestParser =
       // the *** case in which it is both italic and strong
       | DelimitedText ['*'; '*'; '*'] (body, rest) -> 
           Some(body, Italic >> List.singleton >> Strong, rest)
-      // is this a fall-through case?? e.g. does it go to the next line??
-      // TOOD: get rid of "__" anyway
-      | DelimitedText['_'; '_'] (body, rest) 
       | DelimitedText['*'; '*'] (body, rest) -> 
           Some(body, Strong, rest)
       | DelimitedText['_'] (body, rest) ->
