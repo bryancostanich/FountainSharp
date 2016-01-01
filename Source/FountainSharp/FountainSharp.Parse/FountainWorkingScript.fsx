@@ -245,8 +245,8 @@ module FountainTestParser =
       | None -> None
     else None
 
-  // need a function that will take somethign like "*some text* some more text" and return a sequence of TextSpans: italic<"some text">::rest
-  // Question: don't i need some sort of recursive function that each of these should call that will find the matching tail signature?
+  /// recognizes emphasized text of Italic, Bold, etc.
+  /// take somethign like "*some text* some more text" and return a sequence of TextSpans: italic<"some text">::rest
   let (|Emphasized|_|) = function
     // if it starts with either `_` or `*`
     //   1) the code `(('_' | '*')` :: tail)` decomposes the input into a sequence of either `'_'::tail` or `'*'::tail`
@@ -283,9 +283,9 @@ let testString string =
   | Emphasized s -> 
     printfn "it's emphasized"
     match s with
-    | Strong::_ -> printfn "it's bold"
-    | Italic::_ -> printfn "it's italic"
-    | Underline::_ -> printfn "it's underlined"
+    | (body,Strong,rest) -> printfn "it's bold"
+    | (body,Italic,rest) -> printfn "it's italic"
+    | (body,Underline,rest) -> printfn "it's underlined"
     | _ -> printfn "not sure how we got here!"
   | _ -> printfn "it's not emphasized."
 
