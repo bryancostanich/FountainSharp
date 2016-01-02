@@ -361,13 +361,12 @@ module FountainTestParser =
   /// Recognizes a SceneHeading (prefixed with INT/EXT, etc. or a single period)
   let (|SceneHeading|_|) = function
     //TODO: why doesn't this work? 
-//    | String.StartsWithAny [ "INT"; "EXT"; "EST"; "INT./EXT."; "INT/EXT"; "I/E"; ] heading:string :: rest ->
+//    | String.StartsWithAny [ "INT"; "EXT"; "EST"; "INT./EXT."; "INT/EXT"; "I/E" ] heading:string :: rest ->
 //       Some(heading.Trim(), rest)
     | String.StartsWith "." heading:string :: rest ->
        Some(heading.Trim(), rest) 
     | rest ->
        None
-
 
   /// Recognizes a Lyric (prefixed with ~)
   let (|Lyric|_|) = function
@@ -375,7 +374,6 @@ module FountainTestParser =
         Some(lyric.Trim(), rest)
     | rest ->
         None
-
 
   /// Splits input into lines until whitespace
   let (|LinesUntilListOrWhite|) = 
@@ -434,10 +432,10 @@ open FountainTestParser
 
 /// Representation of a Fountain document - the representation of Blocks
 /// uses an F# discriminated union type and so is best used from F#.
+// TODO: this doesn't really need a full blown type for one member (i removed the Links that was part of the markdown doc)
 type FountainDocument(blocks) =
   /// Returns a list of blocks in the document
   member x.Blocks : FountainBlocks = blocks
-  /// Returns a dictionary containing explicitly defined links
 
 
 /// Static class that provides methods for formatting 
