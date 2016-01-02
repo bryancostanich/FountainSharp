@@ -216,9 +216,9 @@ module FountainTestParser =
 
   //====== Fountain Schema/Syntax Definition
 
-  /// Represents inline formatting inside a paragraph. This can be literal (with text), various
+  /// Represents inline formatting inside a block. This can be literal (with text), various
   /// formattings (string, emphasis, etc.), hyperlinks, etc.
-  type FountainSpan =
+  type FountainSpanElement =
     | Literal of string
     | Strong of FountainSpans
     | Italic of FountainSpans
@@ -226,18 +226,18 @@ module FountainTestParser =
     | HardLineBreak
 
   /// A type alias for a list of `FountainSpan` values
-  and FountainSpans = list<FountainSpan>
+  and FountainSpans = list<FountainSpanElement>
 
-  /// A paragraph represents a (possibly) multi-line element of a fountain document.
-  /// Paragraphs are headings, action blocks, dialogue blocks, etc. 
-  type FountainParagraph = 
+  /// A block represents a (possibly) multi-line element of a fountain document.
+  /// Blocks are headings, action blocks, dialogue blocks, etc. 
+  type FountainBlockElement = 
+    | Block of FountainSpans
     | Section of int * FountainSpans
-    | Paragraph of FountainSpans
     | Span of FountainSpans
     | Lyric of FountainSpans
 
-  /// A type alias for a list of paragraphs
-  and FountainParagraphs = list<FountainParagraph>
+  /// A type alias for a list of blocks
+  and FountainBlocks = list<FountainBlockElement>
 
   //====== Parser
   // Part 1: Inline Formatting
@@ -289,7 +289,7 @@ module FountainTestParser =
     | _ -> None
 
 
-  /// Parses a body of a paragraph and recognizes all inline tags.
+  /// Parses a body of a block and recognizes all inline tags.
   /// returns a sequence of FountainSpan
   let rec parseChars acc input = seq {
 
@@ -329,12 +329,12 @@ module FountainTestParser =
     | [] ->
         yield! accLiterals.Value }
 
-  /// Parse body of a paragraph into a list of Markdown inline spans      
+  /// Parse body of a block into a list of Markdown inline spans      
   let parseSpans (String.TrimBoth s) = 
     parseChars [] (s.ToCharArray() |> List.ofArray) |> List.ofSeq
 
   //====== Parser
-  // Part 2: Paragraph Formatting
+  // Part 2: Block Formatting
 
   /// Recognizes a Section (# Some section, ## another section), prefixed with '#'s
   let (|Section|_|) = function
@@ -372,9 +372,9 @@ module FountainTestParser =
       | String.Unindented::_ 
       | String.WhiteSpace::String.WhiteSpace::_ -> true | _ -> false)
 
-  /// Takes lines that belong to a continuing paragraph until 
-  /// a white line or start of other paragraph-item is found
-  let (|TakeParagraphLines|_|) input = 
+  /// Takes lines that belong to a continuing block until 
+  /// a white line or start of other block-item is found
+  let (|TakeBlockLines|_|) input = 
     match List.partitionWhileLookahead (function
       | Section _ -> false
       | String.WhiteSpace::_ -> false
@@ -382,27 +382,27 @@ module FountainTestParser =
     | matching, rest when matching <> [] -> Some(matching, rest)
     | _ -> None
 
-  /// Defines a context for the main `parseParagraphs` function
+  /// Defines a context for the main `parseBlocks` function
   // TODO: Question: what is the Links part supposed to represent?
   type ParsingContext = 
     { 
       Newline : string 
     }
 
-  /// Parse a list of lines into a sequence of markdown paragraphs
-  let rec parseParagraphs (ctx:ParsingContext) lines = seq {
+  /// Parse a list of lines into a sequence of fountain blocks
+  let rec parseBlocks (ctx:ParsingContext) lines = seq {
     match lines with
 
-    // Recognize remaining types of paragraphs
+    // Recognize remaining types of blocks/paragraphs
     | Section(n, body, Lines.TrimBlankStart lines) ->
        yield Section(n, parseSpans body)
-       yield! parseParagraphs ctx lines
+       yield! parseBlocks ctx lines
     | Lyric(body, Lines.TrimBlankStart lines) ->
        yield Lyric(parseSpans body)
-       yield! parseParagraphs ctx lines
-    | TakeParagraphLines(lines, Lines.TrimBlankStart rest) ->      
-       yield Paragraph (parseSpans (String.concat ctx.Newline lines))
-       yield! parseParagraphs ctx rest 
+       yield! parseBlocks ctx lines
+    | TakeBlockLines(lines, Lines.TrimBlankStart rest) ->      
+       yield Block (parseSpans (String.concat ctx.Newline lines))
+       yield! parseBlocks ctx rest 
 
     | Lines.TrimBlankStart [] -> () 
     | _ -> failwithf "Unexpectedly stopped!\n%A" lines }
@@ -411,11 +411,11 @@ module FountainTestParser =
 
 open FountainTestParser
 
-/// Representation of a Fountain document - the representation of Paragraphs
+/// Representation of a Fountain document - the representation of Blocks
 /// uses an F# discriminated union type and so is best used from F#.
-type FountainDocument(paragraphs) =
-  /// Returns a list of paragraphs in the document
-  member x.Paragraphs : FountainParagraphs = paragraphs
+type FountainDocument(blocks) =
+  /// Returns a list of blocks in the document
+  member x.Blocks : FountainBlocks = blocks
   /// Returns a dictionary containing explicitly defined links
 
 
@@ -432,8 +432,8 @@ type Fountain =
           yield line.Value ]
     let (Lines.TrimBlank lines) = lines
     let ctx : ParsingContext = { Newline = newline }
-    let paragraphs = lines |> parseParagraphs ctx |> List.ofSeq
-    FountainDocument(paragraphs)
+    let blocks = lines |> parseBlocks ctx |> List.ofSeq
+    FountainDocument(blocks)
 
   /// Parse the specified text into a MarkdownDocument.
   static member Parse(text) =

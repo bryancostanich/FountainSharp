@@ -46,10 +46,12 @@ Yippie ki-yay! I got my lower-case C back!
 Fountain will remove the @ and interpret McCLANE as Character, preserving its mixed case.
 
 # [] Dialogue
+
 # [] Parenthetical
+
 # [] Dual Dialogue
 
-# [] Lyrics
+# [X] Lyrics
 
 You create a Lyric by starting with a line with a tilde ~.
 
@@ -58,16 +60,25 @@ You create a Lyric by starting with a line with a tilde ~.
 Fountain will remove the '~' and leave it up to the app to style the Lyric appropriately. Lyrics are always forced. There is no "automatic" way to get them.
 
 # [] Transition
-# [] Centered Text
-# [] Emphasis
-# [] Page Breaks
-# [] Punctuation
-# [] Line Breaks
-# [] Indenting
-# [] Notes
-# [] Boneyard (Comments) /* stuff */
-# [X] Sections
-# [] Synopses
 
+# [] Centered Text
+
+# [X] Emphasis - Supported, but needs some testing. i doubt nesting works correctly.
+
+# [] Page Breaks
+
+# [] Punctuation
+
+# [] Line Breaks
+
+# [] Indenting
+
+# [] Notes
+
+# [] Boneyard (Comments) /* stuff */
+
+# [X] Sections
+
+# [] Synopses
 
 # [] Title Page
