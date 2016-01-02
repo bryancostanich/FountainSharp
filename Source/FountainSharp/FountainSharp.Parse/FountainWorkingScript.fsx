@@ -211,6 +211,12 @@ module String =
 //===============================================================================================
 //===============================================================================================
 //===============================================================================================
+//===============================================================================================
+//===============================================================================================
+//===============================================================================================
+//===============================================================================================
+//===============================================================================================
+//===============================================================================================
 // This is where the fun really begins
 module FountainTestParser =
 
@@ -235,6 +241,7 @@ module FountainTestParser =
     | Section of int * FountainSpans
     | Span of FountainSpans
     | Lyric of FountainSpans
+    | SceneHeading of FountainSpans //TODO: Should this really just be a single span? i mean, you shouldn't be able to style/inline a scene heading, right?
 
   /// A type alias for a list of blocks
   and FountainBlocks = list<FountainBlockElement>
@@ -351,6 +358,17 @@ module FountainTestParser =
     | rest ->
         None
 
+  /// Recognizes a SceneHeading (prefixed with INT/EXT, etc. or a single period)
+  let (|SceneHeading|_|) = function
+    //TODO: why doesn't this work? 
+//    | String.StartsWithAny [ "INT"; "EXT"; "EST"; "INT./EXT."; "INT/EXT"; "I/E"; ] heading:string :: rest ->
+//       Some(heading.Trim(), rest)
+    | String.StartsWith "." heading:string :: rest ->
+       Some(heading.Trim(), rest) 
+    | rest ->
+       None
+
+
   /// Recognizes a Lyric (prefixed with ~)
   let (|Lyric|_|) = function
     | String.StartsWith "~" lyric:string :: rest ->
@@ -394,6 +412,9 @@ module FountainTestParser =
     match lines with
 
     // Recognize remaining types of blocks/paragraphs
+    | SceneHeading(body, Lines.TrimBlankStart lines) ->
+       yield SceneHeading(parseSpans body)
+       yield! parseBlocks ctx lines
     | Section(n, body, Lines.TrimBlankStart lines) ->
        yield Section(n, parseSpans body)
        yield! parseBlocks ctx lines
@@ -468,6 +489,8 @@ BRICK
 To retirement.
 
 They drink *long* and _well_ from the beers.
+
+.BINOCULARS A FORCED SCENE HEADING - LATER
 
 # This is a section with level 1
 ## This is a section with level 2
