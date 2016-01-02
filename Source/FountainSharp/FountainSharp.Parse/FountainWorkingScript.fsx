@@ -234,6 +234,7 @@ module FountainTestParser =
     | Section of int * FountainSpans
     | Paragraph of FountainSpans
     | Span of FountainSpans
+    | Lyric of FountainSpans
 
   /// A type alias for a list of paragraphs
   and FountainParagraphs = list<FountainParagraph>
@@ -286,6 +287,7 @@ module FountainTestParser =
           Some(body, Italic, rest)
       | _ -> None
     | _ -> None
+
 
   /// Parses a body of a paragraph and recognizes all inline tags.
   /// returns a sequence of FountainSpan
@@ -349,6 +351,14 @@ module FountainTestParser =
     | rest ->
         None
 
+  /// Recognizes a Lyric (prefixed with ~)
+  let (|Lyric|_|) = function
+    | String.StartsWith "~" lyric:string :: rest ->
+        Some(lyric.Trim(), rest)
+    | rest ->
+        None
+
+
   /// Splits input into lines until whitespace
   let (|LinesUntilListOrWhite|) = 
     List.partitionUntil (function
@@ -385,11 +395,14 @@ module FountainTestParser =
 
     // Recognize remaining types of paragraphs
     | Section(n, body, Lines.TrimBlankStart lines) ->
-        yield Section(n, parseSpans body)
-        yield! parseParagraphs ctx lines 
+       yield Section(n, parseSpans body)
+       yield! parseParagraphs ctx lines
+    | Lyric(body, Lines.TrimBlankStart lines) ->
+       yield Lyric(parseSpans body)
+       yield! parseParagraphs ctx lines
     | TakeParagraphLines(lines, Lines.TrimBlankStart rest) ->      
-        yield Paragraph (parseSpans (String.concat ctx.Newline lines))
-        yield! parseParagraphs ctx rest 
+       yield Paragraph (parseSpans (String.concat ctx.Newline lines))
+       yield! parseParagraphs ctx rest 
 
     | Lines.TrimBlankStart [] -> () 
     | _ -> failwithf "Unexpectedly stopped!\n%A" lines }
@@ -456,9 +469,16 @@ To retirement.
 
 They drink *long* and _well_ from the beers.
 
+# This is a section with level 1
+## This is a section with level 2
+
 And then there's a long beat.  
 Longer than is funny.  
-Long enough to be depressing."
+Long enough to be depressing.
+
+~Some Lyrics
+~Some more lyrics
+"
 
 
 let testString string = 
