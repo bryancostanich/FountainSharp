@@ -485,3 +485,5 @@ explode string4 |> testString
 explode string5 |> testString
 explode string6 |> testString
 explode string7 |> testString
+
+Fountain.Parse string7
