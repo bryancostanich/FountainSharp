@@ -313,30 +313,4 @@ Long enough to be depressing.
 ~Some more lyrics
 "
 
-
-let testString string = 
-  match string with
-  | Emphasized s -> 
-    printfn "it's emphasized: %A" s
-    //couldn't make any of this work. the middle part expects a function of `FountainSpans -> FountainSpan`
-//    match s with
-//    | (body,Strong(spans),rest) -> printfn "it's bold"
-//    | (body,Italic(spans),rest) -> printfn "it's italic"
-//    | (body,Underline(spans),rest) -> printfn "it's underlined"
-//    | _ -> printfn "not sure how we got here!"
-  | _ -> printfn "it's not emphasized."
-
-
-// returns a sequence of characters from a string
-let explode (s:string) =
-  [for c in s -> c]
-
-explode string1 |> testString
-explode string2 |> testString
-explode string3 |> testString
-explode string4 |> testString
-explode string5 |> testString
-explode string6 |> testString
-explode string7 |> testString
-
 Fountain.Parse string7

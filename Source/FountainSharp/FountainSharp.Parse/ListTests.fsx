@@ -27,6 +27,13 @@ let testString string =
     printfn "found: %A" s
   | _ -> printfn "not found"
 
+//let testString2 string = 
+//  match string with
+//  | Emphasized s -> 
+//    printfn "it's emphasized: %A" s
+//  | _ -> printfn "it's not emphasized."
+
+
 // returns a sequence of characters from a string
 let explode (s:string) =
   [for c in s -> c]
