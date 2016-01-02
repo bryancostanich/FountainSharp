@@ -235,6 +235,8 @@ module FountainTestParser =
     | Paragraph of FountainSpans
     | Span of FountainSpans
 
+  /// A type alias for a list of paragraphs
+  and FountainParagraphs = list<FountainParagraph>
 
   //====== Parser
   // Part 1: Inline Formatting
@@ -373,8 +375,9 @@ module FountainTestParser =
   /// Defines a context for the main `parseParagraphs` function
   // TODO: Question: what is the Links part supposed to represent?
   type ParsingContext = 
-    { Links : Dictionary<string, string * option<string>> 
-      Newline : string }
+    { 
+      Newline : string 
+    }
 
   /// Parse a list of lines into a sequence of markdown paragraphs
   let rec parseParagraphs (ctx:ParsingContext) lines = seq {
@@ -391,6 +394,39 @@ module FountainTestParser =
     | Lines.TrimBlankStart [] -> () 
     | _ -> failwithf "Unexpectedly stopped!\n%A" lines }
 
+
+
+open FountainTestParser
+
+/// Representation of a Fountain document - the representation of Paragraphs
+/// uses an F# discriminated union type and so is best used from F#.
+type FountainDocument(paragraphs) =
+  /// Returns a list of paragraphs in the document
+  member x.Paragraphs : FountainParagraphs = paragraphs
+  /// Returns a dictionary containing explicitly defined links
+
+
+/// Static class that provides methods for formatting 
+/// and transforming Markdown documents.
+type Fountain =
+  /// Parse the specified text into a MarkdownDocument. Line breaks in the
+  /// inline HTML (etc.) will be stored using the specified string.
+  static member Parse(text, newline) =
+    use reader = new StringReader(text)
+    let lines = 
+      [ let line = ref ""
+        while (line := reader.ReadLine(); line.Value <> null) do
+          yield line.Value ]
+    let (Lines.TrimBlank lines) = lines
+    let ctx : ParsingContext = { Newline = newline }
+    let paragraphs = lines |> parseParagraphs ctx |> List.ofSeq
+    FountainDocument(paragraphs)
+
+  /// Parse the specified text into a MarkdownDocument.
+  static member Parse(text) =
+    Parse(text, Environment.NewLine)
+
+
 //======= TESTING CODE
 open FountainTestParser
 
@@ -400,6 +436,30 @@ let string3 = "***some bold italic text***"
 let string4 = "_some underlined text_"
 let string5 = "some text that's not emphasized"
 let string6 = "pretty sure this will fail *some italic text **with some bold** in the middle*"
+let string7 = @"EXT. BRICK'S PATIO - DAY
+
+A gorgeous day.  The sun is shining.  But BRICK BRADDOCK, retired police detective, is sitting quietly, contemplating -- something.
+
+The SCREEN DOOR slides open and DICK STEEL, his former partner and fellow retiree, emerges with two cold beers.
+
+STEEL
+Does a bear crap in the woods?
+
+Steel sits.  They laugh at the dumb joke.
+
+STEEL
+(beer raised)
+To retirement.
+
+BRICK
+To retirement.
+
+They drink *long* and _well_ from the beers.
+
+And then there's a long beat.  
+Longer than is funny.  
+Long enough to be depressing."
+
 
 let testString string = 
   match string with
@@ -423,3 +483,5 @@ explode string2 |> testString
 explode string3 |> testString
 explode string4 |> testString
 explode string5 |> testString
+explode string6 |> testString
+explode string7 |> testString
