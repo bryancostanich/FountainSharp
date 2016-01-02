@@ -9,18 +9,6 @@ open FountainSharp.Collections
 open FSharp.Patterns
 open FSharp.Patterns.List
 
-
-
-//===============================================================================================
-//===============================================================================================
-//===============================================================================================
-//===============================================================================================
-//===============================================================================================
-//===============================================================================================
-//===============================================================================================
-//===============================================================================================
-//===============================================================================================
-// This is where the fun really begins
 module FountainTestParser =
 
   //====== Fountain Schema/Syntax Definition
@@ -146,6 +134,7 @@ module FountainTestParser =
         yield! accLiterals.Value
         let body = parseChars [] body |> List.ofSeq
         //TODO: why won't it accept this?
+        // until i figure out what's happening here, Note won't work, because it just pulls the text out entirely.
         //yield f(body)
         yield! parseChars [] rest
 
@@ -218,7 +207,9 @@ module FountainTestParser =
     | _ -> None
 
   /// Defines a context for the main `parseBlocks` function
-  // TODO: Question: what is the Links part supposed to represent?
+  // TODO: Question: what is the Links part supposed to represent? Answer: for some reason he was creating a 
+  // dictionary of known links. probably for additional processing. but fountain doesn't have links, so i got 
+  // rid of it. but now we need to simplify this ParsingContext, probably.
   type ParsingContext = 
     { 
       Newline : string 
