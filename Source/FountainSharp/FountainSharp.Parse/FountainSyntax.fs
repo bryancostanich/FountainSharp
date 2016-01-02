@@ -6,24 +6,30 @@ open System.Collections.Generic
 
 
 
-/// Represents inline formatting inside a paragraph. This can be literal (with text), various
+/// Represents inline formatting inside a block. This can be literal (with text), various
 /// formattings (string, emphasis, etc.), hyperlinks, etc.
-type FountainSpan =
-  | Literal of string
-  | Strong of FountainSpans
-  | Italic of FountainSpans
-  | Underline of FountainSpans
+type FountainSpanElement =
+  | Literal of string // some text
+  | Strong of FountainSpans // **some bold text**
+  | Italic of FountainSpans // *some italicized text*
+  | Underline of FountainSpans // _some underlined text_
+  | Note of FountainSpans // [[this is my note]]
   | HardLineBreak
 
 /// A type alias for a list of `FountainSpan` values
-and FountainSpans = list<FountainSpan>
+and FountainSpans = list<FountainSpanElement>
 
-/// A paragraph represents a (possibly) multi-line element of a fountain document.
-/// Paragraphs are headings, action blocks, dialogue blocks, etc. 
-type FountainParagraph = 
+/// A block represents a (possibly) multi-line element of a fountain document.
+/// Blocks are headings, action blocks, dialogue blocks, etc. 
+type FountainBlockElement = 
+  | Block of FountainSpans
   | Section of int * FountainSpans
-  | Paragraph of FountainSpans
   | Span of FountainSpans
+  | Lyric of FountainSpans
+  | SceneHeading of FountainSpans //TODO: Should this really just be a single span? i mean, you shouldn't be able to style/inline a scene heading, right?
+
+/// A type alias for a list of blocks
+and FountainBlocks = list<FountainBlockElement>
 
 // Document as a tree
 /// This module provides an easy way of processing Markdown documents.
@@ -34,20 +40,21 @@ module Matching =
 
   // represents a Leaf in the tree; that is a node that doesn't have any children
   type SpanLeafInfo = 
-    private SL of FountainSpan
+    private SL of FountainSpanElement
 
   // represents a node that has children
   type SpanNodeInfo = 
-    private SN of FountainSpan 
+    private SN of FountainSpanElement 
 
   // Active Pattern that returns either a SpanLeaf or SpanNode from a span
   let (|SpanLeaf|SpanNode|) span = 
     match span with
-    | Literal _ 
+    | Literal _
+    | Note _ //TODO: not sure what this should be
     | HardLineBreak ->
         SpanLeaf(SL span) //SpanLeafInfo or (SpanNodeInfo * FountainSpans)
     | Strong spans 
-    | Italic spans ->   
+    | Italic spans ->
         SpanNode(SN span, spans)
     | Underline spans ->
         SpanNode(SN span, spans)
@@ -66,22 +73,25 @@ module Matching =
     | _ -> invalidArg "" "Incorrect SpanNodeInfo"
 
   // TODO: Question: marker types again?
-  type ParagraphSpansInfo = private PS of FountainParagraph
-  type ParagraphLeafInfo = private PL of FountainParagraph
-  type ParagraphNestedInfo = private PN of FountainParagraph
+  type ParagraphSpansInfo = private PS of FountainBlockElement
+  type ParagraphLeafInfo = private PL of FountainBlockElement
+  type ParagraphNestedInfo = private PN of FountainBlockElement
 
   let (|ParagraphSpans|) par =
     match par with  
     | Section(_, spans)
-    | Paragraph(spans)
+    | Block(spans)
+    | Lyric(spans)
     | Span(spans) ->
         ParagraphSpans(PS par, spans)
 
   let ParagraphSpans (PS(par), spans) = 
     match par with 
     | Section(a, _) -> Section(a, spans)
-    | Paragraph(_) -> Paragraph(spans)
+    | Block(_) -> Block(spans)
     | Span(_) -> Span(spans)
+    | Lyric(_) -> Lyric(spans)
+    | SceneHeading(_) -> SceneHeading(spans)
     //| _ -> invalidArg "" "Incorrect ParagraphSpansInfo." //commented out because it says the rule will never be matched.
 
   let ParagraphLeaf (PL(par)) = par
