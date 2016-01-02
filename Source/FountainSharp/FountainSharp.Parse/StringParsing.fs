@@ -3,8 +3,6 @@
 // (c) Tomas Petricek, 2012, Available under Apache 2.0 license.
 // --------------------------------------------------------------------------------------
 
-//module internal FSharp.Patterns
-//TODO: Question: why'd i have to get rid of the "internal" for this to work in FountainParser.fs?
 module FSharp.Patterns
 
 open System

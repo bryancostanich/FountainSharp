@@ -1,6 +1,6 @@
 ﻿
 
-#[] Scene Heading
+#[~] Scene Heading - partially workign. 
 
 A Scene Heading is any line that has a blank line following it, and either begins with INT or EXT or similar (full list below). 
 A Scene Heading always has at least one blank line preceding it.
@@ -73,7 +73,7 @@ Fountain will remove the '~' and leave it up to the app to style the Lyric appro
 
 # [] Indenting
 
-# [] Notes
+# [~] Notes - some support, but not the double space thing
 
 # [] Boneyard (Comments) /* stuff */
 
