@@ -225,10 +225,11 @@ module FountainTestParser =
   /// Represents inline formatting inside a block. This can be literal (with text), various
   /// formattings (string, emphasis, etc.), hyperlinks, etc.
   type FountainSpanElement =
-    | Literal of string
-    | Strong of FountainSpans
-    | Italic of FountainSpans
-    | Underline of FountainSpans
+    | Literal of string // some text
+    | Strong of FountainSpans // **some bold text**
+    | Italic of FountainSpans // *some italicized text*
+    | Underline of FountainSpans // _some underlined text_
+    | Note of FountainSpans // [[this is my note]]
     | HardLineBreak
 
   /// A type alias for a list of `FountainSpan` values
@@ -294,6 +295,27 @@ module FountainTestParser =
           Some(body, Italic, rest)
       | _ -> None
     | _ -> None
+
+//  /// recognizes notes which start with "[[" and end with "]]"
+//  TODO: Need a bracket delimiter function that does different start and ending brackets.
+//  see the BracketDelimited function in StringParsing.fs, but the brackets need to be more than a single character.
+//  let (|Note|_|) = function
+//    // if it starts with either `_` or `*`
+//    //   1) the code `(('_' | '*')` :: tail)` decomposes the input into a sequence of either `'_'::tail` or `'*'::tail`
+//    //   2) `as input` binds that sequence to a variable
+//    | (('_' | '*') :: tail) as input ->
+//      match input with
+//      // the *** case in which it is both italic and strong
+//      | DelimitedText ['*'; '*'; '*'] (body, rest) -> 
+//          Some(body, Italic >> List.singleton >> Strong, rest)
+//      | DelimitedText['*'; '*'] (body, rest) -> 
+//          Some(body, Strong, rest)
+//      | DelimitedText['_'] (body, rest) ->
+//          Some(body, Underline, rest)
+//      | DelimitedText['*'] (body, rest) -> 
+//          Some(body, Italic, rest)
+//      | _ -> None
+//    | _ -> None
 
 
   /// Parses a body of a block and recognizes all inline tags.
