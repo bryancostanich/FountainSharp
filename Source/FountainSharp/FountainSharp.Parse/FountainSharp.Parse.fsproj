@@ -15,17 +15,20 @@
     <DefineConstants>DEBUG</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <ConsolePause>false</ConsolePause>
-    <PlatformTarget></PlatformTarget>
+    <PlatformTarget>
+    </PlatformTarget>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugSymbols>false</DebugSymbols>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release</OutputPath>
-    <DefineConstants></DefineConstants>
+    <DefineConstants>
+    </DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <ConsolePause>false</ConsolePause>
     <GenerateTailCalls>true</GenerateTailCalls>
-    <PlatformTarget></PlatformTarget>
+    <PlatformTarget>
+    </PlatformTarget>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="mscorlib" />
@@ -41,7 +44,6 @@
   <Import Project="$(MSBuildExtensionsPath32)\..\Microsoft SDKs\F#\3.1\Framework\v4.0\Microsoft.FSharp.Targets" />
   <ItemGroup>
     <Folder Include="Common\" />
-    <Folder Include="Old Code for Reference\" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="StringParsing.fs" />
@@ -50,8 +52,6 @@
     <None Include="Fountain Syntax Support TODO.md" />
     <None Include="Fountain Syntax Reference.txt" />
     <None Include="Test_Script.txt" />
-    <None Include="Old Code for Reference\Fountain_reference.fs" />
-    <None Include="Old Code for Reference\FountainParser_reference.fs" />
     <None Include="FountainWorkingScript.fsx" />
     <None Include="ListTests.fsx" />
   </ItemGroup>
