@@ -86,6 +86,25 @@ module List =
       | _ -> invalidArg "" "Should start with true" }
     loop input |> List.ofSeq
 
+module Lines = 
+  /// Removes blank lines from the start and the end of a list
+  let (|TrimBlank|) lines = 
+    lines
+    |> List.skipWhile String.IsNullOrWhiteSpace |> List.rev
+    |> List.skipWhile String.IsNullOrWhiteSpace |> List.rev
+
+  /// Matches when there are some lines at the beginning that are 
+  /// either empty (or whitespace) or start with the specified string.
+  /// Returns all such lines from the beginning until a different line.
+  let (|TakeStartingWithOrBlank|_|) start input = 
+    match List.partitionWhile (fun s -> 
+            String.IsNullOrWhiteSpace s || s.StartsWith(start)) input with
+    | matching, rest when matching <> [] -> Some(matching, rest)
+    | _ -> None
+
+  /// Removes whitespace lines from the beginning of the list
+  let (|TrimBlankStart|) = List.skipWhile (String.IsNullOrWhiteSpace)
+
 
 module String =
   /// Matches when a string is a whitespace or null
@@ -218,6 +237,7 @@ module FountainTestParser =
 
 
   //====== Parser
+  // Part 1: Inline Formatting
 
   /// Succeeds when the specified character list starts with an escaped 
   /// character - in that case, returns the character and the tail of the list
@@ -265,6 +285,111 @@ module FountainTestParser =
       | _ -> None
     | _ -> None
 
+  /// Parses a body of a paragraph and recognizes all inline tags.
+  /// returns a sequence of FountainSpan
+  let rec parseChars acc input = seq {
+
+    // Zero or one literals, depending whether there is some accumulated input
+    let accLiterals = Lazy.Create(fun () ->
+      if List.isEmpty acc then [] 
+      else [Literal(String(List.rev acc |> Array.ofList))] )
+
+    match input with 
+
+    // Recognizes explicit line-break at the end of line
+    | ' '::' '::('\n' | '\r')::rest
+    | ' '::' '::'\r'::'\n'::rest ->
+        yield! accLiterals.Value
+        yield HardLineBreak
+        yield! parseChars [] rest
+
+    // Encode & as an HTML entity
+    | '&'::'a'::'m'::'p'::';'::rest 
+    | '&'::rest ->
+        yield! parseChars (';'::'p'::'m'::'a'::'&'::acc) rest      
+
+    // Ignore escaped characters that might mean something else
+    | EscapedChar(c, rest) ->
+        yield! parseChars (c::acc) rest
+
+    // Handle emphasised text
+    | Emphasized (body, f, rest) ->
+        yield! accLiterals.Value
+        let body = parseChars [] body |> List.ofSeq
+        yield f(body)
+        yield! parseChars [] rest
+
+    // This calls itself recursively on the rest of the list
+    | x::xs -> 
+        yield! parseChars (x::acc) xs 
+    | [] ->
+        yield! accLiterals.Value }
+
+  /// Parse body of a paragraph into a list of Markdown inline spans      
+  let parseSpans (String.TrimBoth s) = 
+    parseChars [] (s.ToCharArray() |> List.ofArray) |> List.ofSeq
+
+  //====== Parser
+  // Part 2: Paragraph Formatting
+
+  /// Recognizes a Section (# Some section, ## another section), prefixed with '#'s
+  let (|Section|_|) = function
+    | String.StartsWithRepeated "#" (n, header) :: rest ->
+        let header = 
+          // Drop "##" at the end, but only when it is preceded by some whitespace
+          // (For example "## Hello F#" should be "Hello F#")
+          if header.EndsWith "#" then
+            let noHash = header.TrimEnd [| '#' |]
+            if noHash.Length > 0 && Char.IsWhiteSpace(noHash.Chars(noHash.Length - 1)) 
+            then noHash else header
+          else header        
+        Some(n, header.Trim(), rest)
+    | rest ->
+        None
+
+  /// Splits input into lines until whitespace
+  let (|LinesUntilListOrWhite|) = 
+    List.partitionUntil (function
+      | String.WhiteSpace -> true 
+      | _ -> false
+    )
+
+  /// Splits input into lines until not-indented line and the rest.
+  let (|LinesUntilListOrUnindented|) =
+    List.partitionUntilLookahead (function 
+      | String.Unindented::_ 
+      | String.WhiteSpace::String.WhiteSpace::_ -> true | _ -> false)
+
+  /// Takes lines that belong to a continuing paragraph until 
+  /// a white line or start of other paragraph-item is found
+  let (|TakeParagraphLines|_|) input = 
+    match List.partitionWhileLookahead (function
+      | Section _ -> false
+      | String.WhiteSpace::_ -> false
+      | _ -> true) input with
+    | matching, rest when matching <> [] -> Some(matching, rest)
+    | _ -> None
+
+  /// Defines a context for the main `parseParagraphs` function
+  // TODO: Question: what is the Links part supposed to represent?
+  type ParsingContext = 
+    { Links : Dictionary<string, string * option<string>> 
+      Newline : string }
+
+  /// Parse a list of lines into a sequence of markdown paragraphs
+  let rec parseParagraphs (ctx:ParsingContext) lines = seq {
+    match lines with
+
+    // Recognize remaining types of paragraphs
+    | Section(n, body, Lines.TrimBlankStart lines) ->
+        yield Section(n, parseSpans body)
+        yield! parseParagraphs ctx lines 
+    | TakeParagraphLines(lines, Lines.TrimBlankStart rest) ->      
+        yield Paragraph (parseSpans (String.concat ctx.Newline lines))
+        yield! parseParagraphs ctx rest 
+
+    | Lines.TrimBlankStart [] -> () 
+    | _ -> failwithf "Unexpectedly stopped!\n%A" lines }
 
 //======= TESTING CODE
 open FountainTestParser
