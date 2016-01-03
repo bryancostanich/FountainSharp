@@ -2,7 +2,7 @@
 
 # Current Syntax Support Status
 
-  * [Scene Heading](#sceneheading) - √
+  * [Scene Heading](#scene-heading) - √
   * Action - not supported
   * Character - not supported
   * Dialogue - not supported
@@ -22,8 +22,6 @@
   * Sections - √
   * Synposes - √
 
-
-<a name="sceneheading"/>
 
 # Scene Heading
 
