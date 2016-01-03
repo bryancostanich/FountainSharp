@@ -157,8 +157,13 @@ let (|SceneHeading|_|) = function
 
 // CHARACTER
 let (|Character|_|) = function
+  // matches "BOB" or "BOB JOHNSON"
   | String.IsUppercaseOrWhiteSpace character:string :: rest ->
      Some(character.Trim(), rest)
+  // TODO: matches "BOB (OS)"
+  // TODO: matches "@McAVOY"
+  | String.StartsWith "@" character:string :: rest ->
+     Some(character.Trim(), rest) 
   | _ -> None
 
 // DIALOG

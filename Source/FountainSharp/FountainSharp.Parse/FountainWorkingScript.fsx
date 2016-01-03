@@ -73,6 +73,9 @@ To retirement.
 BRICK
 To retirement.
 
+@McAVOY
+Oy, vay.
+
 They drink *long* and _well_ from the beers.
 
 .BINOCULARS A FORCED SCENE HEADING - LATER
