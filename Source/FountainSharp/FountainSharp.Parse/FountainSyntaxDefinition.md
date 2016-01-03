@@ -1,8 +1,8 @@
-﻿The following syntax definition comes from the [Fountain.io](http://fountain.io/syntax) site. 
+﻿The following syntax definition comes from the [Fountain.io](http://fountain.io/syntax) site.
 
 # Current Syntax Support Status
 
-  * Scene Heading - √
+  * [Scene Heading](#sceneheading) - √
   * Action - not supported
   * Character - not supported
   * Dialogue - not supported
@@ -23,7 +23,7 @@
   * Synposes - √
 
 
-# Scene Heading
+<a name="sceneheading"/># Scene Heading
 
 A Scene Heading is any line that has a blank line following it, and either begins with INT or EXT or similar (full list below). A Scene Heading always has at least one blank line preceding it.
 
@@ -48,11 +48,11 @@ Point Blank Sniper?
 From what seems like only INCHES AWAY.  _Steel's face FILLS the *Leupold Mark 4* scope_.
 ```
 
-`EXT. BRICK'S POOL - DAY` becomes a Scene Heading because of the `EXT`, but `SNIPER SCOPE POV` requires 
+`EXT. BRICK'S POOL - DAY` becomes a Scene Heading because of the `EXT`, but `SNIPER SCOPE POV` requires
 the period before it to force a Scene Heading element. The period is removed from the formatted output.
 
-Note that only a single leading period followed by an alphanumeric character will force a Scene Heading. 
-This allows the writer to begin Action and Dialogue elements with ellipses without worry that they'll be 
+Note that only a single leading period followed by an alphanumeric character will force a Scene Heading.
+This allows the writer to begin Action and Dialogue elements with ellipses without worry that they'll be
 interpreted as Scene Headings.
 
 ```
@@ -93,8 +93,8 @@ INT. HOUSE - DAY - FLASHBACK (1944) #110A#
 
 # [] Action
 
-Action, or scene description, is any paragraph that doesn't meet criteria for another element (e.g. Scene 
-Heading, Character, Dialogue, etc.). Fountain respects your line-by-line decision to single or double-space, 
+Action, or scene description, is any paragraph that doesn't meet criteria for another element (e.g. Scene
+Heading, Character, Dialogue, etc.). Fountain respects your line-by-line decision to single or double-space,
 taking every carriage return as intentional.
 
 ```
@@ -109,12 +109,12 @@ The men look at each other.
 
 **Power User:** You can force an Action element can by preceding it with an exclamation point `!`.
 
-This is helpful when Action is in uppercase and directly followed by another line of Action, preventing the 
+This is helpful when Action is in uppercase and directly followed by another line of Action, preventing the
 two from being interpreted as Character and Dialogue elements.
 
 More on the line break logic can be found here.
 
-Tabs and spaces are retained in Action elements, allowing writers to indent a line. Tabs are converted to 
+Tabs and spaces are retained in Action elements, allowing writers to indent a line. Tabs are converted to
 four spaces.
 
 ```
@@ -174,7 +174,7 @@ A good 'ole boy. You know, loves the Army, blood runs green. Country boy. Seems 
 Manual line breaks are allowed in Dialogue, as are intentionally "empty" lines--see the Line Breaks section.
 
 DAN
-Then let's retire them. 
+Then let's retire them.
 _Permanently_.
 ```
 
@@ -306,7 +306,7 @@ This is going to be BAD.*
 
 # Title Page
 
-The optional Title Page is always the first thing in a Fountain document. Information is encoding in the 
+The optional Title Page is always the first thing in a Fountain document. Information is encoding in the
 format `key: value`. Keys can have spaces (e. g. `Draft date`), but must end with a colon.
 
 ```
@@ -322,14 +322,14 @@ Contact:
     1588 Mission Dr.
     Solvang, CA 93463
 ```
-The recommendation is that Title, Credit, Author (or Authors, either is a valid key syntax), and Source 
+The recommendation is that Title, Credit, Author (or Authors, either is a valid key syntax), and Source
 will be centered on the page in formatted output. Contact and Draft date would be placed at the lower left.
 
-Values can be inline with the key or they can be indented on a newline below the key (as shown with 
-Contact above). Indenting is 3 or more spaces, or a tab. The indenting pattern allows multiple values for 
+Values can be inline with the key or they can be indented on a newline below the key (as shown with
+Contact above). Indenting is 3 or more spaces, or a tab. The indenting pattern allows multiple values for
 the same key (multiple authors, multiple address lines).
 
-The key values may change, but those listed above comprise a minimal useful set. If you add unsupported 
+The key values may change, but those listed above comprise a minimal useful set. If you add unsupported
 key values to your document, they will be ignored, but you may find them useful as metadata.
 
 All Title Page parts are optional. So:
@@ -344,8 +344,8 @@ A page break is implicit after the Title Page. Just drop down two lines and star
 
 # Page Breaks
 
-Page Breaks are indicated by a line containing three or more consecutive equals signs, and nothing more. Page 
-breaks are useful for television scripts, where act breaks are explicitly labeled, and for creating "vanity" 
+Page Breaks are indicated by a line containing three or more consecutive equals signs, and nothing more. Page
+breaks are useful for television scripts, where act breaks are explicitly labeled, and for creating "vanity"
 first-pages featuring a quotation or prologue text.
 
 ```
@@ -364,11 +364,11 @@ The General Lee hangs in the air, right where we left it.  The NARRATOR'S voice 
 ```
 
 # Punctuation
-Some Markdown interpreters convert plain text shorthands for common punctuation to their typographical equivalencies. 
-For example, three consecutive dashes become an em-dash, three consecutive periods becomes an ellipsis, and straight 
+Some Markdown interpreters convert plain text shorthands for common punctuation to their typographical equivalencies.
+For example, three consecutive dashes become an em-dash, three consecutive periods becomes an ellipsis, and straight
 quotes become curly quotes.
 
-Fountain doesn't do any of that, because the screenplay typographical convention is to emulate a typewriter. However 
+Fountain doesn't do any of that, because the screenplay typographical convention is to emulate a typewriter. However
 you type your apostrophes, quotes, dashes, and dots, that's how they'll wind up in the screenplay.
 
 # Line Breaks
@@ -400,8 +400,8 @@ Where is that pit boss?
 
 No luck. He has no choice to deal the cards.
 ```
-...Fountain would interpret SCANNING THE AISLES... as a Character name--due to the entire line being in uppercase--and 
-therefore subsequently interpret Where is that pit boss? as Dialogue. To correct this, use a preceding ! to force the 
+...Fountain would interpret SCANNING THE AISLES... as a Character name--due to the entire line being in uppercase--and
+therefore subsequently interpret Where is that pit boss? as Dialogue. To correct this, use a preceding ! to force the
 uppercase line to be Action:
 
 ```
@@ -455,7 +455,7 @@ Dude, I'm a monkey.
 ```
 
 # Indenting
-Leading tabs or spaces in elements other than Action will be ignored. If you choose to use them though, your Fountain text file could 
+Leading tabs or spaces in elements other than Action will be ignored. If you choose to use them though, your Fountain text file could
 look quite a bit more like a screenplay.
 
 In this example, Transitions are preceded by four tabs, Character names by three, Parentheticals by two, and Dialogue by one.
@@ -477,8 +477,8 @@ BRICK and STEEL get into Mom's PORSCHE, Steel at the wheel.  They pause for a be
 They speed off.  To destiny!
 ```
 
-Tabs do not "hint" formatting to Fountain. They are ignored and the lines are interpreted as if they weren't there. The exception 
-is in Action, where leading tabs and spaces are respected. This allows the writer to indent lines manually. See Action for more 
+Tabs do not "hint" formatting to Fountain. They are ignored and the lines are interpreted as if they weren't there. The exception
+is in Action, where leading tabs and spaces are respected. This allows the writer to indent lines manually. See Action for more
 on this.
 
 # Notes
@@ -573,10 +573,10 @@ You can nest Sections by adding more `#` characters.
 # Another Act
 ```
 
-If you use a Markdown-header-aware app (such as MultiMarkdown Composer on Mac or Writing Kit on the iPad) to write in 
+If you use a Markdown-header-aware app (such as MultiMarkdown Composer on Mac or Writing Kit on the iPad) to write in
 Fountain, you'll be able to navigate your screenplay easily, just as you would a Markdown document.
 
-Fountain's Sections are purely tools for the writer--they are ignored completely in formatted output. In this way they 
+Fountain's Sections are purely tools for the writer--they are ignored completely in formatted output. In this way they
 are much like the structural tools offered in Movie Magic Screenwriter.
 
 # Synopses
@@ -596,10 +596,10 @@ EXT. BRICK'S PATIO - DAY
 A gorgeous day.  The sun is shining.  But BRICK BRADDOCK, retired police detective, is sitting quietly, contemplating -- something.
 ```
 
-Like Sections, Synopses are purely optional tools for the writer's outlining and organizational process. They are 
+Like Sections, Synopses are purely optional tools for the writer's outlining and organizational process. They are
 ignored in formatted output.
 
-Not all screenwriting applications support synopses or sections, but most support some kind of invisible markers, such 
-as Notes. Such apps might choose to import Fountain's Synopses and Sections as notes. Some applications support synopses 
-of "scenes" as defined by a single Scene Heading. Such applications might import Scene Heading synopses correctly, 
+Not all screenwriting applications support synopses or sections, but most support some kind of invisible markers, such
+as Notes. Such apps might choose to import Fountain's Synopses and Sections as notes. Some applications support synopses
+of "scenes" as defined by a single Scene Heading. Such applications might import Scene Heading synopses correctly,
 but need to import Section synopses as Notes.
