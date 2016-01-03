@@ -1,7 +1,11 @@
 ﻿#load "Collections.fs"
 #load "StringParsing.fs"
 
-open FSharp.Patterns.List
+open FSharp.Collections
+open FountainSharp.Parse.Collections
+open FountainSharp.Parse.Patterns
+open FountainSharp.Parse.Patterns.List
+open FountainSharp.Parse.Patterns.String
 
 let string1 = @"EXT. BRICK'S PATIO - DAY
 
@@ -67,3 +71,26 @@ let testStartsWithAny testSequence testString =
   | _ -> printfn "No. It doesn't."
 
 testStartsWithAny [ "INT"; "EXT"; "EST"; "INT./EXT."; "INT/EXT"; "I/E" ] testString2
+
+
+//=====
+/// Recognizes a PageBreak (3 or more consecutive equals and nothign more)
+let (|PageBreak|_|) = function
+  | String.StartsWithRepeated "=" text :: rest ->
+    match text with
+    | _, String.EqualsRepeated "=" ->
+       Some(PageBreak, rest)
+    | _ -> 
+       None
+  | rest ->
+     None
+
+let testPageBreak testString =
+  match testString with
+  | PageBreak s ->
+    printfn "Yes. it does."
+  | _ -> printfn "No. It doesn't."
+
+let pageBreakText = "=========="
+
+testPageBreak pageBreakText

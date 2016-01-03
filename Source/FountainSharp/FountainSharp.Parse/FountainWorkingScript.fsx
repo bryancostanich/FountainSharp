@@ -43,7 +43,6 @@ type Fountain =
 
 
 //======= TESTING CODE
-open FountainTestParser
 
 let string1 = "*some italic text*"
 let string2 = "**some bold text**"
@@ -84,6 +83,13 @@ Long enough to be depressing.
 
 ~Some Lyrics
 ~Some more lyrics
+
+Here comes a page break!
+
+===
+
+> ACT II <
+
 "
 
 Fountain.Parse string7

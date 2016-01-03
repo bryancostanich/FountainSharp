@@ -127,7 +127,7 @@ let rec parseChars acc input = seq {
 let parseSpans (String.TrimBoth s) = 
   parseChars [] (s.ToCharArray() |> List.ofArray) |> List.ofSeq
 
-//====== Parser
+//======================================================================================
 // Part 2: Block Formatting
 
 /// Recognizes a Section (# Some section, ## another section), prefixed with '#'s
@@ -147,11 +147,21 @@ let (|Section|_|) = function
 
 /// Recognizes a SceneHeading (prefixed with INT/EXT, etc. or a single period)
 let (|SceneHeading|_|) = function
-  //TODO: why doesn't this work? 
   | String.StartsWithAny [ "INT"; "EXT"; "EST"; "INT./EXT."; "INT/EXT"; "I/E" ] heading:string :: rest ->
      Some(heading.Trim(), rest)
   | String.StartsWith "." heading:string :: rest ->
      Some(heading.Trim(), rest) 
+  | rest ->
+     None
+
+/// Recognizes a PageBreak (3 or more consecutive equals and nothign more)
+let (|PageBreak|_|) = function
+  | String.StartsWithRepeated "=" text :: rest ->
+    match text with
+    | _, String.EqualsRepeated "=" ->
+       Some(PageBreak, rest)
+    | _ -> 
+       None
   | rest ->
      None
 
@@ -205,6 +215,9 @@ let rec parseBlocks (ctx:ParsingContext) lines = seq {
   | Section(n, body, Lines.TrimBlankStart lines) ->
      yield Section(n, parseSpans body)
      yield! parseBlocks ctx lines
+  | PageBreak(body, Lines.TrimBlankStart lines) ->
+     yield PageBreak
+     //yield! parseBlocks ctx lines 
   | Lyric(body, Lines.TrimBlankStart lines) ->
      yield Lyric(parseSpans body)
      yield! parseBlocks ctx lines
