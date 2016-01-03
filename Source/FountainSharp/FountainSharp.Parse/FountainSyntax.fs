@@ -5,7 +5,6 @@ open System.IO
 open System.Collections.Generic
 
 
-
 /// Represents inline formatting inside a block. This can be literal (with text), various
 /// formattings (string, emphasis, etc.), hyperlinks, etc.
 type FountainSpanElement =
@@ -27,10 +26,12 @@ type FountainBlockElement =
   | Span of FountainSpans
   | Lyric of FountainSpans
   | SceneHeading of FountainSpans //TODO: Should this really just be a single span? i mean, you shouldn't be able to style/inline a scene heading, right?
+  | PageBreak
 
 /// A type alias for a list of blocks
 and FountainBlocks = list<FountainBlockElement>
 
+(*
 // Document as a tree
 /// This module provides an easy way of processing Markdown documents.
 /// It lets you decompose documents into leafs and nodes with nested paragraphs.
@@ -95,4 +96,4 @@ module Matching =
     //| _ -> invalidArg "" "Incorrect ParagraphSpansInfo." //commented out because it says the rule will never be matched.
 
   let ParagraphLeaf (PL(par)) = par
-
+*)

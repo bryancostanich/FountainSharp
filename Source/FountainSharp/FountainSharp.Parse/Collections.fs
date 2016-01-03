@@ -5,7 +5,7 @@
 // Modifications by Bryan Costanich
 // --------------------------------------------------------------------------------------
 
-namespace FountainSharp.Collections
+namespace FountainSharp.Parse.Collections
 
 
 // --------------------------------------------------------------------------------------

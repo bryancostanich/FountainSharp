@@ -3,10 +3,10 @@
 // (c) Tomas Petricek, 2012, Available under Apache 2.0 license.
 // --------------------------------------------------------------------------------------
 
-module FSharp.Patterns
+module FountainSharp.Parse.Patterns
 
 open System
-open FountainSharp.Collections
+open FountainSharp.Parse.Collections
 
 // --------------------------------------------------------------------------------------
 // Active patterns that simplify parsing of strings and lists of strings (lines)
