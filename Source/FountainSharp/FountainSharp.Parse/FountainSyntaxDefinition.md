@@ -1,7 +1,29 @@
 ﻿The following syntax definition comes from the [Fountain.io](http://fountain.io/syntax) site. 
 
+# Current Syntax Support Status
 
-# Scene Heading - √
+  * Scene Heading - √
+  * Action - not supported
+  * Character - not supported
+  * Dialogue - not supported
+  * Parenthetical - not supported
+  * Dual Dialogue - not supported
+  * Lyrics - √
+  * Transition - not supported
+  * Centered Text - not supported
+  * Emphasis - √
+  * Title Page - not supported
+  * Page Breaks - √
+  * Punctuation - √
+  * Line Breaks - Some Support
+  * Indenting - ?
+  * Notes - Some support. No support yet for double-space continuation.
+  * Bonyard/Comments - not supported
+  * Sections - √
+  * Synposes - not supported
+
+
+# Scene Heading
 
 A Scene Heading is any line that has a blank line following it, and either begins with INT or EXT or similar (full list below). A Scene Heading always has at least one blank line preceding it.
 
@@ -113,7 +135,7 @@ Here the ten spaces before the text on the card are passed through to the format
 
 Action also respects vertical whitespace. Any number of empty lines in the Fountain file will be passed faithfully through to the formatted output as empty Action lines.
 
-# [] Character
+# Character
 A Character element is any line entirely in uppercase, with one empty line before it and without an empty line after it.
 
 ```
@@ -156,7 +178,7 @@ Then let's retire them.
 _Permanently_.
 ```
 
-# [] Parenthetical
+# Parenthetical
 
 Parentheticals follow a Character or Dialogue element, and are wrapped in parentheses `()`.
 
@@ -166,7 +188,7 @@ STEEL
 So much for retirement!
 ```
 
-# [] Dual Dialogue
+# Dual Dialogue
 
 Dual, or simultaneous, dialogue is expressed by adding a caret `^` after the second Character element.
 
@@ -190,7 +212,7 @@ You create a Lyric by starting with a line with a tilde ~.
 
 Fountain will remove the '~' and leave it up to the app to style the Lyric appropriately. Lyrics are always forced. There is no "automatic" way to get them.
 
-# [] Transition
+# Transition
 
 The requirements for Transition elements are:
 
@@ -234,7 +256,7 @@ Leading spaces are usually preserved in Action, but not for centered text, so yo
 > THE END <
 ```
 
-# Emphasis - √
+# Emphasis
 Supported, but needs some testing. i doubt nesting works correctly.
 
 Fountain follows Markdown's rules for emphasis, except that it reserves the use of underscores for underlining, which is not interchangeable with italics in a screenplay.
@@ -282,7 +304,7 @@ As he rattles off the long list, Brick and Steel *share a look.
 This is going to be BAD.*
 ```
 
-# [] Title Page
+# Title Page
 
 The optional Title Page is always the first thing in a Fountain document. Information is encoding in the 
 format `key: value`. Keys can have spaces (e. g. `Draft date`), but must end with a colon.
@@ -320,7 +342,7 @@ Draft date: 6/23/2012
 
 A page break is implicit after the Title Page. Just drop down two lines and start writing your screenplay.
 
-# Page Breaks - √
+# Page Breaks
 
 Page Breaks are indicated by a line containing three or more consecutive equals signs, and nothing more. Page 
 breaks are useful for television scripts, where act breaks are explicitly labeled, and for creating "vanity" 
@@ -341,7 +363,7 @@ Shoot, to the Dukes that's about like taking Grandma for a Sunday drive.
 The General Lee hangs in the air, right where we left it.  The NARRATOR'S voice kicks in.
 ```
 
-# Punctuation - √
+# Punctuation
 Some Markdown interpreters convert plain text shorthands for common punctuation to their typographical equivalencies. 
 For example, three consecutive dashes become an em-dash, three consecutive periods becomes an ellipsis, and straight 
 quotes become curly quotes.
@@ -349,7 +371,7 @@ quotes become curly quotes.
 Fountain doesn't do any of that, because the screenplay typographical convention is to emulate a typewriter. However 
 you type your apostrophes, quotes, dashes, and dots, that's how they'll wind up in the screenplay.
 
-# [] Line Breaks
+# Line Breaks
 
 Unlike some markup languages, Fountain takes every carriage return as intent. This allows the writer to control the spacing between paragraphs in Action elements, as seen in this classic example:
 
@@ -432,7 +454,7 @@ MONKEY
 Dude, I'm a monkey.
 ```
 
-# [] Indenting
+# Indenting
 Leading tabs or spaces in elements other than Action will be ignored. If you choose to use them though, your Fountain text file could 
 look quite a bit more like a screenplay.
 
@@ -459,8 +481,7 @@ Tabs do not "hint" formatting to Fountain. They are ignored and the lines are in
 is in Action, where leading tabs and spaces are respected. This allows the writer to indent lines manually. See Action for more 
 on this.
 
-# [~] Notes
-some support, but not the double space thing
+# Notes
 
 A Note is created by enclosing some text with double brackets. Notes can be inserted between lines, or in the middle of a line.
 
@@ -489,7 +510,7 @@ Definitely coffee.]] He looks around.  Phone ringing.
 
 Notes are designed to be compatible with the types of inserted annotation common in screenwriting software, e.g. Final Draft's Scriptnotes. To hide, or "comment out" sections of text, use the boneyard syntax.
 
-# [] Boneyard (Comments)
+# Boneyard (Comments)
 
 If you want Fountain to ignore some text, wrap it with /* some text */. In this example, an entire scene is put in the boneyard. It will be ignored completely on formatted output.
 
@@ -523,7 +544,7 @@ An EXTREMELY HANDSOME MAN drinks a beer.  Shirtless, unfortunately.
 
 The boneyard is the exception to the rule of syntax not carrying across line breaks. Your /* ... */ pairs can span as much of your screenplay as you like.
 
-# Sections - √
+# Sections
 Sections are optional markers for managing the structure of a story. Some screenplay applications use these like nested folders in a navigation view.
 
 Fountain's Sections resemble Markdown's ATX-style headers, but differ in that they do not appear in formatted output.
@@ -558,7 +579,7 @@ Fountain, you'll be able to navigate your screenplay easily, just as you would a
 Fountain's Sections are purely tools for the writer--they are ignored completely in formatted output. In this way they 
 are much like the structural tools offered in Movie Magic Screenwriter.
 
-# [] Synopses
+# Synopses
 Synopses are optional blocks of text to describe a Section or scene.
 
 Synopses are single lines prefixed by an equals sign `=`. They can be located anywhere within the screenplay.
