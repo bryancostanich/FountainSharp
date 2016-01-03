@@ -1,12 +1,13 @@
 ﻿
 
-#[~] Scene Heading - partially workign. 
+#[x] Scene Heading
 
 A Scene Heading is any line that has a blank line following it, and either begins with INT or EXT or similar (full list below). 
 A Scene Heading always has at least one blank line preceding it.
 
 Power user: You can "force" a Scene Heading by starting the line with a single period.
 
+List of known prefixes:
 INT
 EXT
 EST
