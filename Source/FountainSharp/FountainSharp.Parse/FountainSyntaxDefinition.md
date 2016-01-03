@@ -4,7 +4,7 @@
 
   * [Scene Heading](#scene-heading) - √
   * [Action](#action) - not supported
-  * [Character](#character) - not supported
+  * [Character](#character) - Mostly supported. Missing support for Parenthetical extensions, e.g. "BOB (OS)" or "AMY (on the radio)"
   * [Dialogue](#dialogue) - not supported
   * [Parenthetical](#parenthetical) - not supported
   * [Dual Dialogue](#dual-dialogue) - not supported
