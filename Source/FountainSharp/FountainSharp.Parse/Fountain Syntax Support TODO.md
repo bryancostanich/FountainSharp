@@ -64,6 +64,35 @@ Fountain will remove the '~' and leave it up to the app to style the Lyric appro
 
 # [] Transition
 
+The requirements for Transition elements are:
+
+* Uppercase
+* Preceded by and followed by an empty line
+* Ending in TO:
+
+Example:
+
+```
+Jack begins to argue vociferously in Vietnamese (?), But mercifully we...
+
+CUT TO:
+
+EXT. BRICK'S POOL - DAY
+```
+
+Power user: You can force any line to be a transition by beginning it with a greater-than symbol >.
+
+```
+Brick and Steel regard one another.  A job well done.
+
+> Burn to White.
+```
+
+**Power user:** If a line matches the rules for Transition, but you want in interpreted as something else, you have two options:
+
+* Precede it with a period to force a Scene Heading, or
+* Add one or more spaces after the colon to cause the line to be interpreted as Action (since the line no longer ends with a colon).
+
 # [] Centered Text
 
 # Emphasis - √
