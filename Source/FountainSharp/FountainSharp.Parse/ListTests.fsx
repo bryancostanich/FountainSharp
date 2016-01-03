@@ -40,3 +40,30 @@ let explode (s:string) =
 
 explode string1 |> testString
 explode string2 |> testString
+
+
+
+///// Matches when a string starts with any of the specified sub-strings
+//let (|StartsWithAnyBetter|_|) (starts:seq<string>) (text:string) =
+//  for testSeq in starts do
+//    if text.StartsWith(testSeq) then
+//      Some(text.Trim())
+//  None
+
+
+
+//======
+
+/// Matches when a string starts with any of the specified sub-strings
+let (|StartsWithAny|_|) (starts:seq<string>) (text:string) = 
+  if starts |> Seq.exists (text.StartsWith) then Some(text) else None
+
+let testString2 = "EXT. APARTMENT - DAY"
+
+let testStartsWithAny testSequence testString =
+  match testString with
+  | StartsWithAny testSequence s ->
+    printfn "Yes. it does."
+  | _ -> printfn "No. It doesn't."
+
+testStartsWithAny [ "INT"; "EXT"; "EST"; "INT./EXT."; "INT/EXT"; "I/E" ] testString2

@@ -169,8 +169,8 @@ module FountainTestParser =
   /// Recognizes a SceneHeading (prefixed with INT/EXT, etc. or a single period)
   let (|SceneHeading|_|) = function
     //TODO: why doesn't this work? 
-//    | String.StartsWithAny [ "INT"; "EXT"; "EST"; "INT./EXT."; "INT/EXT"; "I/E" ] heading:string :: rest ->
-//       Some(heading.Trim(), rest)
+    | String.StartsWithAny [ "INT"; "EXT"; "EST"; "INT./EXT."; "INT/EXT"; "I/E" ] heading:string :: rest ->
+       Some(heading.Trim(), rest)
     | String.StartsWith "." heading:string :: rest ->
        Some(heading.Trim(), rest) 
     | rest ->
