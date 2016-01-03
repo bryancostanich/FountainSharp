@@ -167,6 +167,13 @@ let (|PageBreak|_|) = function
   | rest ->
      None
 
+/// Recognizes a synposes (prefixed with `=` sign)
+let (|Synopses|_|) = function
+  | String.StartsWith "=" text :: rest ->
+     Some(text, rest)
+  | rest ->
+     None
+
 /// Recognizes a Lyric (prefixed with ~)
 let (|Lyric|_|) = function
   | String.StartsWith "~" lyric:string :: rest ->
@@ -219,7 +226,9 @@ let rec parseBlocks (ctx:ParsingContext) lines = seq {
      yield! parseBlocks ctx lines
   | PageBreak(body, Lines.TrimBlankStart lines) ->
      yield PageBreak
-     //yield! parseBlocks ctx lines 
+  | Synopses(body, Lines.TrimBlankStart lines) ->
+     yield Synopses(parseSpans body)
+     yield! parseBlocks ctx lines
   | Lyric(body, Lines.TrimBlankStart lines) ->
      yield Lyric(parseSpans body)
      yield! parseBlocks ctx lines

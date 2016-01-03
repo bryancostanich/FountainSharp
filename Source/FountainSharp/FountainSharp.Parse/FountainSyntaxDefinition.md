@@ -20,7 +20,7 @@
   * Notes - Some support. No support yet for double-space continuation.
   * Bonyard/Comments - not supported
   * Sections - √
-  * Synposes - not supported
+  * Synposes - √
 
 
 # Scene Heading

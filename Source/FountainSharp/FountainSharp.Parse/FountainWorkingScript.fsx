@@ -52,6 +52,8 @@ let string5 = "some text that's not emphasized"
 let string6 = "pretty sure this will fail *some italic text **with some bold** in the middle*"
 let string7 = @"EXT. BRICK'S PATIO - DAY
 
+= Here is a synopses of this fascinating scene.
+
 A gorgeous day.  The sun is shining.  But BRICK BRADDOCK, retired police detective, is sitting quietly, contemplating -- something.
 
 The SCREEN DOOR slides open and DICK STEEL, his former partner and fellow retiree, emerges with two cold beers.

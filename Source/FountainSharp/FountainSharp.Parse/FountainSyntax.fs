@@ -23,6 +23,7 @@ and FountainSpans = list<FountainSpanElement>
 type FountainBlockElement = 
   | Block of FountainSpans
   | Section of int * FountainSpans
+  | Synopses of FountainSpans
   | Span of FountainSpans
   | Lyric of FountainSpans
   | SceneHeading of FountainSpans //TODO: Should this really just be a single span? i mean, you shouldn't be able to style/inline a scene heading, right?
