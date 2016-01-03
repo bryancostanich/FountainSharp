@@ -106,9 +106,52 @@ Leading spaces are usually preserved in Action, but not for centered text, so yo
 > THE END <
 ```
 
-
 # Emphasis - √
 Supported, but needs some testing. i doubt nesting works correctly.
+
+Fountain follows Markdown's rules for emphasis, except that it reserves the use of underscores for underlining, which is not interchangeable with italics in a screenplay.
+
+```
+*italics*
+**bold**
+***bold italics***
+_underline_
+```
+In this way the writer can mix and match and combine bold, italics and underlining, as screenwriters often do.
+
+```
+From what seems like only INCHES AWAY.  _Steel's face FILLS the *Leupold Mark 4* scope_.
+```
+If you need to use any of the emphasis syntaxes verbatim, you escape the characters using the Markdown convention of a backslash:
+
+```
+Steel enters the code on the keypad: **\*9765\***
+```
+Believe it or not, that turns into:
+
+> Steel enters the code on the keypad: *9765*
+As with Markdown, the spaces around the emphasis characters are meaningful. In this example, the asterisks would not trigger italics between them, because both have a space to the left:
+
+```
+He dialed *69 and then *23, and then hung up.
+```
+But in this case, the text between the asterisks would be italicized:
+
+```
+He dialed *69 and then 23*, and then hung up.
+```
+The writer would need to escape one or both of the asterisks to avoid the accidental italics:
+
+```
+He dialed *69 and then 23\*, and then hung up.
+```
+Also as with Markdown, emphasis is not carried across line breaks. So there are no italics in the formatted output of this example--just asterisks:
+
+```
+As he rattles off the long list, Brick and Steel *share a look.
+
+This is going to be BAD.*
+```
 
 # [] Page Breaks
 
