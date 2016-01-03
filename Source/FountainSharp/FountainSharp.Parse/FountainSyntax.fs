@@ -22,6 +22,8 @@ and FountainSpans = list<FountainSpanElement>
 /// Blocks are headings, action blocks, dialogue blocks, etc. 
 type FountainBlockElement = 
   | Block of FountainSpans
+  | Character of FountainSpans //TODO: maybe just FountainSpanElement?
+  | Dialogue of FountainSpans
   | Section of int * FountainSpans
   | Synopses of FountainSpans
   | Span of FountainSpans

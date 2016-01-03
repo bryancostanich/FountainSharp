@@ -25,6 +25,8 @@
 
 # Scene Heading
 
+TODO: Allow lower-case/mixed case scene headings (make string ToUpper first and then compare)
+
 A Scene Heading is any line that has a blank line following it, and either begins with INT or EXT or similar (full list below). A Scene Heading always has at least one blank line preceding it.
 
 Power user: You can "force" a Scene Heading by starting the line with a single period.

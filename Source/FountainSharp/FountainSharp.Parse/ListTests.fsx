@@ -2,6 +2,7 @@
 #load "StringParsing.fs"
 
 open FSharp.Collections
+open FSharp.Collections.Array
 open FountainSharp.Parse.Collections
 open FountainSharp.Parse.Patterns
 open FountainSharp.Parse.Patterns.List
@@ -104,3 +105,25 @@ testPageBreak [pageBreakText2]
 testPageBreak [pageBreakText3]
 testPageBreak [pageBreakText4]
 testPageBreak [pageBreakText5]
+
+
+//========
+let (|IsUppercaseOrWhiteSpace|_|) (text:string) =
+  if (text |> Seq.forall (fun c -> (System.Char.IsUpper c|| System.Char.IsWhiteSpace c))) then
+    Some(text)
+  else
+    None
+
+let testIsAllUppercase testString =
+  match testString with
+  | IsUppercaseOrWhiteSpace s ->
+    printfn "Yes. it is."
+  | _ -> printfn "No. It's not."
+      
+let upperCaseTest1 = "This is not all uppercase."
+let upperCaseTest2 = "THIS IS ALL UPPERCASE BUT HAS WHITESPACE"
+let upperCaseTest3 = "UPPER"
+
+testIsAllUppercase upperCaseTest1
+testIsAllUppercase upperCaseTest2
+testIsAllUppercase upperCaseTest3

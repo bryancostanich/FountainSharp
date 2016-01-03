@@ -113,6 +113,13 @@ module String =
         if String.IsNullOrWhiteSpace(line) then ""
         else line.Substring(spaces))
 
+  /// Given a string, matches if the string is all uppercase (can include white space)
+  let (|IsUppercaseOrWhiteSpace|_|) (text:string) =
+    if (text |> Seq.forall (fun c -> (System.Char.IsUpper c|| System.Char.IsWhiteSpace c))) then
+      Some(text)
+    else
+      None
+
 
 module List =
   /// Matches a list if it starts with a sub-list that is delimited

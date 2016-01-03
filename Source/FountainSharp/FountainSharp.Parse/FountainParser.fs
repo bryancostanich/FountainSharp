@@ -147,12 +147,21 @@ let (|Section|_|) = function
 
 /// Recognizes a SceneHeading (prefixed with INT/EXT, etc. or a single period)
 let (|SceneHeading|_|) = function
+  // TODO: Make this StartsWithAnyCaseInsensitive
   | String.StartsWithAny [ "INT"; "EXT"; "EST"; "INT./EXT."; "INT/EXT"; "I/E" ] heading:string :: rest ->
      Some(heading.Trim(), rest)
   | String.StartsWith "." heading:string :: rest ->
      Some(heading.Trim(), rest) 
   | rest ->
      None
+
+// CHARACTER
+let (|Character|_|) = function
+  | String.IsUppercaseOrWhiteSpace character:string :: rest ->
+     Some(character.Trim(), rest)
+  | _ -> None
+
+// DIALOG
 
 /// Recognizes a PageBreak (3 or more consecutive equals and nothign more)
 let (|PageBreak|_|) = function
@@ -224,8 +233,12 @@ let rec parseBlocks (ctx:ParsingContext) lines = seq {
   | Section(n, body, Lines.TrimBlankStart lines) ->
      yield Section(n, parseSpans body)
      yield! parseBlocks ctx lines
+  | Character(body, Lines.TrimBlankStart lines) ->
+     yield Character(parseSpans body)
+     yield! parseBlocks ctx lines
   | PageBreak(body, Lines.TrimBlankStart lines) ->
      yield PageBreak
+     yield! parseBlocks ctx lines
   | Synopses(body, Lines.TrimBlankStart lines) ->
      yield Synopses(parseSpans body)
      yield! parseBlocks ctx lines
