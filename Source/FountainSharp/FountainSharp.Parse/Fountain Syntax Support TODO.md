@@ -1,6 +1,4 @@
-﻿
-
-#[x] Scene Heading
+﻿# Scene Heading - √
 
 A Scene Heading is any line that has a blank line following it, and either begins with INT or EXT or similar (full list below). 
 A Scene Heading always has at least one blank line preceding it.
@@ -8,12 +6,13 @@ A Scene Heading always has at least one blank line preceding it.
 Power user: You can "force" a Scene Heading by starting the line with a single period.
 
 List of known prefixes:
-INT
-EXT
-EST
-INT./EXT
-INT/EXT
-I/E
+
+* INT
+* EXT
+* EST
+* INT./EXT
+* INT/EXT
+* I/E
 
 [] Action
 
@@ -52,19 +51,23 @@ Fountain will remove the @ and interpret McCLANE as Character, preserving its mi
 
 # [] Dual Dialogue
 
-# [X] Lyrics
+# Lyrics - √
 
 You create a Lyric by starting with a line with a tilde ~.
 
+```
 ~Willy Wonka! Willy Wonka! The amazing chocolatier!
 ~Willy Wonka! Willy Wonka! Everybody give a cheer!
+```
+
 Fountain will remove the '~' and leave it up to the app to style the Lyric appropriately. Lyrics are always forced. There is no "automatic" way to get them.
 
 # [] Transition
 
 # [] Centered Text
 
-# [X] Emphasis - Supported, but needs some testing. i doubt nesting works correctly.
+# Emphasis - √
+Supported, but needs some testing. i doubt nesting works correctly.
 
 # [] Page Breaks
 
@@ -74,11 +77,13 @@ Fountain will remove the '~' and leave it up to the app to style the Lyric appro
 
 # [] Indenting
 
-# [~] Notes - some support, but not the double space thing
+# [~] Notes
+some support, but not the double space thing
 
-# [] Boneyard (Comments) /* stuff */
+# [] Boneyard (Comments)
+e.g.: /* stuff */
 
-# [X] Sections
+# Sections - √
 
 # [] Synopses
 
