@@ -94,6 +94,18 @@ Brick and Steel regard one another.  A job well done.
 * Add one or more spaces after the colon to cause the line to be interpreted as Action (since the line no longer ends with a colon).
 
 # [] Centered Text
+Centered text constitutes an Action element, and is bracketed with greater/less-than:
+
+```
+>THE END<
+```
+
+Leading spaces are usually preserved in Action, but not for centered text, so you can add spaces between the text and the >< if you like.
+
+```
+> THE END <
+```
+
 
 # Emphasis - √
 Supported, but needs some testing. i doubt nesting works correctly.
