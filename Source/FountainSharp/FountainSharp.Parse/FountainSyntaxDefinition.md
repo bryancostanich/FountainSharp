@@ -3,24 +3,24 @@
 # Current Syntax Support Status
 
   * [Scene Heading](#scene-heading) - √
-  * Action - not supported
-  * Character - not supported
-  * Dialogue - not supported
-  * Parenthetical - not supported
-  * Dual Dialogue - not supported
-  * Lyrics - √
-  * Transition - not supported
-  * Centered Text - not supported
-  * Emphasis - √
-  * Title Page - not supported
-  * Page Breaks - √
-  * Punctuation - √
-  * Line Breaks - Some Support
-  * Indenting - ?
-  * Notes - Some support. No support yet for double-space continuation.
-  * Bonyard/Comments - not supported
-  * Sections - √
-  * Synposes - √
+  * [Action](#action) - not supported
+  * [Character](#character) - not supported
+  * [Dialogue](#dialogue) - not supported
+  * [Parenthetical](#parenthetical) - not supported
+  * [Dual Dialogue](#dual-dialogue) - not supported
+  * [Lyrics](#lyrics) - √
+  * [Transition](#transition) - not supported
+  * [Centered Text](#centered-text) - not supported
+  * [Emphasis](#emphasis) - √
+  * [Title Page](#title-page) - not supported
+  * [Page Breaks](#page-breaks) - √
+  * [Punctuation](#punctuation) - √
+  * [Line Breaks](#line-breaks) - Some Support
+  * [Indenting](#indenting) - ?
+  * [Notes](#notes) - Some support. No support yet for double-space continuation.
+  * [Boneyard/Comments](#boneyard-comments) - not supported
+  * [Sections](#sections) - √
+  * [Synposes](#synopses) - √
 
 
 # Scene Heading
@@ -91,7 +91,7 @@ INT. HOUSE - DAY - FLASHBACK (1944) #110A#
 ```
 
 
-# [] Action
+# Action
 
 Action, or scene description, is any paragraph that doesn't meet criteria for another element (e.g. Scene
 Heading, Character, Dialogue, etc.). Fountain respects your line-by-line decision to single or double-space,
@@ -164,7 +164,7 @@ Yippie ki-yay! I got my lower-case C back!
 ```
 Fountain will remove the `@` and interpret McCLANE as Character, preserving its mixed case.
 
-# [] Dialogue
+# Dialogue
 
 Dialogue is any text following a Character or Parenthetical element.
 
@@ -201,7 +201,7 @@ Screw retirement.
 ```
 Any number of spaces between the Character name and the caret are acceptable, and will be ignored. All that matters is that the caret is the last character on the line.
 
-# Lyrics - √
+# Lyrics
 
 You create a Lyric by starting with a line with a tilde ~.
 
@@ -243,7 +243,7 @@ Brick and Steel regard one another.  A job well done.
 * Precede it with a period to force a Scene Heading, or
 * Add one or more spaces after the colon to cause the line to be interpreted as Action (since the line no longer ends with a colon).
 
-# [] Centered Text
+# Centered Text
 Centered text constitutes an Action element, and is bracketed with greater/less-than:
 
 ```
