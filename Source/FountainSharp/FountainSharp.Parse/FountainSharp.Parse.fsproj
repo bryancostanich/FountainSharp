@@ -49,10 +49,9 @@
     <Compile Include="StringParsing.fs" />
     <Compile Include="FountainSyntax.fs" />
     <Compile Include="FountainParser.fs" />
-    <None Include="Fountain Syntax Support TODO.md" />
-    <None Include="Fountain Syntax Reference.txt" />
     <None Include="Test_Script.txt" />
     <None Include="FountainWorkingScript.fsx" />
     <None Include="ListTests.fsx" />
+    <None Include="FountainSyntaxDefinition.md" />
   </ItemGroup>
 </Project>
