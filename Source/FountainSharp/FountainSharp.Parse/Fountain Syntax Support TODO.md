@@ -130,6 +130,7 @@ Steel enters the code on the keypad: **\*9765\***
 Believe it or not, that turns into:
 
 > Steel enters the code on the keypad: *9765*
+
 As with Markdown, the spaces around the emphasis characters are meaningful. In this example, the asterisks would not trigger italics between them, because both have a space to the left:
 
 ```
@@ -154,6 +155,25 @@ This is going to be BAD.*
 ```
 
 # [] Page Breaks
+
+Page Breaks are indicated by a line containing three or more consecutive equals signs, and nothing more. Page 
+breaks are useful for television scripts, where act breaks are explicitly labeled, and for creating "vanity" 
+first-pages featuring a quotation or prologue text.
+
+```
+The General Lee flies through the air. FREEZE FRAME.
+
+NARRATOR
+Shoot, to the Dukes that's about like taking Grandma for a Sunday drive.
+
+>**End of Act One**<
+
+===
+
+>**Act Two**<
+
+The General Lee hangs in the air, right where we left it.  The NARRATOR'S voice kicks in.
+```
 
 # [] Punctuation
 
