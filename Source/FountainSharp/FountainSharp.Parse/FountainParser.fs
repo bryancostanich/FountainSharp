@@ -157,11 +157,13 @@ let (|SceneHeading|_|) = function
 /// Recognizes a PageBreak (3 or more consecutive equals and nothign more)
 let (|PageBreak|_|) = function
   | String.StartsWithRepeated "=" text :: rest ->
-    match text with
-    | _, String.EqualsRepeated "=" ->
-       Some(PageBreak, rest)
-    | _ -> 
-       None
+    if (fst text) >= 3 then
+      match (snd text).Trim() with
+      | "" -> //after the trim, there should be nothing left.
+         Some(PageBreak, rest)
+      | _ -> 
+         None
+    else None
   | rest ->
      None
 

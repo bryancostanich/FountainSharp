@@ -77,11 +77,13 @@ testStartsWithAny [ "INT"; "EXT"; "EST"; "INT./EXT."; "INT/EXT"; "I/E" ] testStr
 /// Recognizes a PageBreak (3 or more consecutive equals and nothign more)
 let (|PageBreak|_|) = function
   | String.StartsWithRepeated "=" text :: rest ->
-    match text with
-    | _, String.EqualsRepeated "=" ->
-       Some(PageBreak, rest)
-    | _ -> 
-       None
+    if (fst text) >= 3 then
+      match (snd text).Trim() with
+      | "" -> //after the trim, there should be nothing left.
+         Some(PageBreak, rest)
+      | _ -> 
+         None
+    else None
   | rest ->
      None
 
@@ -91,6 +93,14 @@ let testPageBreak testString =
     printfn "Yes. it does."
   | _ -> printfn "No. It doesn't."
 
-let pageBreakText = "=========="
+let pageBreakText1 = "=========="
+let pageBreakText2 = "==="
+let pageBreakText3 = "=="
+let pageBreakText4 = "========== "
+let pageBreakText5 = "======= blah "
 
-testPageBreak pageBreakText
+testPageBreak [pageBreakText1]
+testPageBreak [pageBreakText2]
+testPageBreak [pageBreakText3]
+testPageBreak [pageBreakText4]
+testPageBreak [pageBreakText5]
