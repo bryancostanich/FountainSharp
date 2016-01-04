@@ -236,7 +236,8 @@ type ParsingContext =
   }
 
 /// Parse a list of lines into a sequence of fountain blocks
-let rec parseBlocks (ctx:ParsingContext) lines = seq {
+let rec parseBlocks (ctx:ParsingContext) (lines: _ list) = seq {
+  printfn "Match %d lines" lines.Length
   match lines with
 
   // Recognize remaining types of blocks/paragraphs

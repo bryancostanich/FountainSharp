@@ -36,4 +36,4 @@ type Fountain =
 
   /// Parse the specified text into a MarkdownDocument.
   static member Parse(text) =
-    Fountain.Parse(text, Environment.NewLine)
+    Fountain.Parse(text, Environment.NewLine)  
