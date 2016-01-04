@@ -303,28 +303,6 @@ let rec parseBlocks (ctx:ParsingContext) (previousBlock:FountainBlockElement opt
      //yield! parseBlocks ctx (Some(item)) rest
      yield! parseBlocks ctx None rest
 
-//  // Recognize remaining types of blocks/paragraphs
-//  | SceneHeading(body, Lines.TrimBlankStart lines) ->
-//     yield SceneHeading(parseSpans body)
-//     yield! parseBlocks ctx lines
-//  | Section(n, body, Lines.TrimBlankStart lines) ->
-//     yield Section(n, parseSpans body)
-//     yield! parseBlocks ctx lines
-//  | Character(body, Lines.TrimBlankStart lines) ->
-//     yield Character(parseSpans body)
-//     yield! parseBlocks ctx lines
-//  | PageBreak(body, Lines.TrimBlankStart lines) ->
-//     yield PageBreak
-//     yield! parseBlocks ctx lines
-//  | Synopses(body, Lines.TrimBlankStart lines) ->
-//     yield Synopses(parseSpans body)
-//     yield! parseBlocks ctx lines
-//  | Lyric(body, Lines.TrimBlankStart lines) ->
-//     yield Lyric(parseSpans body)
-//     yield! parseBlocks ctx lines
-//  | TakeBlockLines(lines, Lines.TrimBlankStart rest) ->      
-//     yield Block (parseSpans (String.concat ctx.Newline lines))
-//     yield! parseBlocks ctx rest 
 
   | Lines.TrimBlankStart [] -> () 
   | _ -> failwithf "Unexpectedly stopped!\n%A" lines }
