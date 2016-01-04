@@ -281,7 +281,8 @@ let rec parseBlocks (ctx:ParsingContext) lines = seq {
 //  | TakeBlockLines(lines, Lines.TrimBlankStart rest) ->      
 //     let item = Block (parseSpans (String.concat ctx.Newline lines))
 //     yield item
-//     yield! parseBlocks ctx (*(Some(item))*) lines 
+//     yield! parseBlocks ctx (*(Some(item))*) lines
+
   // Recognize remaining types of blocks/paragraphs
   | SceneHeading(body, Lines.TrimBlankStart lines) ->
      yield SceneHeading(parseSpans body)
