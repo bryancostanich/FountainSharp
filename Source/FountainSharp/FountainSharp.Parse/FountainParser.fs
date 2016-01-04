@@ -249,7 +249,8 @@ type ParsingContext =
 /// Parse a list of lines into a sequence of fountain blocks
 // TODO: need to add a LasedParsed type because in fountain, many element definitons 
 // rely on the previous block type. i.e.; Dialogue after Character.
-let rec parseBlocks (ctx:ParsingContext) (previousBlock:FountainBlockElement option) lines = seq {
+// deleted: (previousBlock:FountainBlockElement option)
+let rec parseBlocks (ctx:ParsingContext) lines = seq {
   match lines with
 
   // Recognize remaining types of blocks/paragraphs
@@ -259,49 +260,49 @@ let rec parseBlocks (ctx:ParsingContext) (previousBlock:FountainBlockElement opt
 //     printfn "%A" item
 //     yield item
      //yield! parseBlocks ctx (Some(item)) rest
-     yield! parseBlocks ctx None rest
+     yield! parseBlocks ctx rest
   | Section(n, body, Lines.TrimBlankStart rest) ->
      yield Section(n, parseSpans body)
 //     let item = Section(n, parseSpans body)
 //     printfn "%A" item
 //     yield item
      //yield! parseBlocks ctx (Some(item)) rest
-     yield! parseBlocks ctx None rest
+     yield! parseBlocks ctx rest
   | Character(body, Lines.TrimBlankStart rest) ->
      yield Character(parseSpans body)
 //     let item = Character(parseSpans body)
 //     printfn "%A" item
 //     yield item
      //yield! parseBlocks ctx (Some(item)) rest
-     yield! parseBlocks ctx None rest
+     yield! parseBlocks ctx rest
   | PageBreak(body, Lines.TrimBlankStart rest) ->
      yield PageBreak
 //     let item = PageBreak
 //     printfn "%A" item
 //     yield item
      //yield! parseBlocks ctx (Some(item)) rest
-     yield! parseBlocks ctx None rest
+     yield! parseBlocks ctx rest
   | Synopses(body, Lines.TrimBlankStart rest) ->
      yield Synopses(parseSpans body)
 //     let item = Synopses(parseSpans body)
 //     printfn "%A" item
 //     yield item
      //yield! parseBlocks ctx (Some(item)) rest
-     yield! parseBlocks ctx None rest
+     yield! parseBlocks ctx rest
   | Lyric(body, Lines.TrimBlankStart rest) ->
      yield Lyric(parseSpans body)
 //     let item = Lyric(parseSpans body)
 //     printfn "%A" item
 //     yield item
      //yield! parseBlocks ctx (Some(item)) rest
-     yield! parseBlocks ctx None rest
+     yield! parseBlocks ctx rest
   | TakeBlockLines(lines, Lines.TrimBlankStart rest) ->      
      yield Block (parseSpans (String.concat ctx.Newline rest))
 //     let item = Block (parseSpans (String.concat ctx.Newline rest))
 //     printfn "%A" item
 //     yield item
      //yield! parseBlocks ctx (Some(item)) rest
-     yield! parseBlocks ctx None rest
+     yield! parseBlocks ctx rest
 
 
   | Lines.TrimBlankStart [] -> () 
