@@ -250,61 +250,76 @@ type ParsingContext =
 // TODO: need to add a LasedParsed type because in fountain, many element definitons 
 // rely on the previous block type. i.e.; Dialogue after Character.
 // //let rec parseBlocks (ctx:ParsingContext) (*(previousBlock:FountainBlockElement option)*) lines = seq {
-let rec parseBlocks (ctx:ParsingContext) lines = seq {
-  match lines with
 
-//  // Recognize remaining types of blocks/paragraphs
-//  | SceneHeading(body, Lines.TrimBlankStart lines) ->
-//     let item = SceneHeading(parseSpans body)
-//     yield item
-//     yield! parseBlocks ctx (*(Some(item))*) lines
-//  | Section(n, body, Lines.TrimBlankStart lines) ->
-//     let item = Section(n, parseSpans body)
-//     yield item
-//     yield! parseBlocks ctx (*(Some(item))*) lines
-//  | Character(body, Lines.TrimBlankStart lines) ->
-//     let item = Character(parseSpans body)
-//     yield item
-//     yield! parseBlocks ctx (*(Some(item))*) lines
-//  | PageBreak(body, Lines.TrimBlankStart lines) ->
-//     let item = PageBreak
-//     yield item
-//     yield! parseBlocks ctx (*(Some(item))*) lines
-//  | Synopses(body, Lines.TrimBlankStart lines) ->
-//     let item = Synopses(parseSpans body)
-//     yield item
-//     yield! parseBlocks ctx (*(Some(item))*) lines
-//  | Lyric(body, Lines.TrimBlankStart lines) ->
-//     let item = Lyric(parseSpans body)
-//     yield item
-//     yield! parseBlocks ctx (*(Some(item))*) lines
-//  | TakeBlockLines(lines, Lines.TrimBlankStart rest) ->      
-//     let item = Block (parseSpans (String.concat ctx.Newline lines))
-//     yield item
-//     yield! parseBlocks ctx (*(Some(item))*) lines
+let rec parseBlocks (ctx:ParsingContext) (previousBlock:FountainBlockElement option) lines = seq {
+  match lines with
 
   // Recognize remaining types of blocks/paragraphs
   | SceneHeading(body, Lines.TrimBlankStart lines) ->
-     yield SceneHeading(parseSpans body)
-     yield! parseBlocks ctx lines
+     let item = SceneHeading(parseSpans body)
+     //printfn "%A" item
+     yield item
+     //yield! parseBlocks ctx (Some(item)) lines
+     yield! parseBlocks ctx None lines
   | Section(n, body, Lines.TrimBlankStart lines) ->
-     yield Section(n, parseSpans body)
-     yield! parseBlocks ctx lines
+     let item = Section(n, parseSpans body)
+     //printfn "%A" item
+     yield item
+     //yield! parseBlocks ctx (Some(item)) lines
+     yield! parseBlocks ctx None lines
   | Character(body, Lines.TrimBlankStart lines) ->
-     yield Character(parseSpans body)
-     yield! parseBlocks ctx lines
+     let item = Character(parseSpans body)
+     //printfn "%A" item
+     yield item
+     //yield! parseBlocks ctx (Some(item)) lines
+     yield! parseBlocks ctx None lines
   | PageBreak(body, Lines.TrimBlankStart lines) ->
-     yield PageBreak
-     yield! parseBlocks ctx lines
+     let item = PageBreak
+     //printfn "%A" item
+     yield item
+     //yield! parseBlocks ctx (Some(item)) lines
+     yield! parseBlocks ctx None lines
   | Synopses(body, Lines.TrimBlankStart lines) ->
-     yield Synopses(parseSpans body)
-     yield! parseBlocks ctx lines
+     let item = Synopses(parseSpans body)
+     //printfn "%A" item
+     yield item
+     //yield! parseBlocks ctx (Some(item)) lines
+     yield! parseBlocks ctx None lines
   | Lyric(body, Lines.TrimBlankStart lines) ->
-     yield Lyric(parseSpans body)
-     yield! parseBlocks ctx lines
+     let item = Lyric(parseSpans body)
+     //printfn "%A" item
+     yield item
+     //yield! parseBlocks ctx (Some(item)) lines
+     yield! parseBlocks ctx None lines
   | TakeBlockLines(lines, Lines.TrimBlankStart rest) ->      
-     yield Block (parseSpans (String.concat ctx.Newline lines))
-     yield! parseBlocks ctx rest 
+     let item = Block (parseSpans (String.concat ctx.Newline lines))
+     //printfn "%A" item
+     yield item
+     //yield! parseBlocks ctx (Some(item)) lines
+     yield! parseBlocks ctx None lines
+
+//  // Recognize remaining types of blocks/paragraphs
+//  | SceneHeading(body, Lines.TrimBlankStart lines) ->
+//     yield SceneHeading(parseSpans body)
+//     yield! parseBlocks ctx lines
+//  | Section(n, body, Lines.TrimBlankStart lines) ->
+//     yield Section(n, parseSpans body)
+//     yield! parseBlocks ctx lines
+//  | Character(body, Lines.TrimBlankStart lines) ->
+//     yield Character(parseSpans body)
+//     yield! parseBlocks ctx lines
+//  | PageBreak(body, Lines.TrimBlankStart lines) ->
+//     yield PageBreak
+//     yield! parseBlocks ctx lines
+//  | Synopses(body, Lines.TrimBlankStart lines) ->
+//     yield Synopses(parseSpans body)
+//     yield! parseBlocks ctx lines
+//  | Lyric(body, Lines.TrimBlankStart lines) ->
+//     yield Lyric(parseSpans body)
+//     yield! parseBlocks ctx lines
+//  | TakeBlockLines(lines, Lines.TrimBlankStart rest) ->      
+//     yield Block (parseSpans (String.concat ctx.Newline lines))
+//     yield! parseBlocks ctx rest 
 
   | Lines.TrimBlankStart [] -> () 
   | _ -> failwithf "Unexpectedly stopped!\n%A" lines }
