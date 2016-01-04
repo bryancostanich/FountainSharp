@@ -250,7 +250,8 @@ type ParsingContext =
 // TODO: need to add a LasedParsed type because in fountain, many element definitons 
 // rely on the previous block type. i.e.; Dialogue after Character.
 // deleted: (previousBlock:FountainBlockElement option)
-let rec parseBlocks (ctx:ParsingContext) lines = seq {
+let rec parseBlocks (ctx:ParsingContext) (lines : _ list) = seq {
+  printfn "Match %d lines" lines.Length
   match lines with
 
   // Recognize remaining types of blocks/paragraphs
