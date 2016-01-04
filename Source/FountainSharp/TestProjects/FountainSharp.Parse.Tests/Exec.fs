@@ -70,7 +70,7 @@ type Exec (args) =
 
     "
 
-    Fountain.Parse string7
+    let doc = Fountain.Parse string7
 
 
     exit 1
