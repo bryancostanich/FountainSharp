@@ -31,7 +31,7 @@ type Fountain =
           yield line.Value ]
     let (Lines.TrimBlank lines) = lines
     let ctx : ParsingContext = { Newline = newline }
-    let blocks = lines |> parseBlocks ctx |> List.ofSeq
+    let blocks = lines |> parseBlocks ctx None |> List.ofSeq
     FountainDocument(blocks)
 
   /// Parse the specified text into a MarkdownDocument.

@@ -236,33 +236,47 @@ type ParsingContext =
   }
 
 /// Parse a list of lines into a sequence of fountain blocks
-let rec parseBlocks (ctx:ParsingContext) (lines: _ list) = seq {
+let rec parseBlocks (ctx:ParsingContext) (lastParsedBlock:FountainBlockElement option) (lines: _ list) = seq {
   printfn "Match %d lines" lines.Length
   match lines with
 
   // Recognize remaining types of blocks/paragraphs
   | SceneHeading(body, Lines.TrimBlankStart rest) ->
-     yield SceneHeading(parseSpans body)
-     yield! parseBlocks ctx rest
+     let item = SceneHeading(parseSpans body)
+     printfn "%A" item
+     yield item
+     yield! parseBlocks ctx (Some(item)) rest
   | Section(n, body, Lines.TrimBlankStart rest) ->
-     yield Section(n, parseSpans body)
-     yield! parseBlocks ctx rest
+     let item = Section(n, parseSpans body)
+     printfn "%A" item
+     yield item
+     yield! parseBlocks ctx (Some(item)) rest
   | Character(body, Lines.TrimBlankStart rest) ->
-     yield Character(parseSpans body)
-     yield! parseBlocks ctx rest
+     let item = Character(parseSpans body)
+     printfn "%A" item
+     yield item
+     yield! parseBlocks ctx (Some(item)) rest
   | PageBreak(body, Lines.TrimBlankStart rest) ->
-     yield PageBreak
-     yield! parseBlocks ctx rest
+     let item = PageBreak
+     printfn "%A" item
+     yield item
+     yield! parseBlocks ctx (Some(item)) rest
   | Synopses(body, Lines.TrimBlankStart rest) ->
-     yield Synopses(parseSpans body)
-     yield! parseBlocks ctx rest
+     let item = Synopses(parseSpans body)
+     printfn "%A" item
+     yield item
+     yield! parseBlocks ctx (Some(item)) rest
   | Lyric(body, Lines.TrimBlankStart rest) ->
-     yield Lyric(parseSpans body)
-     yield! parseBlocks ctx rest
+     let item = Lyric(parseSpans body)
+     printfn "%A" item
+     yield item
+     yield! parseBlocks ctx (Some(item)) rest
   // NOTE: pattern here is different
-  | TakeBlockLines(lines, Lines.TrimBlankStart rest) ->      
-     yield Block (parseSpans (String.concat ctx.Newline lines))
-     yield! parseBlocks ctx rest 
+  | TakeBlockLines(lines, Lines.TrimBlankStart rest) -> 
+     let item = Block (parseSpans (String.concat ctx.Newline lines))
+     printfn "%A" item
+     yield item
+     yield! parseBlocks ctx (Some(item)) rest
 
   | Lines.TrimBlankStart [] -> () 
   | _ -> failwithf "Unexpectedly stopped!\n%A" lines }
