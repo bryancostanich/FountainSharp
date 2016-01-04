@@ -155,16 +155,24 @@ let (|SceneHeading|_|) = function
   | rest ->
      None
 
-// CHARACTER
-let (|Character|_|) = function
-  // matches "BOB" or "BOB JOHNSON"
-  | String.IsUppercaseOrWhiteSpace character:string :: rest ->
-     Some(character.Trim(), rest)
-  // TODO: matches "BOB (OS)"
-  // TODO: matches "@McAVOY"
-  | String.StartsWith "@" character:string :: rest ->
-     Some(character.Trim(), rest) 
-  | _ -> None
+// CHARACTER TODO: "BOB (OS)"
+let (|Character|_|) (list:string list) =
+  match list with
+  | [] -> None
+  | head :: rest ->
+    if (head.Length = 0) then 
+      None
+    // matches "@McAVOY"
+    else if (head.StartsWith "@") then
+      Some(head.Trim(), rest)
+    // matches "BOB" or "BOB JOHNSON" or "R2D2" but not "25D2"
+    else if (System.Char.IsUpper (head.[0]) && head |> Seq.forall (fun c -> (System.Char.IsUpper c|| System.Char.IsWhiteSpace c || System.Char.IsNumber c))) then
+      Some(head.Trim(), rest)
+    // matches "BOB (*)"
+    //else if (
+    else
+      None
+
 
 // DIALOG
 
