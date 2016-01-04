@@ -46,8 +46,8 @@
     <Compile Include="StringParsing.fs" />
     <Compile Include="FountainSyntax.fs" />
     <Compile Include="FountainParser.fs" />
-    <None Include="Test_Script.txt" />
     <Compile Include="Fountain.fs" />
+    <None Include="Test_Script.txt" />
     <None Include="FountainWorkingScript.fsx" />
     <None Include="ListTests.fsx" />
     <None Include="FountainSyntaxDefinition.md" />
