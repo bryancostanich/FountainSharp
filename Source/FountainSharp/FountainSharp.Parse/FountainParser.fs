@@ -155,32 +155,35 @@ let (|SceneHeading|_|) = function
   | rest ->
      None
 
-//// CHARACTER TODO: "BOB (OS)"
-//let (|Character|_|) (text:string) =
-//  if (text.Length = 0) then 
-//    None
-//  // matches "@McAVOY"
-//  else if (text.StartsWith "@") then
-//    Some(character.Trim(), rest)
-//  // matches "BOB" or "BOB JOHNSON" or "R2D2" but not "25D2"
-//  else if (System.Char.IsUpper (text.[0]) && text |> Seq.forall (fun c -> (System.Char.IsUpper c|| System.Char.IsWhiteSpace c || System.Char.IsNumber c))) then
-//    Some(character.Trim(), rest)
-//  // matches "BOB (*)"
-//  //else if (
-//  else
-//    None
+// CHARACTER TODO: "BOB (OS)"
+let (|Character|_|) (list:string list) =
+  match list with
+  | [] -> None
+  | head :: rest ->
+    if (head.Length = 0) then 
+      None
+    // matches "@McAVOY"
+    else if (head.StartsWith "@") then
+      Some(head.Trim(), rest)
+    // matches "BOB" or "BOB JOHNSON" or "R2D2" but not "25D2"
+    else if (System.Char.IsUpper (head.[0]) && head |> Seq.forall (fun c -> (System.Char.IsUpper c|| System.Char.IsWhiteSpace c || System.Char.IsNumber c))) then
+      Some(head.Trim(), rest)
+    // matches "BOB (*)"
+    //else if (
+    else
+      None
 
-// CHARACTER
-let (|Character|_|) = function
-  // matches "BOB" or "BOB JOHNSON" or "R2D2"
-  // TODO: will match "23" which is a fail, need to make sure it starts with an uppercase letter
-  | String.IsUppercaseOrWhiteSpaceOrNumber character:string :: rest ->
-     Some(character.Trim(), rest)
-  // TODO: matches "BOB (OS)"
-  // matches "@McAVOY"
-  | String.StartsWith "@" character:string :: rest ->
-     Some(character.Trim(), rest) 
-  | _ -> None
+//// CHARACTER
+//let (|Character|_|) = function
+//  // matches "BOB" or "BOB JOHNSON" or "R2D2"
+//  // TODO: will match "23" which is a fail, need to make sure it starts with an uppercase letter
+//  | String.IsUppercaseOrWhiteSpaceOrNumber character:string :: rest ->
+//     Some(character.Trim(), rest)
+//  // TODO: matches "BOB (OS)"
+//  // matches "@McAVOY"
+//  | String.StartsWith "@" character:string :: rest ->
+//     Some(character.Trim(), rest) 
+//  | _ -> None
 
 // DIALOG
 
@@ -244,6 +247,8 @@ type ParsingContext =
   }
 
 /// Parse a list of lines into a sequence of fountain blocks
+// TODO: need to add a LasedParsed type because in fountain, many element definitons 
+// rely on the previous block type. i.e.; Dialogue after Character.
 let rec parseBlocks (ctx:ParsingContext) lines = seq {
   match lines with
 
