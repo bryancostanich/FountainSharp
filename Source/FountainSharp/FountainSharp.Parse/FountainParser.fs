@@ -249,8 +249,11 @@ type ParsingContext =
 /// Parse a list of lines into a sequence of fountain blocks
 // TODO: need to add a LasedParsed type because in fountain, many element definitons 
 // rely on the previous block type. i.e.; Dialogue after Character.
-let rec parseBlocks (ctx:ParsingContext) lines = seq {
+// //let rec parseBlocks (ctx:ParsingContext) (*(previousBlock:FountainBlockElement option)*) lines = seq {
+ let rec parseBlocks (ctx:ParsingContext) lines = seq {
   match lines with
+
+//  // Recognize remaining types of blocks/paragraphs //  | SceneHeading(body, Lines.TrimBlankStart lines) -> //     let item = SceneHeading(parseSpans body) //     yield item //     yield! parseBlocks ctx (*(Some(item))*) lines //  | Section(n, body, Lines.TrimBlankStart lines) -> //     let item = Section(n, parseSpans body) //     yield item //     yield! parseBlocks ctx (*(Some(item))*) lines //  | Character(body, Lines.TrimBlankStart lines) -> //     let item = Character(parseSpans body) //     yield item //     yield! parseBlocks ctx (*(Some(item))*) lines //  | PageBreak(body, Lines.TrimBlankStart lines) -> //     let item = PageBreak //     yield item //     yield! parseBlocks ctx (*(Some(item))*) lines //  | Synopses(body, Lines.TrimBlankStart lines) -> //     let item = Synopses(parseSpans body) //     yield item //     yield! parseBlocks ctx (*(Some(item))*) lines //  | Lyric(body, Lines.TrimBlankStart lines) -> //     let item = Lyric(parseSpans body) //     yield item //     yield! parseBlocks ctx (*(Some(item))*) lines //  | TakeBlockLines(lines, Lines.TrimBlankStart rest) ->       //     let item = Block (parseSpans (String.concat ctx.Newline lines)) //     yield item //     yield! parseBlocks ctx (*(Some(item))*) lines 
 
   // Recognize remaining types of blocks/paragraphs
   | SceneHeading(body, Lines.TrimBlankStart lines) ->
