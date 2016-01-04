@@ -15,20 +15,17 @@
     <DefineConstants>DEBUG</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <Externalconsole>true</Externalconsole>
-    <PlatformTarget>
-    </PlatformTarget>
+    <PlatformTarget></PlatformTarget>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugSymbols>false</DebugSymbols>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release</OutputPath>
-    <DefineConstants>
-    </DefineConstants>
+    <DefineConstants></DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <Externalconsole>true</Externalconsole>
     <GenerateTailCalls>true</GenerateTailCalls>
-    <PlatformTarget>
-    </PlatformTarget>
+    <PlatformTarget></PlatformTarget>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="mscorlib" />
@@ -49,11 +46,5 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="TestFiles\" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\..\FountainSharp.Parse\FountainSharp.Parse.fsproj">
-      <Project>{5C25E5F6-6E91-4497-9DA0-CC5F6A1083B7}</Project>
-      <Name>FountainSharp.Parse</Name>
-    </ProjectReference>
   </ItemGroup>
 </Project>

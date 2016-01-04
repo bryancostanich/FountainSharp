@@ -4,7 +4,7 @@
 
   * [Scene Heading](#scene-heading) - √
   * [Action](#action) - not supported
-  * [Character](#character) - √ - Missing support for Parenthetical extensions, e.g. "BOB (OS)" or "AMY (on the radio)"
+  * [Character](#character) - not supported
   * [Dialogue](#dialogue) - not supported
   * [Parenthetical](#parenthetical) - not supported
   * [Dual Dialogue](#dual-dialogue) - not supported
@@ -17,7 +17,7 @@
   * [Punctuation](#punctuation) - √
   * [Line Breaks](#line-breaks) - Some Support
   * [Indenting](#indenting) - ?
-  * [Notes](#notes) - √ - No support yet for double-space continuation.
+  * [Notes](#notes) - Some support. No support yet for double-space continuation.
   * [Boneyard/Comments](#boneyard-comments) - not supported
   * [Sections](#sections) - √
   * [Synposes](#synopses) - √

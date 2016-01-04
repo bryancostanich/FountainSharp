@@ -114,9 +114,8 @@ module String =
         else line.Substring(spaces))
 
   /// Given a string, matches if the string is all uppercase (can include white space)
-  // TODO: move this out of here, it's too specialized
-  let (|IsUppercaseOrWhiteSpaceOrNumber|_|) (text:string) =
-    if (text |> Seq.forall (fun c -> (System.Char.IsUpper c|| System.Char.IsWhiteSpace c || System.Char.IsNumber c))) then
+  let (|IsUppercaseOrWhiteSpace|_|) (text:string) =
+    if (text |> Seq.forall (fun c -> (System.Char.IsUpper c|| System.Char.IsWhiteSpace c))) then
       Some(text)
     else
       None
