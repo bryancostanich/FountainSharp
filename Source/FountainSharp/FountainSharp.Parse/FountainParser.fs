@@ -241,24 +241,25 @@ let rec parseBlocks (ctx:ParsingContext) (lines: _ list) = seq {
   match lines with
 
   // Recognize remaining types of blocks/paragraphs
-  | SceneHeading(body, Lines.TrimBlankStart lines) ->
+  | SceneHeading(body, Lines.TrimBlankStart rest) ->
      yield SceneHeading(parseSpans body)
-     yield! parseBlocks ctx lines
-  | Section(n, body, Lines.TrimBlankStart lines) ->
+     yield! parseBlocks ctx rest
+  | Section(n, body, Lines.TrimBlankStart rest) ->
      yield Section(n, parseSpans body)
-     yield! parseBlocks ctx lines
-  | Character(body, Lines.TrimBlankStart lines) ->
+     yield! parseBlocks ctx rest
+  | Character(body, Lines.TrimBlankStart rest) ->
      yield Character(parseSpans body)
-     yield! parseBlocks ctx lines
-  | PageBreak(body, Lines.TrimBlankStart lines) ->
+     yield! parseBlocks ctx rest
+  | PageBreak(body, Lines.TrimBlankStart rest) ->
      yield PageBreak
-     yield! parseBlocks ctx lines
-  | Synopses(body, Lines.TrimBlankStart lines) ->
+     yield! parseBlocks ctx rest
+  | Synopses(body, Lines.TrimBlankStart rest) ->
      yield Synopses(parseSpans body)
-     yield! parseBlocks ctx lines
-  | Lyric(body, Lines.TrimBlankStart lines) ->
+     yield! parseBlocks ctx rest
+  | Lyric(body, Lines.TrimBlankStart rest) ->
      yield Lyric(parseSpans body)
-     yield! parseBlocks ctx lines
+     yield! parseBlocks ctx rest
+  // NOTE: pattern here is different
   | TakeBlockLines(lines, Lines.TrimBlankStart rest) ->      
      yield Block (parseSpans (String.concat ctx.Newline lines))
      yield! parseBlocks ctx rest 
