@@ -155,20 +155,32 @@ let (|SceneHeading|_|) = function
   | rest ->
      None
 
-// CHARACTER TODO: "BOB (OS)"
-let (|Character|_|) (text:string) =
-  if (text.Length = 0) then 
-    None
+//// CHARACTER TODO: "BOB (OS)"
+//let (|Character|_|) (text:string) =
+//  if (text.Length = 0) then 
+//    None
+//  // matches "@McAVOY"
+//  else if (text.StartsWith "@") then
+//    Some(character.Trim(), rest)
+//  // matches "BOB" or "BOB JOHNSON" or "R2D2" but not "25D2"
+//  else if (System.Char.IsUpper (text.[0]) && text |> Seq.forall (fun c -> (System.Char.IsUpper c|| System.Char.IsWhiteSpace c || System.Char.IsNumber c))) then
+//    Some(character.Trim(), rest)
+//  // matches "BOB (*)"
+//  //else if (
+//  else
+//    None
+
+// CHARACTER
+let (|Character|_|) = function
+  // matches "BOB" or "BOB JOHNSON" or "R2D2"
+  // TODO: will match "23" which is a fail, need to make sure it starts with an uppercase letter
+  | String.IsUppercaseOrWhiteSpaceOrNumber character:string :: rest ->
+     Some(character.Trim(), rest)
+  // TODO: matches "BOB (OS)"
   // matches "@McAVOY"
-  else if (text.StartsWith "@") then
-    Some(text)
-  // matches "BOB" or "BOB JOHNSON" or "R2D2" but not "25D2"
-  else if (System.Char.IsUpper (text.[0]) && text |> Seq.forall (fun c -> (System.Char.IsUpper c|| System.Char.IsWhiteSpace c || System.Char.IsNumber c))) then
-    Some(text)
-  // matches "BOB (*)"
-  //else if (
-  else
-    None
+  | String.StartsWith "@" character:string :: rest ->
+     Some(character.Trim(), rest) 
+  | _ -> None
 
 // DIALOG
 
