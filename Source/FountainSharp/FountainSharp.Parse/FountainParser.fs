@@ -253,48 +253,55 @@ let rec parseBlocks (ctx:ParsingContext) (previousBlock:FountainBlockElement opt
   match lines with
 
   // Recognize remaining types of blocks/paragraphs
-  | SceneHeading(body, Lines.TrimBlankStart lines) ->
-     let item = SceneHeading(parseSpans body)
-     printfn "%A" item
-     yield item
-     //yield! parseBlocks ctx (Some(item)) lines
-     yield! parseBlocks ctx None lines
-  | Section(n, body, Lines.TrimBlankStart lines) ->
-     let item = Section(n, parseSpans body)
-     printfn "%A" item
-     yield item
-     //yield! parseBlocks ctx (Some(item)) lines
-     yield! parseBlocks ctx None lines
-  | Character(body, Lines.TrimBlankStart lines) ->
-     let item = Character(parseSpans body)
-     printfn "%A" item
-     yield item
-     //yield! parseBlocks ctx (Some(item)) lines
-     yield! parseBlocks ctx None lines
-  | PageBreak(body, Lines.TrimBlankStart lines) ->
-     let item = PageBreak
-     printfn "%A" item
-     yield item
-     //yield! parseBlocks ctx (Some(item)) lines
-     yield! parseBlocks ctx None lines
-  | Synopses(body, Lines.TrimBlankStart lines) ->
-     let item = Synopses(parseSpans body)
-     printfn "%A" item
-     yield item
-     //yield! parseBlocks ctx (Some(item)) lines
-     yield! parseBlocks ctx None lines
-  | Lyric(body, Lines.TrimBlankStart lines) ->
-     let item = Lyric(parseSpans body)
-     printfn "%A" item
-     yield item
-     //yield! parseBlocks ctx (Some(item)) lines
-     yield! parseBlocks ctx None lines
+  | SceneHeading(body, Lines.TrimBlankStart rest) ->
+     yield SceneHeading(parseSpans body)
+//     item = SceneHeading(parseSpans body)
+//     printfn "%A" item
+//     yield item
+     //yield! parseBlocks ctx (Some(item)) rest
+     yield! parseBlocks ctx None rest
+  | Section(n, body, Lines.TrimBlankStart rest) ->
+     yield Section(n, parseSpans body)
+//     let item = Section(n, parseSpans body)
+//     printfn "%A" item
+//     yield item
+     //yield! parseBlocks ctx (Some(item)) rest
+     yield! parseBlocks ctx None rest
+  | Character(body, Lines.TrimBlankStart rest) ->
+     yield Character(parseSpans body)
+//     let item = Character(parseSpans body)
+//     printfn "%A" item
+//     yield item
+     //yield! parseBlocks ctx (Some(item)) rest
+     yield! parseBlocks ctx None rest
+  | PageBreak(body, Lines.TrimBlankStart rest) ->
+     yield PageBreak
+//     let item = PageBreak
+//     printfn "%A" item
+//     yield item
+     //yield! parseBlocks ctx (Some(item)) rest
+     yield! parseBlocks ctx None rest
+  | Synopses(body, Lines.TrimBlankStart rest) ->
+     yield Synopses(parseSpans body)
+//     let item = Synopses(parseSpans body)
+//     printfn "%A" item
+//     yield item
+     //yield! parseBlocks ctx (Some(item)) rest
+     yield! parseBlocks ctx None rest
+  | Lyric(body, Lines.TrimBlankStart rest) ->
+     yield Lyric(parseSpans body)
+//     let item = Lyric(parseSpans body)
+//     printfn "%A" item
+//     yield item
+     //yield! parseBlocks ctx (Some(item)) rest
+     yield! parseBlocks ctx None rest
   | TakeBlockLines(lines, Lines.TrimBlankStart rest) ->      
-     let item = Block (parseSpans (String.concat ctx.Newline lines))
-     printfn "%A" item
-     yield item
-     //yield! parseBlocks ctx (Some(item)) lines
-     yield! parseBlocks ctx None lines
+     yield Block (parseSpans (String.concat ctx.Newline rest))
+//     let item = Block (parseSpans (String.concat ctx.Newline rest))
+//     printfn "%A" item
+//     yield item
+     //yield! parseBlocks ctx (Some(item)) rest
+     yield! parseBlocks ctx None rest
 
 //  // Recognize remaining types of blocks/paragraphs
 //  | SceneHeading(body, Lines.TrimBlankStart lines) ->
