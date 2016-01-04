@@ -108,22 +108,47 @@ testPageBreak [pageBreakText5]
 
 
 //========
-let (|IsUppercaseOrWhiteSpace|_|) (text:string) =
-  if (text |> Seq.forall (fun c -> (System.Char.IsUpper c|| System.Char.IsWhiteSpace c))) then
+let (|Character|_|) (text:string) =
+  if (text.Length = 0) then 
+    None
+  // matches "@McAVOY"
+  else if (text.StartsWith "@") then
     Some(text)
+  // matches "BOB" or "BOB JOHNSON" or "R2D2" but not "25D2"
+  else if (System.Char.IsUpper (text.[0]) && text |> Seq.forall (fun c -> (System.Char.IsUpper c|| System.Char.IsWhiteSpace c || System.Char.IsNumber c))) then
+    Some(text)
+  // matches "BOB (*)"
+  //else if (
   else
     None
 
-let testIsAllUppercase testString =
+let testIsCharacter testString =
   match testString with
-  | IsUppercaseOrWhiteSpace s ->
+  | Character s ->
     printfn "Yes. it is."
   | _ -> printfn "No. It's not."
       
-let upperCaseTest1 = "This is not all uppercase."
-let upperCaseTest2 = "THIS IS ALL UPPERCASE BUT HAS WHITESPACE"
-let upperCaseTest3 = "UPPER"
+let characterTest1 = "This is not all uppercase." // needs to fail
+let characterTest2 = "THIS IS ALL UPPERCASE BUT HAS WHITESPACE" // needs to succeed
+let characterTest3 = "UPPER" // needs to succeed
+let characterTest4 = "R2D2" // needs to succeed
+let characterTest5 = "25D2" // needs to fail
+let characterTest6 = "@McAvoy" // needs to succeed
 
-testIsAllUppercase upperCaseTest1
-testIsAllUppercase upperCaseTest2
-testIsAllUppercase upperCaseTest3
+
+testIsCharacter characterTest1
+testIsCharacter characterTest2
+testIsCharacter characterTest3
+testIsCharacter characterTest4
+testIsCharacter characterTest5
+testIsCharacter characterTest6
+
+
+
+//let (|SomeSheeit|_|) (text:string) =
+//  match text with
+//  | fun text -> (
+//      if text.Length > 1 then Some(input)
+//    )
+//  | _ -> None
+//
