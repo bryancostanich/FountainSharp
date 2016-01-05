@@ -157,6 +157,7 @@ let (|SceneHeading|_|) = function
 
 // CHARACTER TODO: "BOB (OS)"
 let (|Character|_|) (list:string list) =
+  printfn "testing for character"
   match list with
   | [] -> None
   | head :: rest ->
@@ -173,8 +174,6 @@ let (|Character|_|) (list:string list) =
     else
       None
 
-
-// DIALOG
 
 /// Recognizes a PageBreak (3 or more consecutive equals and nothign more)
 let (|PageBreak|_|) = function
