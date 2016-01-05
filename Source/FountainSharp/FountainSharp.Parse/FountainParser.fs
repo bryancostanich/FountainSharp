@@ -5,7 +5,7 @@
 // Modifications (c) by Bryan Costanich, 2015, 2016
 // --------------------------------------------------------------------------------------
 
-module FountainSharp.Parse.Parser
+module internal FountainSharp.Parse.Parser
 
 open System
 open System.IO
@@ -202,6 +202,15 @@ let (|Lyric|_|) = function
       Some(lyric.Trim(), rest)
   | rest ->
       None
+//
+///// Dialogue
+//let (|Dialogue|_|) (lastParsedBlock:FountainSharp.Parse.FountainBlockElement option) input =
+//  match lastParsedBlock with
+//  | :? FountainSharp.Parse.Character ->
+//     match Input with 
+//     | _ -> None
+//  | _ -> None
+
 
 /// Splits input into lines until whitespace
 let (|LinesUntilListOrWhite|) = 
@@ -236,10 +245,15 @@ type ParsingContext =
   }
 
 /// Parse a list of lines into a sequence of fountain blocks
+/// note, we pass the lastParsedBlock because some blocks are dependent on what came before. dialogue, for 
+/// instance, comes after Character
+/// 
 let rec parseBlocks (ctx:ParsingContext) (lastParsedBlock:FountainBlockElement option) (lines: _ list) = seq {
   printfn "Match %d lines" lines.Length
-  match lines with
 
+
+    
+  match lines with
   // Recognize remaining types of blocks/paragraphs
   | SceneHeading(body, Lines.TrimBlankStart rest) ->
      let item = SceneHeading(parseSpans body)

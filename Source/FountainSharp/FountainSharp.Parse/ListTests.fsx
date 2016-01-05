@@ -2,7 +2,7 @@
 #load "StringParsing.fs"
 
 open FSharp.Collections
-open FSharp.Collections.Array
+//open FSharp.Collections.Array
 open FountainSharp.Parse.Collections
 open FountainSharp.Parse.Patterns
 open FountainSharp.Parse.Patterns.List
@@ -152,3 +152,39 @@ testIsCharacter characterTest6
 //    )
 //  | _ -> None
 //
+//let (|SomeSheeit|_|) =
+//  function text when text.Length > 1 -> Some text | _ -> None
+
+
+#load "FountainSyntax.fs"
+
+
+let (|Dialogue|_|) (lastParsedBlock:FountainSharp.Parse.FountainBlockElement option) input =
+  match lastParsedBlock with
+  | :? FountainSharp.Parse.Character as c ->
+     match Input with 
+     | _ -> None
+  | _ -> None
+
+
+
+
+
+let (|MultipleOf|_|) x input = 
+  if input % x = 0 then 
+    Some(input / x) else 
+  None
+ 
+let factorize x =
+    let rec factorizeRec n i =
+        let sqrt = int (System.Math.Sqrt(float n))
+        if i > sqrt then
+            []
+        else
+            match n with
+            | MultipleOf i timesXdividesIntoI
+                -> i :: timesXdividesIntoI :: (factorizeRec n (i + 1))
+            | _ -> factorizeRec n (i + 1)
+    factorizeRec x 1
+   
+assert ([1; 10; 2; 5] = (factorize 10))
