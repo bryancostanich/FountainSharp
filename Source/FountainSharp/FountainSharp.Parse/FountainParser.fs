@@ -202,14 +202,17 @@ let (|Lyric|_|) = function
       Some(lyric.Trim(), rest)
   | rest ->
       None
-//
-///// Dialogue
-//let (|Dialogue|_|) (lastParsedBlock:FountainSharp.Parse.FountainBlockElement option) input =
-//  match lastParsedBlock with
-//  | :? FountainSharp.Parse.Character ->
-//     match Input with 
-//     | _ -> None
-//  | _ -> None
+
+// Dialogue
+let (|Dialogue|_|) (lastParsedBlock:FountainSharp.Parse.FountainBlockElement option) input =
+  printfn "Testing for Dialogue"
+  match lastParsedBlock with
+  | Some (FountainSharp.Parse.Character(_)) ->
+  //| :? FountainSharp.Parse.Character as c ->
+     printfn "Last item was a Character"
+     match input with 
+     | _ -> None
+  | _ -> None
 
 
 /// Splits input into lines until whitespace
@@ -227,6 +230,7 @@ let (|LinesUntilListOrUnindented|) =
 
 /// Takes lines that belong to a continuing block until 
 /// a white line or start of other block-item is found
+// TODO: there's some real jedi-level clever shit here. learn wth he's actually doing.
 let (|TakeBlockLines|_|) input = 
   match List.partitionWhileLookahead (function
     | Section _ -> false
@@ -285,6 +289,7 @@ let rec parseBlocks (ctx:ParsingContext) (lastParsedBlock:FountainBlockElement o
      printfn "%A" item
      yield item
      yield! parseBlocks ctx (Some(item)) rest
+  
   // NOTE: pattern here is different
   | TakeBlockLines(lines, Lines.TrimBlankStart rest) -> 
      let item = Block (parseSpans (String.concat ctx.Newline lines))

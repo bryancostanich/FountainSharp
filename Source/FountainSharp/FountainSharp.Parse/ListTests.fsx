@@ -161,8 +161,10 @@ testIsCharacter characterTest6
 
 let (|Dialogue|_|) (lastParsedBlock:FountainSharp.Parse.FountainBlockElement option) input =
   match lastParsedBlock with
-  | :? FountainSharp.Parse.Character as c ->
-     match Input with 
+  | Some (FountainSharp.Parse.Character(_)) ->
+  //| :? FountainSharp.Parse.Character as c ->
+     printfn "Last item was a dialogue"
+     match input with 
      | _ -> None
   | _ -> None
 
