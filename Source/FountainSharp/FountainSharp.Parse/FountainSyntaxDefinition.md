@@ -5,8 +5,8 @@
   * [Scene Heading](#scene-heading) - √
   * [Action](#action) - not supported
   * [Character](#character) - √ - Missing support for Parenthetical extensions, e.g. "BOB (OS)" or "AMY (on the radio)"
-  * [Dialogue](#dialogue) - not supported
-  * [Parenthetical](#parenthetical) - not supported
+  * [Dialogue](#dialogue) - √
+  * [Parenthetical](#parenthetical) - √
   * [Dual Dialogue](#dual-dialogue) - not supported
   * [Lyrics](#lyrics) - √
   * [Transition](#transition) - not supported

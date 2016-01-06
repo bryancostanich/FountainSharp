@@ -218,9 +218,24 @@ let (|Lyric|_|) = function
   | rest ->
       None
 
+
+// Parenthetical
+let (|Parenthetical|_|) (lastParsedBlock:FountainSharp.Parse.FountainBlockElement option) (input:string list) =
+  printfn "Testing for Parenthetical"
+  match lastParsedBlock with
+  | Some (FountainSharp.Parse.Character(_)) ->
+     printfn "Last item was a Character"
+     match input with
+     | blockContent :: rest ->
+        if (blockContent.StartsWith "(" && blockContent.EndsWith ")") then
+          Some(blockContent.Trim(), rest)
+        else
+          None
+     | [] -> None
+  | _ -> None
+
 // Dialogue
 let (|Dialogue|_|) (lastParsedBlock:FountainSharp.Parse.FountainBlockElement option) (input:string list) =
-  printfn "Testing for Dialogue"
   match lastParsedBlock with
   | Some (FountainSharp.Parse.Character(_)) ->
      printfn "Last item was a Character"
@@ -271,7 +286,8 @@ type ParsingContext =
 let rec parseBlocks (ctx:ParsingContext) (lastParsedBlock:FountainBlockElement option) (lines: _ list) = seq {
   printfn "Match %d lines" lines.Length
 
-
+  // NOTE: Order of matching is important here. for instance, if you matched dialogue before 
+  // parenthetical, you'd never get parenthetical
     
   match lines with
   // Recognize remaining types of blocks/paragraphs
@@ -306,6 +322,12 @@ let rec parseBlocks (ctx:ParsingContext) (lastParsedBlock:FountainBlockElement o
      yield item
      yield! parseBlocks ctx (Some(item)) rest
   
+  | Parenthetical lastParsedBlock (body, Lines.TrimBlankStart rest) ->
+     let item = Parenthetical(parseSpans body)
+     printfn "%A" item
+     yield item
+     yield! parseBlocks ctx (Some(item)) rest
+
   | Dialogue lastParsedBlock (body, Lines.TrimBlankStart rest) ->
      let item = Dialogue(parseSpans body)
      printfn "%A" item

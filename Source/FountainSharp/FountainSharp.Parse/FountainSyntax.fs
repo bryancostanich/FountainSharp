@@ -24,6 +24,7 @@ type FountainBlockElement =
   | Block of FountainSpans
   | Character of FountainSpans //TODO: maybe just FountainSpanElement? or just string?
   | Dialogue of FountainSpans
+  | Parenthetical of FountainSpans
   | Section of int * FountainSpans
   | Synopses of FountainSpans
   | Span of FountainSpans
