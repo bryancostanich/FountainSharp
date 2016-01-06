@@ -7,6 +7,7 @@
     <OutputType>Exe</OutputType>
     <RootNamespace>FountainSharp.Parse.Tests</RootNamespace>
     <AssemblyName>FountainSharp.Parse.Tests</AssemblyName>
+    <TargetFrameworkVersion>v4.5.1</TargetFrameworkVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -32,12 +33,24 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="mscorlib" />
-    <Reference Include="FSharp.Core" />
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Numerics" />
+    <Reference Include="nunit.framework">
+      <HintPath>..\..\packages\NUnit.2.6.4\lib\nunit.framework.dll</HintPath>
+    </Reference>
+    <Reference Include="FSharp.Core">
+      <HintPath>..\..\packages\FSharp.Core.3.1.2.5\lib\net40\FSharp.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="FsUnit.NUnit">
+      <HintPath>..\..\packages\FsUnit.1.4.1.0\lib\net45\FsUnit.NUnit.dll</HintPath>
+    </Reference>
+    <Reference Include="NHamcrest">
+      <HintPath>..\..\packages\FsUnit.1.4.1.0\lib\net45\NHamcrest.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="FountainTests.fs" />
     <Compile Include="AssemblyInfo.fs" />
     <Compile Include="Resources.fs" />
     <Compile Include="Exec.fs" />
@@ -55,5 +68,8 @@
       <Project>{5C25E5F6-6E91-4497-9DA0-CC5F6A1083B7}</Project>
       <Name>FountainSharp.Parse</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
   </ItemGroup>
 </Project>
