@@ -1,7 +1,7 @@
-﻿#if INTERACTIVE
+﻿//TODO: these aren't right.
+#if INTERACTIVE
 #r "../../bin/FountainSharp.Parse.dll"
 #r "../../packages/NUnit/lib/nunit.framework.dll"
-#load "FsUnit.fs"
 #else
 module FountainSharp.Tests.Parsing
 #endif
