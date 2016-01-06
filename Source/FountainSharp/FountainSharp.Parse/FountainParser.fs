@@ -218,6 +218,16 @@ let (|Lyric|_|) = function
   | rest ->
       None
 
+/// Recognizes centered text (> The End <)
+let (|Centered|_|) = function
+  | String.StartsWith ">" text:string :: rest ->
+     if text.EndsWith "<" then //TODO: i'm sure an F# ninja can find a way to combine this with previous line
+       Some(text.Trim().TrimEnd [|'<'|], rest)
+     else
+       None
+  | rest ->
+      None
+
 
 // Parenthetical
 let (|Parenthetical|_|) (lastParsedBlock:FountainSharp.Parse.FountainBlockElement option) (input:string list) =
@@ -253,7 +263,10 @@ let (|Transition|_|) (lastParsedBlock:FountainSharp.Parse.FountainBlockElement o
      match input with
      | blockContent :: rest ->
        if blockContent.EndsWith "TO:" || blockContent.StartsWith ">" then // TODO: need to check for a hard linebreak after
-         Some(blockContent.Trim(), rest)
+         if blockContent.StartsWith ">" then //TODO: can we combine this with the previous line? F#'ers?
+           Some(blockContent.Trim().Substring(1), rest)
+         else
+           Some(blockContent.Trim(), rest)
        else
          None
      | [] -> None
@@ -332,6 +345,12 @@ let rec parseBlocks (ctx:ParsingContext) (lastParsedBlock:FountainBlockElement o
      yield! parseBlocks ctx (Some(item)) rest
   | Lyric(body, Lines.TrimBlankStart rest) ->
      let item = Lyric(parseSpans body)
+     printfn "%A" item
+     yield item
+     yield! parseBlocks ctx (Some(item)) rest
+
+  | Centered(body, Lines.TrimBlankStart rest) ->
+     let item = Centered(parseSpans body)
      printfn "%A" item
      yield item
      yield! parseBlocks ctx (Some(item)) rest

@@ -32,6 +32,7 @@ type FountainBlockElement =
   | SceneHeading of FountainSpans //TODO: Should this really just be a single span? i mean, you shouldn't be able to style/inline a scene heading, right?
   | PageBreak
   | Transition of FountainSpans
+  | Centered of FountainSpans
 
 /// A type alias for a list of blocks
 and FountainBlocks = list<FountainBlockElement>
