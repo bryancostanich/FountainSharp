@@ -261,6 +261,7 @@ let (|Dialogue|_|) (lastParsedBlock:FountainSharp.Parse.FountainBlockElement opt
 // Transition
 let (|Transition|_|) (lastParsedBlock:FountainSharp.Parse.FountainBlockElement option) (input:string list) =
   match lastParsedBlock with
+  | None //could be the first thing, so handle as if it had something else before it.
   | Some (FountainSharp.Parse.Block(_)) ->
      printfn "Last item was a block "
      match input with
