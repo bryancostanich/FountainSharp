@@ -123,6 +123,12 @@ and formatSpans ctx = List.iter (formatSpan ctx)
 //    |> fun name -> if String.IsNullOrWhiteSpace name then "header" else name
 //    |> ctx.UniqueNameGenerator.GetName
 
+let withInner ctx f =
+  use sb = new StringWriter()
+  let newCtx = { ctx with Writer = sb }
+  f newCtx
+  sb.ToString()
+
 //======== This is where all of our block element HTML tags are defined.
 /// Write a FountainBlockElement value to a TextWriter
 let rec formatBlockElement (ctx:FormattingContext) block =
@@ -187,7 +193,7 @@ and formatBlocks ctx blocks =
 /// Format Markdown document and write the result to 
 /// a specified TextWriter. Parameters specify newline character
 /// and a dictionary with link keys defined in the document.
-let formatMarkdown writer generateAnchors newline wrap links = 
+let formatFountain writer generateAnchors newline wrap links = 
   formatBlocks
     { Writer = writer
       Newline = newline
