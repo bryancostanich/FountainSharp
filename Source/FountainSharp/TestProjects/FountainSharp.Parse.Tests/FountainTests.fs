@@ -12,6 +12,8 @@ open FountainSharp.Parse
 
 let properNewLines (text: string) = text.Replace("\r\n", System.Environment.NewLine)
 
+//===== Block Elements ==============================================================
+
 //===== Scene Headings
 [<Test>]
 let ``Basic Scene Heading`` () =
@@ -219,3 +221,66 @@ let ``Centered`` () =
 //   doc.Blocks
 //   |> should equal [Centered [Literal "The End"]]
 
+
+//===== Span Elements ==============================================================
+
+//===== Emphasis
+
+[<Test>]
+let ``Emphasis - Bold`` () =
+   let doc = "**This is bold Text**" |> Fountain.Parse
+   doc.Blocks
+   |> should equal [Action [Strong [Literal "This is bold Text"]]]
+
+[<Test>]
+let ``Emphasis - Italics`` () =
+   let doc = "*This is italic Text*" |> Fountain.Parse
+   doc.Blocks
+   |> should equal [Action [Italic [Literal "This is italic Text"]]]
+
+[<Test>]
+let ``Emphasis - Bold Italic`` () =
+   let doc = "***This is bold Text***" |> Fountain.Parse
+   doc.Blocks
+   |> should equal [Action [Strong [Italic [Literal "This is bold Text"]]]]
+
+//TODO: i don't even know how to write this test. it fails anyway. (look at next one, for clues)
+[<Test>]
+let ``Emphasis - Nested Bold Italic`` () =
+ let doc = "**This is bold *and Italic Text***" |> Fountain.Parse
+ doc.Blocks
+   |> should equal [Action [Literal "need to figure out how to write the value here."]]
+// |> should equal [Action [Strong [Literal "This is bold "] [Italic [Literal "and Italic Text"]]]]
+
+[<Test>]
+let ``Emphasis - Nested Italic Bold`` () =
+   let doc = "From what seems like only INCHES AWAY.  _Steel's face FILLS the *Leupold Mark 4* scope_." |> Fountain.Parse
+   doc.Blocks
+   |> should equal [Action [Literal "From what seems like only INCHES AWAY.  "; Underline [Literal "Steel's face FILLS the "; Italic [Literal "Leupold Mark 4"]; Literal " scope"]; Literal "."]]
+
+[<Test>]
+let ``Emphasis - with escapes`` () =
+   let doc = "Steel enters the code on the keypad: **\*9765\***" |> Fountain.Parse
+   doc.Blocks
+   |> should equal [Action [Literal "Steel enters the code on the keypad: "; Strong [Literal "*9765*"]]]
+
+[<Test>]
+let ``Emphasis - italics with spaces to left`` () =
+   let doc = "He dialed *69 and then *23, and then hung up." |> Fountain.Parse
+   doc.Blocks
+   |> should equal [Action [Literal "He dialed "; Italic [Literal "69 and then "]; Literal "23, and then hung up."]]
+
+[<Test>]
+let ``Emphasis - italics with spaces to left but escaped`` () =
+   let doc = "He dialed *69 and then 23\*, and then hung up.." |> Fountain.Parse
+   doc.Blocks
+   |> should equal [Action [Literal "He dialed *69 and then 23*, and then hung up.."]]
+
+// TODO: are line breaks being recognized properly here? i think not. i think i need more line break cases
+[<Test>]
+let ``Emphasis - between line breaks`` () =
+   let doc = """As he rattles off the long list, Brick and Steel *share a look.\r\n\
+             \r\n\
+             This is going to be BAD.*""" |> Fountain.Parse
+   doc.Blocks
+   |> should equal [Action [Literal "As he rattles off the long list, Brick and Steel *share a look.\r\n\\"]; Action [Literal "\r\n\\"]; Action [Literal "This is going to be BAD.*"]]
