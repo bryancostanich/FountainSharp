@@ -44,6 +44,8 @@ Oy, vay.
 
 They drink *long* and _well_ from the beers.
 
+CUT TO:
+
 .BINOCULARS A FORCED SCENE HEADING - LATER
 
 # This is a section with level 1

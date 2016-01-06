@@ -245,6 +245,20 @@ let (|Dialogue|_|) (lastParsedBlock:FountainSharp.Parse.FountainBlockElement opt
      | [] -> None
   | _ -> None
 
+// Transition
+let (|Transition|_|) (lastParsedBlock:FountainSharp.Parse.FountainBlockElement option) (input:string list) =
+  match lastParsedBlock with
+  | Some (FountainSharp.Parse.Block(_)) -> //TODO: need to check to see if the block content ends with a HardLineBreak
+     printfn "Last item was a block "
+     match input with
+     | blockContent :: rest ->
+       if blockContent.EndsWith "TO:" || blockContent.StartsWith ">" then // TODO: need to check for a hard linebreak after
+         Some(blockContent.Trim(), rest)
+       else
+         None
+     | [] -> None
+  | _ -> None
+
 
 /// Splits input into lines until whitespace
 let (|LinesUntilListOrWhite|) = 
@@ -318,6 +332,12 @@ let rec parseBlocks (ctx:ParsingContext) (lastParsedBlock:FountainBlockElement o
      yield! parseBlocks ctx (Some(item)) rest
   | Lyric(body, Lines.TrimBlankStart rest) ->
      let item = Lyric(parseSpans body)
+     printfn "%A" item
+     yield item
+     yield! parseBlocks ctx (Some(item)) rest
+
+  | Transition lastParsedBlock (body, Lines.TrimBlankStart rest) ->
+     let item = Transition(parseSpans body)
      printfn "%A" item
      yield item
      yield! parseBlocks ctx (Some(item)) rest
