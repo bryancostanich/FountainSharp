@@ -3,7 +3,7 @@
 # Current Syntax Support Status
 
   * [Scene Heading](#scene-heading) - √
-  * [Action](#action) - not supported
+  * [Action](#action) - √
   * [Character](#character) - √ - Missing support for Parenthetical extensions, e.g. "BOB (OS)" or "AMY (on the radio)"
   * [Dialogue](#dialogue) - √
   * [Parenthetical](#parenthetical) - √

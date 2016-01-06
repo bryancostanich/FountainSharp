@@ -22,6 +22,7 @@ and FountainSpans = list<FountainSpanElement>
 /// Blocks are headings, action blocks, dialogue blocks, etc. 
 type FountainBlockElement = 
   | Block of FountainSpans
+  | Action of FountainSpans
   | Character of FountainSpans //TODO: maybe just FountainSpanElement? or just string?
   | Dialogue of FountainSpans
   | Parenthetical of FountainSpans

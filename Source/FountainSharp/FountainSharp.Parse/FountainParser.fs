@@ -247,11 +247,14 @@ let (|Parenthetical|_|) (lastParsedBlock:FountainSharp.Parse.FountainBlockElemen
 // Dialogue
 let (|Dialogue|_|) (lastParsedBlock:FountainSharp.Parse.FountainBlockElement option) (input:string list) =
   match lastParsedBlock with
-  | Some (FountainSharp.Parse.Character(_)) ->
+  | Some (FountainSharp.Parse.Character(_)) | Some (FountainSharp.Parse.Parenthetical(_)) ->
      printfn "Last item was a Character"
      match input with
      | blockContent :: rest ->
-        Some(blockContent.Trim(), rest)
+        if blockContent.StartsWith "!" then // guard against forced action
+          None
+        else
+          Some(blockContent.Trim(), rest)
      | [] -> None
   | _ -> None
 
@@ -262,15 +265,27 @@ let (|Transition|_|) (lastParsedBlock:FountainSharp.Parse.FountainBlockElement o
      printfn "Last item was a block "
      match input with
      | blockContent :: rest ->
-       if blockContent.EndsWith "TO:" || blockContent.StartsWith ">" then // TODO: need to check for a hard linebreak after
-         if blockContent.StartsWith ">" then //TODO: can we combine this with the previous line? F#'ers?
-           Some(blockContent.Trim().Substring(1), rest)
-         else
-           Some(blockContent.Trim(), rest)
-       else
+        if blockContent.StartsWith "!" then // guard against forced action
+          None
+        elif blockContent.EndsWith "TO:" || blockContent.StartsWith ">" then // TODO: need to check for a hard linebreak after
+          if blockContent.StartsWith ">" then //TODO: can we combine this with the previous line? F#'ers?
+            Some(blockContent.Trim().Substring(1), rest)
+          else
+            Some(blockContent.Trim(), rest)
+        else
          None
      | [] -> None
   | _ -> None
+
+/// Recognizes Action basically anything not the other stuff (or starts with `!`)
+let (|Action|_|) = function
+  // TODO: do i really need this? i really just need to guard against elsewhere, yeah?
+  | String.StartsWith "!" text:string :: rest -> 
+     Some(text.Trim(), rest)
+  | head::tail ->
+     Some(head,tail)
+  | _ ->
+     None
 
 
 /// Splits input into lines until whitespace
@@ -369,6 +384,12 @@ let rec parseBlocks (ctx:ParsingContext) (lastParsedBlock:FountainBlockElement o
 
   | Dialogue lastParsedBlock (body, Lines.TrimBlankStart rest) ->
      let item = Dialogue(parseSpans body)
+     printfn "%A" item
+     yield item
+     yield! parseBlocks ctx (Some(item)) rest
+
+  | Action (body, Lines.TrimBlankStart rest) ->
+     let item = Action(parseSpans body)
      printfn "%A" item
      yield item
      yield! parseBlocks ctx (Some(item)) rest
