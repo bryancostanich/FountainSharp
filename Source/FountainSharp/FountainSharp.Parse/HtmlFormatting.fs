@@ -200,7 +200,7 @@ and formatBlocks ctx blocks =
 /// Format Markdown document and write the result to 
 /// a specified TextWriter. Parameters specify newline character
 /// and a dictionary with link keys defined in the document.
-let formatFountain writer generateAnchors newline wrap links = 
+let formatFountain writer generateAnchors newline wrap = 
   formatBlocks
     { Writer = writer
       Newline = newline

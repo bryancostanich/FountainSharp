@@ -71,6 +71,9 @@ type Exec (args) =
     "
 
     let doc = FountainSharp.Parse.Fountain.Parse string7
+    let html = FountainSharp.Parse.Fountain.WriteHtml doc
+
+    printfn "%A" html
 
 
     exit 1
