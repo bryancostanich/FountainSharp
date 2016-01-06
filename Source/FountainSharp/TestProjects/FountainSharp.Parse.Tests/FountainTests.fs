@@ -222,12 +222,11 @@ let ``Centered - with spaces`` () =
 
 //===== Line Breaks
 
-// TODO: get this to compile
-//[<Test>]
-//let ``Line Breaks`` () =
-//   let doc = """Murtaugh, springing...\n\nAn explosion of sound...\nAs it rises like an avenging angel ...\nHovers, shattering the air \n\nScreaming, chaos, frenzy.\nThree words that apply to this scene.""" |> Fountain.Parse
-//   doc.Blocks
-//   |> should equal [Centered [Literal "The End"]]
+[<Test>]
+let ``Line Breaks`` () =
+   let doc = """Murtaugh, springing...\n\nAn explosion of sound...\nAs it rises like an avenging angel ...\nHovers, shattering the air \n\nScreaming, chaos, frenzy.\nThree words that apply to this scene.""" |> Fountain.Parse
+   doc.Blocks
+   |> should equal [Centered [Literal "The End"]]
 
 //===== Notes
 [<Test>]
