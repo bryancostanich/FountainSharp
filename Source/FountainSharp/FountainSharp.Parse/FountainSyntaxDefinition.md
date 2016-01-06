@@ -281,7 +281,7 @@ Steel enters the code on the keypad: **\*9765\***
 ```
 Believe it or not, that turns into:
 
-> Steel enters the code on the keypad: *9765*
+> Steel enters the code on the keypad: **9765**
 
 As with Markdown, the spaces around the emphasis characters are meaningful. In this example, the asterisks would not trigger italics between them, because both have a space to the left:
 
@@ -377,9 +377,9 @@ you type your apostrophes, quotes, dashes, and dots, that's how they'll wind up 
 
 Unlike some markup languages, Fountain takes every carriage return as intent. This allows the writer to control the spacing between paragraphs in Action elements, as seen in this classic example:
 
+```
 Murtaugh, springing hell bent for leather -- and folks, grab your hats ... because just then, a BELL COBRA HELICOPTER crests the edge of the bluff.
 
-```
 An explosion of sound...
 As it rises like an avenging angel ...
 Hovers, shattering the air with turbo-throb, sandblasting the hillside with a roto-wash of loose dirt, tables, chairs, everything that's not nailed down ...
