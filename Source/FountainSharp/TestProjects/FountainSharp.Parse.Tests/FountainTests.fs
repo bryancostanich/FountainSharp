@@ -126,7 +126,7 @@ let ``Character - with forced at and parenthetical extension`` () =
 //===== Parenthetical
 
 [<Test>]
-let ``Parenthetical`` () =
+let ``Parenthetical `` () =
    let doc = "LINDSEY\r\n(quietly)" |> Fountain.Parse
    doc.Blocks
    |> should equal [Character [Literal "LINDSEY"]; Parenthetical [Literal "(quietly)"]];
@@ -140,12 +140,11 @@ let ``Dialogue - Normal`` () =
    doc.Blocks
    |> should equal [Character [Literal "LINDSEY"]; Dialogue [Literal "Hello, friend."]]
 
-// WTF won't this compile?
-//[<Test>]
-//let ``Dialogue - After Parenthetical`` () =
-//   let doc = "LINDSEY\r\n(quietly)\r\nHello, friend." |> Fountain.Parse
-//   doc.Blocks
-//   |> should equal [Character [Literal "LINDSEY"]; Parenthetical [Literal "(quietly)"]; Dialogue [Literal "Hello, friend."]]
+[<Test>]
+let ``Dialogue - After Parenthetical`` () =
+   let doc = "LINDSEY\r\n(quietly)\r\nHello, friend." |> Fountain.Parse
+   doc.Blocks
+   |> should equal [Character [Literal "LINDSEY"]; Parenthetical [Literal "(quietly)"]; Dialogue [Literal "Hello, friend."]]
 
 
 //===== Page Break
@@ -209,17 +208,17 @@ let ``Transition - forced`` () =
 //===== Centered
 
 [<Test>]
-let ``Centered`` () =
+let ``Centered `` () =
    let doc = ">The End<" |> Fountain.Parse
    doc.Blocks
    |> should equal [Centered [Literal "The End"]]
 
-//// TODO: wtf doesn't this compile either?
-//[<Test>]
-//let ``Centered - with spaces`` () =
-//   let doc = "> The End <" |> Fountain.Parse
-//   doc.Blocks
-//   |> should equal [Centered [Literal "The End"]]
+// TODO: wtf doesn't this compile either?
+[<Test>]
+let ``Centered - with spaces`` () =
+   let doc = "> The End <" |> Fountain.Parse
+   doc.Blocks
+   |> should equal [Centered [Literal "The End"]]
 
 //===== Line Breaks
 
@@ -230,6 +229,23 @@ let ``Centered`` () =
 //   doc.Blocks
 //   |> should equal [Centered [Literal "The End"]]
 
+//===== Notes
+[<Test>]
+let ``Notes - Inline`` () =
+   let doc = "Some text and then a [[bit a of a note]]. And some more text." |> Fountain.Parse
+   doc.Blocks
+   // TODO: figure out the right output here. 
+   |> should equal [Action [Literal "fails anyway, it drops the note right now."]]
+   //|> should equal [Action [Literal "Some text and then a "];[Note [Literal"bit of a note"]]; Literal ". And some more text."]
+
+[<Test>]
+let ``Notes - Block`` () =
+   let doc = "[[It was supposed to be Vietnamese, right?]]" |> Fountain.Parse
+   doc.Blocks
+   |> should equal [Note [Literal "It was supposed to be Vietnamese, right?"]]
+
+//===== Boneyard (Comments)
+//TODO: not implemented yet.
 
 //===== Span Elements ==============================================================
 
@@ -293,4 +309,7 @@ let ``Emphasis - between line breaks`` () =
              This is going to be BAD.*""" |> Fountain.Parse
    doc.Blocks
    |> should equal [Action [Literal @"As he rattles off the long list, Brick and Steel *share a look.\r\n\"]; Action [Literal @"\r\n\"]; Action [Literal "This is going to be BAD.*"]]
-                   
+
+//===== Indenting
+// TODO
+
