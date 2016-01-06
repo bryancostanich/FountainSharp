@@ -70,8 +70,12 @@ type Exec (args) =
 
     "
 
+    // 2 step
     let doc = FountainSharp.Parse.Fountain.Parse string7
     let html = FountainSharp.Parse.Fountain.WriteHtml doc
+
+    // can also do 1 step
+    let html2 = FountainSharp.Parse.Fountain.TransformHtml string7
 
     printfn "%A" html
 
