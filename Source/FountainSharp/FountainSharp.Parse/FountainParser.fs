@@ -131,8 +131,23 @@ let parseSpans (String.TrimBoth s) =
 // Part 2: Block Formatting
 
 /// Recognizes a Section (# Some section, ## another section), prefixed with '#'s
-let (|Section|_|) = function
-  | String.StartsWithRepeated "#" (n, header) :: rest ->
+let (|Section|_|) input = //function
+// conceptually, this is what is happening
+//  let head :: rest = input
+//  match head with
+//  // ## Some Heading or # Some heading
+//  | String.StartsWithRepeated "#" head -> { n, matchedText -> {
+//       Some (n, matchedText.Trim(), rest)
+//      }
+
+// another way to write this:
+//  match input with
+//  | String.StartsWithRepeated "#" s :: rest ->
+//      let (n, header) = s
+//      let header = 
+  match input with
+  | String.StartsWithRepeated "#" (n, header) :: rest -> // step 1: decouple head :: tail. step 2: pass head to startsWith and it returns the n, header
+      //TODO: at some point, re visit the header variable name because we're actually hiding in this next line
       let header = 
         // Drop "##" at the end, but only when it is preceded by some whitespace
         // (For example "## Hello F#" should be "Hello F#")
@@ -176,7 +191,8 @@ let (|Character|_|) (list:string list) =
 
 
 /// Recognizes a PageBreak (3 or more consecutive equals and nothign more)
-let (|PageBreak|_|) = function
+let (|PageBreak|_|) input = //function
+  match input with
   | String.StartsWithRepeated "=" text :: rest ->
     if (fst text) >= 3 then
       match (snd text).Trim() with
@@ -203,14 +219,15 @@ let (|Lyric|_|) = function
       None
 
 // Dialogue
-let (|Dialogue|_|) (lastParsedBlock:FountainSharp.Parse.FountainBlockElement option) input =
+let (|Dialogue|_|) (lastParsedBlock:FountainSharp.Parse.FountainBlockElement option) (input:string list) =
   printfn "Testing for Dialogue"
   match lastParsedBlock with
   | Some (FountainSharp.Parse.Character(_)) ->
-  //| :? FountainSharp.Parse.Character as c ->
      printfn "Last item was a Character"
-     match input with 
-     | _ -> None
+     match input with
+     | blockContent :: rest ->
+        Some(blockContent.Trim(), rest)
+     | [] -> None
   | _ -> None
 
 
@@ -289,6 +306,12 @@ let rec parseBlocks (ctx:ParsingContext) (lastParsedBlock:FountainBlockElement o
      yield item
      yield! parseBlocks ctx (Some(item)) rest
   
+  | Dialogue lastParsedBlock (body, Lines.TrimBlankStart rest) ->
+     let item = Dialogue(parseSpans body)
+     printfn "%A" item
+     yield item
+     yield! parseBlocks ctx (Some(item)) rest
+
   // NOTE: pattern here is different
   | TakeBlockLines(lines, Lines.TrimBlankStart rest) -> 
      let item = Block (parseSpans (String.concat ctx.Newline lines))
