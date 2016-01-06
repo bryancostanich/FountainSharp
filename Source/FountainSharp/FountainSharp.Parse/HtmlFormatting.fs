@@ -138,17 +138,17 @@ let rec formatBlockElement (ctx:FormattingContext) block =
 //        formatSpans ctx spans
       formatSpans ctx spans
       ctx.Writer.Write("</h" + string n + ">")
-  | Synopses (spans)
+  | Synopses (spans) ->
       ctx.Writer.Write("""<div style="color:#6cf;">""")
       for span in spans do 
         formatSpan ctx span
       ctx.Writer.Write("</div>")
-  | Lyric (spans)
+  | Lyric (spans) ->
       ctx.Writer.Write("""<div style="color:#333"><em>""")
       for span in spans do 
         formatSpan ctx span
       ctx.Writer.Write("</em></div>")
-  | Transition spans
+  | Transition spans ->
       ctx.Writer.Write("""<div style="text-align:right;">""")
       for span in spans do 
         formatSpan ctx span
