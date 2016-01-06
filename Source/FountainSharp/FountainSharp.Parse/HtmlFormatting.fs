@@ -144,6 +144,13 @@ let rec formatBlockElement (ctx:FormattingContext) block =
 //        formatSpans ctx spans
       formatSpans ctx spans
       ctx.Writer.Write("</h" + string n + ">")
+  | SceneHeading (spans) ->
+      ctx.Writer.Write("<div>")
+      for span in spans do 
+        formatSpan ctx span
+      ctx.Writer.Write("</div>")
+  | PageBreak ->
+      ctx.Writer.Write("<hr>")
   | Synopses (spans) ->
       ctx.Writer.Write("""<div style="color:#6cf;">""")
       for span in spans do 
@@ -188,7 +195,7 @@ and formatBlocks ctx blocks =
   let smallCtx = { ctx with LineBreak = smallBreak ctx }
   let bigCtx = { ctx with LineBreak = bigBreak ctx }
   for last, block in blocks |> Seq.mapi (fun i v -> (i = length - 1), v) do
-    formatBlocks (if last then smallCtx else bigCtx) block
+    formatBlockElement (if last then smallCtx else bigCtx) block
 
 /// Format Markdown document and write the result to 
 /// a specified TextWriter. Parameters specify newline character
