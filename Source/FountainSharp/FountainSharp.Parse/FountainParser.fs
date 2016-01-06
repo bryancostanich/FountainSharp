@@ -261,7 +261,7 @@ let (|Dialogue|_|) (lastParsedBlock:FountainSharp.Parse.FountainBlockElement opt
 // Transition
 let (|Transition|_|) (lastParsedBlock:FountainSharp.Parse.FountainBlockElement option) (input:string list) =
   match lastParsedBlock with
-  | Some (FountainSharp.Parse.Block(_)) -> //TODO: need to check to see if the block content ends with a HardLineBreak
+  | Some (FountainSharp.Parse.Block(_)) ->
      printfn "Last item was a block "
      match input with
      | blockContent :: rest ->

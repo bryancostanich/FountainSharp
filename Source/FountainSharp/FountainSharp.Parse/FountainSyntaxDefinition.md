@@ -9,7 +9,7 @@
   * [Parenthetical](#parenthetical) - √
   * [Dual Dialogue](#dual-dialogue) - not supported
   * [Lyrics](#lyrics) - √
-  * [Transition](#transition) - √ - Needs a little refinement to look for hardlinebreaks before and after.
+  * [Transition](#transition) - √
   * [Centered Text](#centered-text) - √
   * [Emphasis](#emphasis) - √
   * [Title Page](#title-page) - not supported
