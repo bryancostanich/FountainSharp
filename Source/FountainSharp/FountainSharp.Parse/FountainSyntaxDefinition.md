@@ -15,7 +15,7 @@
   * [Title Page](#title-page) - not supported
   * [Page Breaks](#page-breaks) - √
   * [Punctuation](#punctuation) - √
-  * [Line Breaks](#line-breaks) - √ - Mostly, I think.
+  * [Line Breaks](#line-breaks) - not yet.
   * [Indenting](#indenting) - ?
   * [Notes](#notes) - √ - No support yet for double-space continuation.
   * [Boneyard/Comments](#boneyard-comments) - not supported

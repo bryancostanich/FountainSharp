@@ -221,6 +221,15 @@ let ``Centered`` () =
 //   doc.Blocks
 //   |> should equal [Centered [Literal "The End"]]
 
+//===== Line Breaks
+
+// TODO: get this to compile
+//[<Test>]
+//let ``Line Breaks`` () =
+//   let doc = """Murtaugh, springing...\n\nAn explosion of sound...\nAs it rises like an avenging angel ...\nHovers, shattering the air \n\nScreaming, chaos, frenzy.\nThree words that apply to this scene.""" |> Fountain.Parse
+//   doc.Blocks
+//   |> should equal [Centered [Literal "The End"]]
+
 
 //===== Span Elements ==============================================================
 
@@ -283,4 +292,5 @@ let ``Emphasis - between line breaks`` () =
              \r\n\
              This is going to be BAD.*""" |> Fountain.Parse
    doc.Blocks
-   |> should equal [Action [Literal "As he rattles off the long list, Brick and Steel *share a look.\r\n\\"]; Action [Literal "\r\n\\"]; Action [Literal "This is going to be BAD.*"]]
+   |> should equal [Action [Literal @"As he rattles off the long list, Brick and Steel *share a look.\r\n\"]; Action [Literal @"\r\n\"]; Action [Literal "This is going to be BAD.*"]]
+                   
