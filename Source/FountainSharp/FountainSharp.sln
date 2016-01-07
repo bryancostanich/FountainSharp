@@ -7,6 +7,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "TestProjects", "TestProject
 EndProject
 Project("{f2a71f9b-5d33-465a-a702-920d77279786}") = "FountainSharp.Parse.Tests", "TestProjects\FountainSharp.Parse.Tests\FountainSharp.Parse.Tests.fsproj", "{53A87A1F-1756-43C3-BF8A-BB1696439DC7}"
 EndProject
+Project("{f2a71f9b-5d33-465a-a702-920d77279786}") = "FountainSharp.Editor", "TestProjects\FountainSharp.Parse.Tests\FountainSharp.Editor\FountainSharp.Editor.fsproj", "{A6A1F82E-0C4E-40A4-98A4-38C4B260D4B1}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,8 +23,13 @@ Global
 		{5C25E5F6-6E91-4497-9DA0-CC5F6A1083B7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5C25E5F6-6E91-4497-9DA0-CC5F6A1083B7}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5C25E5F6-6E91-4497-9DA0-CC5F6A1083B7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A6A1F82E-0C4E-40A4-98A4-38C4B260D4B1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A6A1F82E-0C4E-40A4-98A4-38C4B260D4B1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A6A1F82E-0C4E-40A4-98A4-38C4B260D4B1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A6A1F82E-0C4E-40A4-98A4-38C4B260D4B1}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{53A87A1F-1756-43C3-BF8A-BB1696439DC7} = {C794F080-C598-47E4-A1BF-FD8A051F5EB8}
+		{A6A1F82E-0C4E-40A4-98A4-38C4B260D4B1} = {C794F080-C598-47E4-A1BF-FD8A051F5EB8}
 	EndGlobalSection
 EndGlobal
