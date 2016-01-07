@@ -36,7 +36,7 @@ namespace FountainSharp.Editor
 
 			}
 
-			this.MainTextView.TextDidChange += async (object sender, EventArgs e) => {
+			this.MainTextView.TextDidChange += (object sender, EventArgs e) => {
 				this.UpdateHtml();
 			};
 
