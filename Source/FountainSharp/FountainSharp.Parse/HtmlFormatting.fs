@@ -166,15 +166,6 @@ let rec formatBlockElement (ctx:FormattingContext) block =
       for span in spans do 
         formatSpan ctx span
       ctx.Writer.Write("</div>")
-  | Action spans
-  | Block(spans) ->
-      ctx.ParagraphIndent()
-      ctx.Writer.Write("<p>")
-      for span in spans do 
-        formatSpan ctx span
-      ctx.Writer.Write("</p>")
-  | Span spans -> 
-      formatSpans ctx spans
   | Character spans
   | Dialogue spans
   | Centered spans ->
@@ -187,6 +178,15 @@ let rec formatBlockElement (ctx:FormattingContext) block =
       for span in spans do 
         formatSpan ctx span
       ctx.Writer.Write(")</div>")
+  | Action spans
+  | Span spans -> 
+      formatSpans ctx spans
+  | Block(spans) ->
+      ctx.ParagraphIndent()
+      ctx.Writer.Write("<p>")
+      for span in spans do 
+        formatSpan ctx span
+      ctx.Writer.Write("</p>")
   ctx.LineBreak()
 
 /// Write a list of MarkdownParagraph values to a TextWriter

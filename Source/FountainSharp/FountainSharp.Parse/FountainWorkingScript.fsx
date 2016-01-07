@@ -2,6 +2,7 @@
 #load "StringParsing.fs"
 #load "FountainSyntax.fs"
 #load "FountainParser.fs"
+#load "HtmlFormatting.fs"
 #load "Fountain.fs"
 
 open System

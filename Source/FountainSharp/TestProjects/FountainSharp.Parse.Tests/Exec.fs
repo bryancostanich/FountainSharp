@@ -25,57 +25,57 @@ type Exec (args) =
     let string6 = "pretty sure this will fail *some italic text **with some bold** in the middle*"
     let string7 = @"EXT. BRICK'S PATIO - DAY
 
-    = Here is a synopses of this fascinating scene.
+= Here is a synopses of this fascinating scene.
 
-    A gorgeous day.  The sun is shining.  But BRICK BRADDOCK, retired police detective, is sitting quietly, contemplating -- something.
+A gorgeous day.  The sun is shining.  But BRICK BRADDOCK, retired police detective, is sitting quietly, contemplating -- something.
 
-    The SCREEN DOOR slides open and DICK STEEL, his former partner and fellow retiree, emerges with two cold beers.
+The SCREEN DOOR slides open and DICK STEEL, his former partner and fellow retiree, emerges with two cold beers.
 
-    STEEL
-    Does a bear crap in the woods?
+STEEL
+Does a bear crap in the woods?
 
-    Steel sits.  They laugh at the dumb joke.
+Steel sits.  They laugh at the dumb joke.
 
-    [[Some notes about the scene]]
+[[Some notes about the scene]]
 
-    STEEL
-    (beer raised)
-    To retirement.
+STEEL
+(beer raised)
+To retirement.
 
-    BRICK
-    To retirement.
+BRICK
+To retirement.
 
-    @McAVOY
-    Oy, vay.
+@McAVOY
+Oy, vay.
 
-    They drink *long* and _well_ from the beers.
+They drink *long* and _well_ from the beers.
 
-    .BINOCULARS A FORCED SCENE HEADING - LATER
+.BINOCULARS A FORCED SCENE HEADING - LATER
 
-    # This is a section with level 1
-    ## This is a section with level 2
+# This is a section with level 1
+## This is a section with level 2
 
-    And then there's a long beat.  
-    Longer than is funny.  
-    Long enough to be depressing.
+And then there's a long beat.  
+Longer than is funny.  
+Long enough to be depressing.
 
-    ~Some Lyrics
-    ~Some more lyrics
+~Some Lyrics
+~Some more lyrics
 
-    Here comes a page break!
+Here comes a page break!
 
-    ===
+===
 
-    > ACT II <
+> ACT II <
 
     "
 
     // 2 step
-    let doc = FountainSharp.Parse.Fountain.Parse string7
-    let html = FountainSharp.Parse.Fountain.WriteHtml doc
+    let doc = Fountain.Parse string7
+    let html = Fountain.WriteHtml doc
 
-    // can also do 1 step
-    let html2 = FountainSharp.Parse.Fountain.TransformHtml string7
+//    // can also do 1 step
+//    let html2 = FountainSharp.Parse.Fountain.TransformHtml string7
 
     printfn "%A" html
 
