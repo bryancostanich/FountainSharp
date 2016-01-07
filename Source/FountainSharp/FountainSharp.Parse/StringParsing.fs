@@ -106,7 +106,11 @@ module String =
     let spaces =
       lines 
       |> Seq.filter (String.IsNullOrWhiteSpace >> not)
+#if _MOBILEPCL_
+      |> Seq.map (fun line -> line.ToCharArray() |> Seq.takeWhile Char.IsWhiteSpace |> Seq.length)
+#else
       |> Seq.map (fun line -> line |> Seq.takeWhile Char.IsWhiteSpace |> Seq.length)
+#endif
       |> fun xs -> if Seq.isEmpty xs then 0 else Seq.min xs
     lines 
     |> Seq.map (fun line -> 
@@ -115,7 +119,11 @@ module String =
 
   /// Given a string, matches if the string is all uppercase (can include white space)
   let (|IsUppercaseOrWhiteSpace|_|) (text:string) =
+#if _MOBILEPCL_
+    if (text.ToCharArray() |> Seq.forall (fun c -> (System.Char.IsUpper c|| System.Char.IsWhiteSpace c))) then
+#else
     if (text |> Seq.forall (fun c -> (System.Char.IsUpper c|| System.Char.IsWhiteSpace c))) then
+#endif
       Some(text)
     else
       None
@@ -198,7 +206,11 @@ let (|ParseCommands|_|) (str:string) =
         if kv.Length = 2 then yield kv.[0].Trim(), kv.[1].Trim()
         elif kv.Length = 1 then yield kv.[0].Trim(), "" ] 
   let allKeysValid = 
+#if _MOBILEPCL_
+    kvs |> Seq.forall (fst >> fun s -> s.ToCharArray() >> Seq.forall (fun c -> Char.IsLetter c || c = '_' || c = '-'))
+#else
     kvs |> Seq.forall (fst >> Seq.forall (fun c -> Char.IsLetter c || c = '_' || c = '-'))
+#endif
   if allKeysValid && kvs <> [] then Some(dict kvs) else None
 
 /// Utility for parsing commands - this deals with a single command.
@@ -206,7 +218,11 @@ let (|ParseCommands|_|) (str:string) =
 /// characters in it - otherwise, the parsing fails.
 let (|ParseCommand|_|) (cmd:string) = 
   let kv = cmd.Split([| '='; ':' |])
+#if _MOBILEPCL_
   if kv.Length >= 1 && not (Seq.forall Char.IsLetter kv.[0]) then None
+#else
+  if kv.Length >= 1 && not (Seq.forall Char.IsLetter kv.[0]) then None
+#endif
   elif kv.Length = 2 then Some(kv.[0].Trim(), kv.[1].Trim())
   elif kv.Length = 1 then Some(kv.[0].Trim(), "")
   else None

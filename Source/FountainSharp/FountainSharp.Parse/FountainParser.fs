@@ -172,7 +172,6 @@ let (|SceneHeading|_|) = function
 
 // CHARACTER TODO: "BOB (OS)"
 let (|Character|_|) (list:string list) =
-  printfn "testing for character"
   match list with
   | [] -> None
   | head :: rest ->
@@ -182,7 +181,11 @@ let (|Character|_|) (list:string list) =
     else if (head.StartsWith "@") then
       Some(head.Trim(), rest)
     // matches "BOB" or "BOB JOHNSON" or "R2D2" but not "25D2"
+#if _MOBILEPCL_
+    else if (System.Char.IsUpper (head.[0]) && head.ToCharArray() |> Seq.forall (fun c -> (System.Char.IsUpper c|| System.Char.IsWhiteSpace c || System.Char.IsNumber c))) then
+#else
     else if (System.Char.IsUpper (head.[0]) && head |> Seq.forall (fun c -> (System.Char.IsUpper c|| System.Char.IsWhiteSpace c || System.Char.IsNumber c))) then
+#endif
       Some(head.Trim(), rest)
     // matches "BOB (*)"
     //else if (
@@ -231,10 +234,8 @@ let (|Centered|_|) = function
 
 // Parenthetical
 let (|Parenthetical|_|) (lastParsedBlock:FountainSharp.Parse.FountainBlockElement option) (input:string list) =
-  printfn "Testing for Parenthetical"
   match lastParsedBlock with
   | Some (FountainSharp.Parse.Character(_)) ->
-     printfn "Last item was a Character"
      match input with
      | blockContent :: rest ->
         if (blockContent.StartsWith "(" && blockContent.EndsWith ")") then
@@ -248,7 +249,6 @@ let (|Parenthetical|_|) (lastParsedBlock:FountainSharp.Parse.FountainBlockElemen
 let (|Dialogue|_|) (lastParsedBlock:FountainSharp.Parse.FountainBlockElement option) (input:string list) =
   match lastParsedBlock with
   | Some (FountainSharp.Parse.Character(_)) | Some (FountainSharp.Parse.Parenthetical(_)) ->
-     printfn "Last item was a Character"
      match input with
      | blockContent :: rest ->
         if blockContent.StartsWith "!" then // guard against forced action
@@ -263,7 +263,6 @@ let (|Transition|_|) (lastParsedBlock:FountainSharp.Parse.FountainBlockElement o
   match lastParsedBlock with
   | None //could be the first thing, so handle as if it had something else before it.
   | Some (FountainSharp.Parse.Block(_)) ->
-     printfn "Last item was a block "
      match input with
      | blockContent :: rest ->
         if blockContent.StartsWith "!" then // guard against forced action
@@ -327,7 +326,6 @@ type ParsingContext =
 /// instance, comes after Character
 /// 
 let rec parseBlocks (ctx:ParsingContext) (lastParsedBlock:FountainBlockElement option) (lines: _ list) = seq {
-  printfn "Match %d lines" lines.Length
 
   // NOTE: Order of matching is important here. for instance, if you matched dialogue before 
   // parenthetical, you'd never get parenthetical
@@ -336,69 +334,57 @@ let rec parseBlocks (ctx:ParsingContext) (lastParsedBlock:FountainBlockElement o
   // Recognize remaining types of blocks/paragraphs
   | SceneHeading(body, Lines.TrimBlankStart rest) ->
      let item = SceneHeading(parseSpans body)
-     printfn "%A" item
      yield item
      yield! parseBlocks ctx (Some(item)) rest
   | Section(n, body, Lines.TrimBlankStart rest) ->
      let item = Section(n, parseSpans body)
-     printfn "%A" item
      yield item
      yield! parseBlocks ctx (Some(item)) rest
   | Character(body, Lines.TrimBlankStart rest) ->
      let item = Character(parseSpans body)
-     printfn "%A" item
      yield item
      yield! parseBlocks ctx (Some(item)) rest
   | PageBreak(body, Lines.TrimBlankStart rest) ->
      let item = PageBreak
-     printfn "%A" item
      yield item
      yield! parseBlocks ctx (Some(item)) rest
   | Synopses(body, Lines.TrimBlankStart rest) ->
      let item = Synopses(parseSpans body)
-     printfn "%A" item
      yield item
      yield! parseBlocks ctx (Some(item)) rest
   | Lyric(body, Lines.TrimBlankStart rest) ->
      let item = Lyric(parseSpans body)
-     printfn "%A" item
      yield item
      yield! parseBlocks ctx (Some(item)) rest
 
   | Centered(body, Lines.TrimBlankStart rest) ->
      let item = Centered(parseSpans body)
-     printfn "%A" item
      yield item
      yield! parseBlocks ctx (Some(item)) rest
 
   | Transition lastParsedBlock (body, Lines.TrimBlankStart rest) ->
      let item = Transition(parseSpans body)
-     printfn "%A" item
      yield item
      yield! parseBlocks ctx (Some(item)) rest
   
   | Parenthetical lastParsedBlock (body, Lines.TrimBlankStart rest) ->
      let item = Parenthetical(parseSpans body)
-     printfn "%A" item
      yield item
      yield! parseBlocks ctx (Some(item)) rest
 
   | Dialogue lastParsedBlock (body, Lines.TrimBlankStart rest) ->
      let item = Dialogue(parseSpans body)
-     printfn "%A" item
      yield item
      yield! parseBlocks ctx (Some(item)) rest
 
   | Action (body, Lines.TrimBlankStart rest) ->
      let item = Action(parseSpans body)
-     printfn "%A" item
      yield item
      yield! parseBlocks ctx (Some(item)) rest
 
   // NOTE: pattern here is different
   | TakeBlockLines(lines, Lines.TrimBlankStart rest) -> 
      let item = Block (parseSpans (String.concat ctx.Newline lines))
-     printfn "%A" item
      yield item
      yield! parseBlocks ctx (Some(item)) rest
 
