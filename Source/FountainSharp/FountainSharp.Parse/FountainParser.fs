@@ -79,7 +79,8 @@ let (|Note|_|) = function
 let rec parseChars acc input = seq {
 
   // Zero or one literals, depending whether there is some accumulated input
-  let accLiterals = Lazy.Create(fun () ->
+  // 2015.01.07 Bryan Costanich - change Lazy.Create to Lazy<char []> because of some ambiguation err when building as a PCL
+  let accLiterals = Lazy<char []>.Create(fun () ->
     if List.isEmpty acc then [] 
     else [Literal(String(List.rev acc |> Array.ofList))] )
 
