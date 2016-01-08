@@ -207,7 +207,7 @@ let (|ParseCommands|_|) (str:string) =
         elif kv.Length = 1 then yield kv.[0].Trim(), "" ] 
   let allKeysValid = 
 #if _MOBILEPCL_
-    kvs |> Seq.forall (fst >> fun s -> s.ToCharArray() >> Seq.forall (fun c -> Char.IsLetter c || c = '_' || c = '-'))
+    kvs |> Seq.forall (fst >> fun (coll:string) -> (coll.ToCharArray()) |> Seq.forall (fun c -> System.Char.IsLetter c || c = '_' || c = '-') )
 #else
     kvs |> Seq.forall (fst >> Seq.forall (fun c -> Char.IsLetter c || c = '_' || c = '-'))
 #endif
@@ -219,7 +219,7 @@ let (|ParseCommands|_|) (str:string) =
 let (|ParseCommand|_|) (cmd:string) = 
   let kv = cmd.Split([| '='; ':' |])
 #if _MOBILEPCL_
-  if kv.Length >= 1 && not (Seq.forall Char.IsLetter kv.[0]) then None
+  if kv.Length >= 1 && not (Seq.forall Char.IsLetter (kv.[0].ToCharArray())) then None
 #else
   if kv.Length >= 1 && not (Seq.forall Char.IsLetter kv.[0]) then None
 #endif
