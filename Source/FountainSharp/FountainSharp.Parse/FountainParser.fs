@@ -180,7 +180,7 @@ let (|Character|_|) (list:string list) =
       None
     // matches "@McAVOY"
     else if (head.StartsWith "@") then
-      Some(head.Trim(), rest)
+      Some(head.Trim().Substring(1), rest)
     // matches "BOB" or "BOB JOHNSON" or "R2D2" but not "25D2"
 #if _MOBILEPCL_
     else if (System.Char.IsUpper (head.[0]) && head.ToCharArray() |> Seq.forall (fun c -> (System.Char.IsUpper c|| System.Char.IsWhiteSpace c || System.Char.IsNumber c))) then
@@ -231,7 +231,6 @@ let (|Centered|_|) = function
        None
   | rest ->
       None
-
 
 // Parenthetical
 let (|Parenthetical|_|) (lastParsedBlock:FountainSharp.Parse.FountainBlockElement option) (input:string list) =
