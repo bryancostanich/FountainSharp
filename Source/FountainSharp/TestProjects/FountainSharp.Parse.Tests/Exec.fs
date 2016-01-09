@@ -72,6 +72,7 @@ Here comes a page break!
 
     // 2 step
     let doc = Fountain.Parse string7
+    printfn "%A" doc
     let html = Fountain.WriteHtml doc
 
 //    // can also do 1 step

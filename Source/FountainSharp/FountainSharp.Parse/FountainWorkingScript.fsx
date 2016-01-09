@@ -67,4 +67,7 @@ Here comes a page break!
 
 "
 
-Fountain.Parse string7
+let doc = Fountain.Parse string7
+let html = Fountain.WriteHtml doc
+
+printfn "%A" html

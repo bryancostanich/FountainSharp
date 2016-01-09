@@ -84,14 +84,27 @@ let rec parseChars acc input = seq {
     if List.isEmpty acc then [] 
     else [Literal(String(List.rev acc |> Array.ofList))] )
 
+    // so, by the time it gets here, the \r\n seems to have been stripped off.
   match input with 
 
+  // TODO: will need this for dialogue hard line breaks
+  //// Recognizes explicit line-break at the end of line
+  //| ' '::' '::('\n' | '\r')::rest
+  //| ' '::' '::'\r'::'\n'::rest ->
+  //    yield! accLiterals.Value
+  //    yield HardLineBreak
+  //    yield! parseChars [] rest
+
+  // markdown requires two spaces and then \r or \n, but fountain 
+  // recognizes without
   // Recognizes explicit line-break at the end of line
-  | ' '::' '::('\n' | '\r')::rest
-  | ' '::' '::'\r'::'\n'::rest ->
-      yield! accLiterals.Value
-      yield HardLineBreak
-      yield! parseChars [] rest
+  | ('\n' | '\r')::rest
+  | '\r'::'\n'::rest ->
+    System.Diagnostics.Debug.WriteLine("found a hardlinebreak")
+    yield! accLiterals.Value
+    yield HardLineBreak
+    yield! parseChars [] rest
+
 
   // Encode & as an HTML entity
   | '&'::'a'::'m'::'p'::';'::rest 
@@ -124,8 +137,12 @@ let rec parseChars acc input = seq {
   | [] ->
       yield! accLiterals.Value }
 
-/// Parse body of a block into a list of Markdown inline spans      
+/// Parse body of a block into a list of Markdown inline spans
+// trimming off \r\n?
+//let parseSpans (s) = 
 let parseSpans (String.TrimBoth s) = 
+  System.Diagnostics.Debug.WriteLine(s);
+  // why List.ofArray |> List.ofSeq?
   parseChars [] (s.ToCharArray() |> List.ofArray) |> List.ofSeq
 
 //======================================================================================
@@ -161,6 +178,7 @@ let (|Section|_|) input = //function
   | rest ->
       None
 
+// TODO: Scene heading should also look for a line break before and after. 
 /// Recognizes a SceneHeading (prefixed with INT/EXT, etc. or a single period)
 let (|SceneHeading|_|) = function
   // TODO: Make this StartsWithAnyCaseInsensitive
@@ -245,6 +263,26 @@ let (|Parenthetical|_|) (lastParsedBlock:FountainSharp.Parse.FountainBlockElemen
      | [] -> None
   | _ -> None
 
+//==== DIALOGUE
+
+//let (|IsLineBreak|_|) (input:string list) =
+//  match input with
+//  | 
+//  | _ -> None
+
+
+//// get all the dialogue lines (either line break or two spaces plus line break
+//let (|TakeDialogueLines|_|) (input:string list) =
+//  match List.partitionWhileLookahead(function
+//    | "  ":: rest ->
+//      match rest with 
+//      | "\r\n" :: moreRest
+//      | ("\n"|"\r") :: moreRest ->
+//        true // trim out something here? // also, how do i pass back a hardlinebreak, too?
+//      ) ->
+//        Some 
+//    | _ -> None)
+ 
 // Dialogue
 let (|Dialogue|_|) (lastParsedBlock:FountainSharp.Parse.FountainBlockElement option) (input:string list) =
   match lastParsedBlock with
@@ -258,11 +296,15 @@ let (|Dialogue|_|) (lastParsedBlock:FountainSharp.Parse.FountainBlockElement opt
      | [] -> None
   | _ -> None
 
+//==== /DIALOGUE
+
+
 // Transition
 let (|Transition|_|) (lastParsedBlock:FountainSharp.Parse.FountainBlockElement option) (input:string list) =
   match lastParsedBlock with
   | None //could be the first thing, so handle as if it had something else before it.
-  | Some (FountainSharp.Parse.Block(_)) ->
+  | Some (FountainSharp.Parse.Transition(_)) ->
+  //| Some (FountainSharp.Parse.Block(_)) ->
      match input with
      | blockContent :: rest ->
         if blockContent.StartsWith "!" then // guard against forced action
@@ -277,39 +319,53 @@ let (|Transition|_|) (lastParsedBlock:FountainSharp.Parse.FountainBlockElement o
      | [] -> None
   | _ -> None
 
+//==== ACTION
+
+let (|Action|_|) input =
+  // look ahead and keep matching while it's none of these.
+  match List.partitionWhileLookahead (function
+    | SceneHeading _ -> false //note: it's decomposing the match and the rest and discarding the rest: `SceneHeading _` 
+    | Character _ -> false
+    | Lyric _ -> false
+    //| Transition _ -> false
+    | Centered _ -> false
+    | Section _ -> false
+    //| Comments _ -> false
+    //| Title _ -> false
+    | Synopses _ -> false
+    | PageBreak _ -> false
+    | _ -> true) input with // if we found a match,a nd it's not empty, return the Action and the rest
+      | matching, rest when matching <> [] ->
+         Some(matching, rest)
+      | _ -> None
+
+
 /// Recognizes Action basically anything not the other stuff (or starts with `!`)
-let (|Action|_|) = function
-  // TODO: do i really need this? i really just need to guard against elsewhere, yeah?
-  | String.StartsWith "!" text:string :: rest -> 
-     Some(text.Trim(), rest)
-  | head::tail ->
-     Some(head,tail)
-  | _ ->
-     None
+//let (|Action|_|) = function
+//  // TODO: do i really need this? i really just need to guard against elsewhere, yeah?
+//  | String.StartsWith "!" text:string :: rest -> 
+//     //Some(text.Trim(), rest)
+//     Some(text, rest)
+//  | head::tail ->
+//     Some(head,tail)
+//  | _ ->
+//     None
+
+//==== /ACTION
 
 
-/// Splits input into lines until whitespace
-let (|LinesUntilListOrWhite|) = 
-  List.partitionUntil (function
-    | String.WhiteSpace -> true 
-    | _ -> false
-  )
 
-/// Splits input into lines until not-indented line and the rest.
-let (|LinesUntilListOrUnindented|) =
-  List.partitionUntilLookahead (function 
-    | String.Unindented::_ 
-    | String.WhiteSpace::String.WhiteSpace::_ -> true | _ -> false)
-
-/// Takes lines that belong to a continuing block until 
+/// Takes lines that belong to a continuing block until //TODO: What's a continuing block??
 /// a white line or start of other block-item is found
+// TODO: could this be used for say, like a dialogue block that spans multiple lines?
 // TODO: there's some real jedi-level clever shit here. learn wth he's actually doing.
+// TODO: i debugged this, and it was only hit once, and the input had a length of zero.
 let (|TakeBlockLines|_|) input = 
   match List.partitionWhileLookahead (function
-    | Section _ -> false
+    | Section _ -> false // why specifically check for section?
     | String.WhiteSpace::_ -> false
     | _ -> true) input with
-  | matching, rest when matching <> [] -> Some(matching, rest)
+  | matching, rest when matching <> [] -> Some(matching, rest) // if matching isn't empty?
   | _ -> None
 
 /// Defines a context for the main `parseBlocks` function
@@ -329,64 +385,88 @@ let rec parseBlocks (ctx:ParsingContext) (lastParsedBlock:FountainBlockElement o
 
   // NOTE: Order of matching is important here. for instance, if you matched dialogue before 
   // parenthetical, you'd never get parenthetical
-    
+
+  let foo =
+    match lines with 
+     | (line::rest) ->
+       match line with
+       | "" -> "Empty line"
+       | _ -> ""
+     | _ -> ""
+
+  if foo = "Empty line" then
+    System.Diagnostics.Debug.WriteLine("empty line")
+
   match lines with
+  //TODO: some of these US should be trimmed, and some not, yeah? like for instance
+  // maybe SceneHeading, Section, etc. 
+
   // Recognize remaining types of blocks/paragraphs
-  | SceneHeading(body, Lines.TrimBlankStart rest) ->
+  | SceneHeading(body, (*Lines.TrimBlankStart*) rest) ->
      let item = SceneHeading(parseSpans body)
      yield item
      yield! parseBlocks ctx (Some(item)) rest
-  | Section(n, body, Lines.TrimBlankStart rest) ->
+  | Section(n, body, (*Lines.TrimBlankStart*) rest) ->
      let item = Section(n, parseSpans body)
      yield item
      yield! parseBlocks ctx (Some(item)) rest
-  | Character(body, Lines.TrimBlankStart rest) ->
+  | Character(body, (*Lines.TrimBlankStart*) rest) ->
      let item = Character(parseSpans body)
      yield item
      yield! parseBlocks ctx (Some(item)) rest
-  | PageBreak(body, Lines.TrimBlankStart rest) ->
+
+  | PageBreak(body, (*Lines.TrimBlankStart*) rest) ->
      let item = PageBreak
      yield item
      yield! parseBlocks ctx (Some(item)) rest
-  | Synopses(body, Lines.TrimBlankStart rest) ->
+  | Synopses(body, (*Lines.TrimBlankStart*) rest) ->
      let item = Synopses(parseSpans body)
      yield item
      yield! parseBlocks ctx (Some(item)) rest
-  | Lyric(body, Lines.TrimBlankStart rest) ->
+  | Lyric(body, (*Lines.TrimBlankStart*) rest) ->
      let item = Lyric(parseSpans body)
      yield item
      yield! parseBlocks ctx (Some(item)) rest
 
-  | Centered(body, Lines.TrimBlankStart rest) ->
+  | Centered(body, (*Lines.TrimBlankStart*) rest) ->
      let item = Centered(parseSpans body)
      yield item
      yield! parseBlocks ctx (Some(item)) rest
 
-  | Transition lastParsedBlock (body, Lines.TrimBlankStart rest) ->
+  | Transition lastParsedBlock (body, (*Lines.TrimBlankStart*) rest) ->
      let item = Transition(parseSpans body)
      yield item
      yield! parseBlocks ctx (Some(item)) rest
   
-  | Parenthetical lastParsedBlock (body, Lines.TrimBlankStart rest) ->
+  | Parenthetical lastParsedBlock (body, (*Lines.TrimBlankStart*) rest) ->
      let item = Parenthetical(parseSpans body)
      yield item
      yield! parseBlocks ctx (Some(item)) rest
 
-  | Dialogue lastParsedBlock (body, Lines.TrimBlankStart rest) ->
+  | Dialogue lastParsedBlock (body, (*Lines.TrimBlankStart*) rest) ->
      let item = Dialogue(parseSpans body)
      yield item
      yield! parseBlocks ctx (Some(item)) rest
 
-  | Action (body, Lines.TrimBlankStart rest) ->
-     let item = Action(parseSpans body)
+  //// NOTE: pattern here is different. also, it never seems to get hit.
+  //| TakeBlockLines(lines, (*Lines.TrimBlankStart*) rest) ->
+  //   System.Diagnostics.Debug.WriteLine ("TakeBlockLines is match")
+  //   let item = Block (parseSpans (String.concat ctx.Newline lines))
+  //   yield item
+  //   yield! parseBlocks ctx (Some(item)) rest
+
+  | Action(bodyLines, (*Lines.TrimBlankStart*) rest) ->
+     System.Diagnostics.Debug.WriteLine ("Action is match")
+     let item = Action(parseSpans (String.concat ctx.Newline bodyLines))
      yield item
      yield! parseBlocks ctx (Some(item)) rest
 
-  // NOTE: pattern here is different
-  | TakeBlockLines(lines, Lines.TrimBlankStart rest) -> 
-     let item = Block (parseSpans (String.concat ctx.Newline lines))
-     yield item
-     yield! parseBlocks ctx (Some(item)) rest
+  //| Action (body, (*Lines.TrimBlankStart*) rest) ->
+  //   let item = Action(parseSpans body)
+  //   yield item
+  //   yield! parseBlocks ctx (Some(item)) rest
 
-  | Lines.TrimBlankStart [] -> () 
+  | Lines.TrimBlankStart [] -> 
+    System.Diagnostics.Debug.WriteLine("Trimming blank line. ")
+    () 
   | _ -> failwithf "Unexpectedly stopped!\n%A" lines }

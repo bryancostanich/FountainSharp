@@ -21,7 +21,7 @@ and FountainSpans = list<FountainSpanElement>
 /// A block represents a (possibly) multi-line element of a fountain document.
 /// Blocks are headings, action blocks, dialogue blocks, etc. 
 type FountainBlockElement = 
-  | Block of FountainSpans
+  //| Block of FountainSpans
   | Action of FountainSpans
   | Character of FountainSpans //TODO: maybe just FountainSpanElement? or just string?
   | Dialogue of FountainSpans

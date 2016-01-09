@@ -226,7 +226,8 @@ let ``Centered - with spaces`` () =
 let ``Line Breaks`` () =
    let doc = """Murtaugh, springing...\n\nAn explosion of sound...\nAs it rises like an avenging angel ...\nHovers, shattering the air \n\nScreaming, chaos, frenzy.\nThree words that apply to this scene.""" |> Fountain.Parse
    doc.Blocks
-   |> should equal [Centered [Literal "The End"]]
+   |> should equal [Action [Literal "Murtaugh, springing...\n\nAn explosion of sound...\nAs it rises like an avenging angel ...\nHovers, shattering the air \n\nScreaming, chaos, frenzy.\nThree words that apply to this scene."]]
+
 
 //===== Notes
 [<Test>]
