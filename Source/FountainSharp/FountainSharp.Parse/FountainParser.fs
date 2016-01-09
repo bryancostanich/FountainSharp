@@ -298,26 +298,41 @@ let (|Dialogue|_|) (lastParsedBlock:FountainSharp.Parse.FountainBlockElement opt
 
 //==== /DIALOGUE
 
-
 // Transition
-let (|Transition|_|) (lastParsedBlock:FountainSharp.Parse.FountainBlockElement option) (input:string list) =
-  match lastParsedBlock with
-  | None //could be the first thing, so handle as if it had something else before it.
-  | Some (FountainSharp.Parse.Transition(_)) ->
-  //| Some (FountainSharp.Parse.Block(_)) ->
-     match input with
-     | blockContent :: rest ->
-        if blockContent.StartsWith "!" then // guard against forced action
-          None
-        elif blockContent.EndsWith "TO:" || blockContent.StartsWith ">" then // TODO: need to check for a hard linebreak after
-          if blockContent.StartsWith ">" then //TODO: can we combine this with the previous line? F#'ers?
-            Some(blockContent.Trim().Substring(1), rest)
-          else
-            Some(blockContent.Trim(), rest)
+let (|Transition|_|) (input:string list) =
+   match input with
+   | blockContent :: rest ->
+      if blockContent.StartsWith "!" then // guard against forced action
+        None
+      elif blockContent.EndsWith "TO:" || blockContent.StartsWith ">" then // TODO: need to check for a hard linebreak after
+        if blockContent.StartsWith ">" then //TODO: can we combine this with the previous line? F#'ers?
+          Some(blockContent.Trim().Substring(1), rest)
         else
-         None
-     | [] -> None
-  | _ -> None
+          Some(blockContent.Trim(), rest)
+      else
+       None
+   | [] -> None
+
+
+//// Transition
+//let (|Transition|_|) (lastParsedBlock:FountainSharp.Parse.FountainBlockElement option) (input:string list) =
+//  match lastParsedBlock with
+//  | None //could be the first thing, so handle as if it had something else before it.
+//  | Some (FountainSharp.Parse.Transition(_)) ->
+//  //| Some (FountainSharp.Parse.Block(_)) ->
+//     match input with
+//     | blockContent :: rest ->
+//        if blockContent.StartsWith "!" then // guard against forced action
+//          None
+//        elif blockContent.EndsWith "TO:" || blockContent.StartsWith ">" then // TODO: need to check for a hard linebreak after
+//          if blockContent.StartsWith ">" then //TODO: can we combine this with the previous line? F#'ers?
+//            Some(blockContent.Trim().Substring(1), rest)
+//          else
+//            Some(blockContent.Trim(), rest)
+//        else
+//         None
+//     | [] -> None
+//  | _ -> None
 
 //==== ACTION
 
@@ -327,7 +342,7 @@ let (|Action|_|) input =
     | SceneHeading _ -> false //note: it's decomposing the match and the rest and discarding the rest: `SceneHeading _` 
     | Character _ -> false
     | Lyric _ -> false
-    //| Transition _ -> false
+    | Transition _ -> false // ugh. need to pass the last parsed block.
     | Centered _ -> false
     | Section _ -> false
     //| Comments _ -> false
@@ -433,7 +448,7 @@ let rec parseBlocks (ctx:ParsingContext) (lastParsedBlock:FountainBlockElement o
      yield item
      yield! parseBlocks ctx (Some(item)) rest
 
-  | Transition lastParsedBlock (body, (*Lines.TrimBlankStart*) rest) ->
+  | Transition(body, (*Lines.TrimBlankStart*) rest) ->
      let item = Transition(parseSpans body)
      yield item
      yield! parseBlocks ctx (Some(item)) rest
