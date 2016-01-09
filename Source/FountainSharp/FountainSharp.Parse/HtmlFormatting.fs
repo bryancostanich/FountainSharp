@@ -145,10 +145,10 @@ let rec formatBlockElement (ctx:FormattingContext) block =
       formatSpans ctx spans
       ctx.Writer.Write("</h" + string n + ">")
   | SceneHeading (spans) ->
-      ctx.Writer.Write("<div>")
+      ctx.Writer.Write("<div><strong>")
       for span in spans do 
         formatSpan ctx span
-      ctx.Writer.Write("</div>")
+      ctx.Writer.Write("</strong></div>")
   | PageBreak ->
       ctx.Writer.Write("<hr>")
   | Synopses (spans) ->
@@ -162,11 +162,15 @@ let rec formatBlockElement (ctx:FormattingContext) block =
         formatSpan ctx span
       ctx.Writer.Write("</em></div>")
   | Transition spans ->
-      ctx.Writer.Write("""<div style="text-align:right;">""")
+      ctx.Writer.Write("""<div style="text-align:right;"><strong>""")
+      for span in spans do 
+        formatSpan ctx span
+      ctx.Writer.Write("</strong><br/></div>")
+  | Character spans ->
+      ctx.Writer.Write("""<div style="text-align:center;"><br/>""")
       for span in spans do 
         formatSpan ctx span
       ctx.Writer.Write("</div>")
-  | Character spans
   | Dialogue spans
   | Centered spans ->
       ctx.Writer.Write("""<div style="text-align:center;">""")
@@ -191,6 +195,7 @@ let rec formatBlockElement (ctx:FormattingContext) block =
 
 /// Write a list of MarkdownParagraph values to a TextWriter
 and formatBlocks ctx blocks = 
+  ctx.Writer.Write("""<style>body{font-family:"Courier Prime","Courier New",Courier,monospace;}"</style>""")
   let length = List.length blocks
   let smallCtx = { ctx with LineBreak = smallBreak ctx }
   let bigCtx = { ctx with LineBreak = bigBreak ctx }
