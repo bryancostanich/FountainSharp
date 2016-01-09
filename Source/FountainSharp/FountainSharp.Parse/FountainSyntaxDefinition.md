@@ -2,6 +2,8 @@
 
 # Current Syntax Support Status
 
+## Block Elements
+
   * [Scene Heading](#scene-heading) - √
   * [Action](#action) - √
   * [Character](#character) - √ - Missing support for Parenthetical extensions, e.g. "BOB (OS)" or "AMY (on the radio)"
@@ -11,16 +13,20 @@
   * [Lyrics](#lyrics) - √
   * [Transition](#transition) - √
   * [Centered Text](#centered-text) - √
-  * [Emphasis](#emphasis) - √
+  * [Sections](#sections) - √
+  * [Synposes](#synopses) - √
+  * [Boneyard/Comments](#boneyard-comments) - not supported
   * [Title Page](#title-page) - not supported
+
+## Span Elements
+  * [Emphasis](#emphasis) - √
   * [Page Breaks](#page-breaks) - √
+  * [Notes](#notes) - √ - No support yet for double-space continuation.
+
+## Other Rules
   * [Punctuation](#punctuation) - √
   * [Line Breaks](#line-breaks) - not yet.
   * [Indenting](#indenting) - ?
-  * [Notes](#notes) - √ - No support yet for double-space continuation.
-  * [Boneyard/Comments](#boneyard-comments) - not supported
-  * [Sections](#sections) - √
-  * [Synposes](#synopses) - √
 
 
 # Scene Heading
