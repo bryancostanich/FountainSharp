@@ -25,7 +25,7 @@
 
 ## Other Rules
   * [Punctuation](#punctuation) - √
-  * [Line Breaks](#line-breaks) - not yet.
+  * [Line Breaks](#line-breaks) - ~√; Actions - yes. Dialogue - No.
   * [Indenting](#indenting) - ?
 
 
