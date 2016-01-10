@@ -84,7 +84,6 @@ let rec parseChars acc input = seq {
     if List.isEmpty acc then [] 
     else [Literal(String(List.rev acc |> Array.ofList))] )
 
-    // so, by the time it gets here, the \r\n seems to have been stripped off.
   match input with 
 
   // TODO: will need this for dialogue hard line breaks
@@ -313,27 +312,6 @@ let (|Transition|_|) (input:string list) =
        None
    | [] -> None
 
-
-//// Transition
-//let (|Transition|_|) (lastParsedBlock:FountainSharp.Parse.FountainBlockElement option) (input:string list) =
-//  match lastParsedBlock with
-//  | None //could be the first thing, so handle as if it had something else before it.
-//  | Some (FountainSharp.Parse.Transition(_)) ->
-//  //| Some (FountainSharp.Parse.Block(_)) ->
-//     match input with
-//     | blockContent :: rest ->
-//        if blockContent.StartsWith "!" then // guard against forced action
-//          None
-//        elif blockContent.EndsWith "TO:" || blockContent.StartsWith ">" then // TODO: need to check for a hard linebreak after
-//          if blockContent.StartsWith ">" then //TODO: can we combine this with the previous line? F#'ers?
-//            Some(blockContent.Trim().Substring(1), rest)
-//          else
-//            Some(blockContent.Trim(), rest)
-//        else
-//         None
-//     | [] -> None
-//  | _ -> None
-
 //==== ACTION
 
 let (|Action|_|) input =
@@ -354,7 +332,6 @@ let (|Action|_|) input =
          Some(matching, rest)
       | _ -> None
 
-
 /// Recognizes Action basically anything not the other stuff (or starts with `!`)
 //let (|Action|_|) = function
 //  // TODO: do i really need this? i really just need to guard against elsewhere, yeah?
@@ -368,20 +345,6 @@ let (|Action|_|) input =
 
 //==== /ACTION
 
-
-
-/// Takes lines that belong to a continuing block until //TODO: What's a continuing block??
-/// a white line or start of other block-item is found
-// TODO: could this be used for say, like a dialogue block that spans multiple lines?
-// TODO: there's some real jedi-level clever shit here. learn wth he's actually doing.
-// TODO: i debugged this, and it was only hit once, and the input had a length of zero.
-let (|TakeBlockLines|_|) input = 
-  match List.partitionWhileLookahead (function
-    | Section _ -> false // why specifically check for section?
-    | String.WhiteSpace::_ -> false
-    | _ -> true) input with
-  | matching, rest when matching <> [] -> Some(matching, rest) // if matching isn't empty?
-  | _ -> None
 
 /// Defines a context for the main `parseBlocks` function
 // TODO: Question: what is the Links part supposed to represent? Answer: for some reason he was creating a 
@@ -463,23 +426,10 @@ let rec parseBlocks (ctx:ParsingContext) (lastParsedBlock:FountainBlockElement o
      yield item
      yield! parseBlocks ctx (Some(item)) rest
 
-  //// NOTE: pattern here is different. also, it never seems to get hit.
-  //| TakeBlockLines(lines, (*Lines.TrimBlankStart*) rest) ->
-  //   System.Diagnostics.Debug.WriteLine ("TakeBlockLines is match")
-  //   let item = Block (parseSpans (String.concat ctx.Newline lines))
-  //   yield item
-  //   yield! parseBlocks ctx (Some(item)) rest
-
   | Action(bodyLines, (*Lines.TrimBlankStart*) rest) ->
-     System.Diagnostics.Debug.WriteLine ("Action is match")
-     let item = Action(parseSpans (String.concat ctx.Newline bodyLines))
+     let item = Action(parseSpans (String.concat ctx.Newline bodyLines)) //get back multiple lines, so we concatenate them
      yield item
      yield! parseBlocks ctx (Some(item)) rest
-
-  //| Action (body, (*Lines.TrimBlankStart*) rest) ->
-  //   let item = Action(parseSpans body)
-  //   yield item
-  //   yield! parseBlocks ctx (Some(item)) rest
 
   | Lines.TrimBlankStart [] -> 
     System.Diagnostics.Debug.WriteLine("Trimming blank line. ")
