@@ -252,7 +252,9 @@ let (|Centered|_|) = function
 // Parenthetical
 let (|Parenthetical|_|) (lastParsedBlock:FountainSharp.Parse.FountainBlockElement option) (input:string list) =
   match lastParsedBlock with
-  | Some (FountainSharp.Parse.Character(_)) ->
+  // parenthetical can come after character OR dialogue
+  | Some (FountainSharp.Parse.Character(_)) 
+  | Some (FountainSharp.Parse.Dialogue(_)) ->
      match input with
      | blockContent :: rest ->
         if (blockContent.Trim().StartsWith "(" && blockContent.EndsWith ")") then
@@ -285,7 +287,8 @@ let (|Parenthetical|_|) (lastParsedBlock:FountainSharp.Parse.FountainBlockElemen
 // Dialogue
 let (|Dialogue|_|) (lastParsedBlock:FountainSharp.Parse.FountainBlockElement option) (input:string list) =
   match lastParsedBlock with
-  | Some (FountainSharp.Parse.Character(_)) | Some (FountainSharp.Parse.Parenthetical(_)) ->
+  | Some (FountainSharp.Parse.Character(_)) 
+  | Some (FountainSharp.Parse.Parenthetical(_)) ->
      match input with
      | blockContent :: rest ->
         if blockContent.StartsWith "!" then // guard against forced action

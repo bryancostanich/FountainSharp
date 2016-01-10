@@ -131,6 +131,12 @@ let ``Parenthetical `` () =
    doc.Blocks
    |> should equal [Character [Literal "LINDSEY"]; Parenthetical [Literal "quietly"]];
 
+[<Test>]
+let ``Parenthetical - After Dialogue`` () =
+   let doc = "LINDSEY\r\n(quietly)\r\nHello, friend.\r\n(loudly)\r\nFriendo!" |> Fountain.Parse
+   doc.Blocks
+   |> should equal [Character [Literal "LINDSEY"]; Parenthetical [Literal "quietly"]; Dialogue [Literal "Hello, friend."]; Parenthetical [Literal "loudly"]; Dialogue [Literal "Friendo!"]];
+
 
 //===== Dialogue
 
