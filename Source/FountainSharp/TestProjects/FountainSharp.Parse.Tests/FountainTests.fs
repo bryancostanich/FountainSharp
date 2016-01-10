@@ -129,7 +129,7 @@ let ``Character - with forced at and parenthetical extension`` () =
 let ``Parenthetical `` () =
    let doc = "LINDSEY\r\n(quietly)" |> Fountain.Parse
    doc.Blocks
-   |> should equal [Character [Literal "LINDSEY"]; Parenthetical [Literal "(quietly)"]];
+   |> should equal [Character [Literal "LINDSEY"]; Parenthetical [Literal "quietly"]];
 
 
 //===== Dialogue
@@ -144,7 +144,7 @@ let ``Dialogue - Normal`` () =
 let ``Dialogue - After Parenthetical`` () =
    let doc = "LINDSEY\r\n(quietly)\r\nHello, friend." |> Fountain.Parse
    doc.Blocks
-   |> should equal [Character [Literal "LINDSEY"]; Parenthetical [Literal "(quietly)"]; Dialogue [Literal "Hello, friend."]]
+   |> should equal [Character [Literal "LINDSEY"]; Parenthetical [Literal "quietly"]; Dialogue [Literal "Hello, friend."]]
 
 
 //===== Page Break

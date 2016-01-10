@@ -255,8 +255,8 @@ let (|Parenthetical|_|) (lastParsedBlock:FountainSharp.Parse.FountainBlockElemen
   | Some (FountainSharp.Parse.Character(_)) ->
      match input with
      | blockContent :: rest ->
-        if (blockContent.StartsWith "(" && blockContent.EndsWith ")") then
-          Some(blockContent.Trim(), rest)
+        if (blockContent.Trim().StartsWith "(" && blockContent.EndsWith ")") then
+          Some(blockContent.Trim().TrimStart([|'('|]).TrimEnd([|')'|]), rest)
         else
           None
      | [] -> None
