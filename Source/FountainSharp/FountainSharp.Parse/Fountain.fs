@@ -39,6 +39,13 @@ type Fountain =
   static member Parse(text) =
     Fountain.Parse(text, Environment.NewLine)
 
+  // Parses a single line. Used for optimization when working with a large doc from an editor.
+  static member ParseLine(text:string, newline, (lastBlock:FountainBlockElement option)) =
+    let ctx : ParsingContext = { Newline = Environment.NewLine }
+    let line = text::[]
+    let blocks = line |> parseBlocks ctx lastBlock |> List.ofSeq
+    FountainDocument(blocks)
+
   /// Transform Fountain document into HTML format. The result
   /// will be written to the provided TextWriter.
   static member TransformHtml(text, writer:TextWriter, newline) = 
