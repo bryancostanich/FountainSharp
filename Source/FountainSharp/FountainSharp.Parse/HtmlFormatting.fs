@@ -95,8 +95,8 @@ let rec formatSpan (ctx:FormattingContext) = function
       ctx.Writer.Write("</span>")
 
 /// Write list of MarkdownSpan values to a TextWriter
-and formatSpans ctx = 
-  List.iter (formatSpan ctx)
+and formatSpans ctx list = 
+  List.iter (formatSpan ctx) list
 
 // Generates anchor names. Can bring this back in when needed.
 ///// generate anchor name from Markdown text
