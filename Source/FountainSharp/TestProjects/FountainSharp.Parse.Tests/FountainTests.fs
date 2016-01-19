@@ -73,21 +73,21 @@ let ``Known I/E Scene Head`` () =
 let ``Scene Heading with line breaks and action`` () =
    let doc = "EXT. BRICK'S PATIO - DAY\r\n\r\nSome Action" |> Fountain.Parse
    doc.Blocks
-   |> should equal [SceneHeading [Literal "EXT. BRICK'S PATIO - DAY"]; Action [HardLineBreak; HardLineBreak; Literal "Some Action"]]
+   |> should equal  [SceneHeading [Literal "EXT. BRICK'S PATIO - DAY"]; Action [HardLineBreak; Literal "Some Action"]]
 
 
 [<Test>]
 let ``Scene Heading with more line breaks and action`` () =
    let doc = "EXT. BRICK'S PATIO - DAY\r\n\r\n\r\nSome Action" |> Fountain.Parse
    doc.Blocks
-   |> should equal [SceneHeading [Literal "EXT. BRICK'S PATIO - DAY"]; Action [HardLineBreak; HardLineBreak; HardLineBreak; Literal "Some Action"]]
+   |> should equal  [SceneHeading [Literal "EXT. BRICK'S PATIO - DAY"]; Action [HardLineBreak; HardLineBreak; Literal "Some Action"]]
 
-////===== Action
-//let ``Action with line breaks`` () =
-//   let doc = """Natalie looks around at the group, TIM, ROGER, NATE, and VEEK. They look around, a nod here, a quick nod there.\r\n
-//   \r\nTIM (50ish - looks like a returning commando who found the spiritual wonder of hallucinogens), is smiling broadly.""" |> Fountain.Parse
-//   doc.Blocks
-//   |> should equal [SceneHeading [Literal "EXT. BRICK'S PATIO - DAY"]; Action [HardLineBreak; HardLineBreak; Literal "Some Action"]]
+//===== Action
+[<Test>]
+let ``Action with line breaks`` () =
+   let doc = "EXT. BRICK'S PATIO - DAY\r\n\r\nSome Action\r\n\r\nSome More Action" |> Fountain.Parse
+   doc.Blocks
+   |> should equal  [SceneHeading [Literal "EXT. BRICK'S PATIO - DAY"]; Action [HardLineBreak; Literal "Some Action"; HardLineBreak; HardLineBreak; Literal "Some More Action"]]
 
 
 //===== Synopses
