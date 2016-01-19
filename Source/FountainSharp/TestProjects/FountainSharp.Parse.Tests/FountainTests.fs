@@ -89,6 +89,15 @@ let ``Action with line breaks`` () =
    doc.Blocks
    |> should equal  [SceneHeading [Literal "EXT. BRICK'S PATIO - DAY"]; Action [HardLineBreak; Literal "Some Action"; HardLineBreak; HardLineBreak; Literal "Some More Action"]]
 
+[<Test>]
+let ``Action with line breaks and no heading`` () =
+   let doc = "Natalie looks around at the group, TIM, ROGER, NATE, and VEEK.\n
+TIM, is smiling broadly." |> Fountain.Parse
+   doc.Blocks
+   |> should equal [Action [Literal "Natalie looks around at the group, TIM, ROGER, NATE, and VEEK."; HardLineBreak; HardLineBreak; Literal "TIM, is smiling broadly."]]
+
+
+
 
 //===== Synopses
 
@@ -251,9 +260,12 @@ let ``Centered - with spaces`` () =
 
 [<Test>]
 let ``Line Breaks`` () =
-   let doc = """Murtaugh, springing...\n\nAn explosion of sound...\nAs it rises like an avenging angel ...\nHovers, shattering the air \n\nScreaming, chaos, frenzy.\nThree words that apply to this scene.""" |> Fountain.Parse
+   let doc = "Murtaugh, springing...\n\nAn explosion of sound...\nAs it rises like an avenging angel ...\nHovers, shattering the air \n\nScreaming, chaos, frenzy.\nThree words that apply to this scene." |> Fountain.Parse
    doc.Blocks
-   |> should equal [Action [Literal "Murtaugh, springing...\n\nAn explosion of sound...\nAs it rises like an avenging angel ...\nHovers, shattering the air \n\nScreaming, chaos, frenzy.\nThree words that apply to this scene."]]
+   |> should equal [Action [Literal "Murtaugh, springing..."; HardLineBreak; HardLineBreak; Literal "An explosion of sound..."; HardLineBreak; 
+      Literal "As it rises like an avenging angel ..."; HardLineBreak;Literal "Hovers, shattering the air"; HardLineBreak; HardLineBreak;
+      Literal "Screaming, chaos, frenzy."; HardLineBreak; Literal "Three words that apply to this scene."]]
+  
 
 
 //===== Notes
@@ -331,9 +343,9 @@ let ``Emphasis - italics with spaces to left but escaped`` () =
 // TODO: are line breaks being recognized properly here? i think not. i think i need more line break cases
 [<Test>]
 let ``Emphasis - between line breaks`` () =
-   let doc = """As he rattles off the long list, Brick and Steel *share a look.\r\n\
+   let doc = "As he rattles off the long list, Brick and Steel *share a look.\r\n\
              \r\n\
-             This is going to be BAD.*""" |> Fountain.Parse
+             This is going to be BAD.*" |> Fountain.Parse
    doc.Blocks
    |> should equal [Action [Literal @"As he rattles off the long list, Brick and Steel *share a look.\r\n\"]; Action [Literal @"\r\n\"]; Action [Literal "This is going to be BAD.*"]]
 
