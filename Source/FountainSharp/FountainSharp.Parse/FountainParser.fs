@@ -429,11 +429,6 @@ let rec parseBlocks (ctx:ParsingContext) (lastParsedBlock:FountainBlockElement o
      yield item
      yield! parseBlocks ctx (Some(item)) rest
 
-  | Lines.TrimBlankStart [] ->
-     yield Action([HardLineBreak])
-     //System.Diagnostics.Debug.WriteLine("Trimming blank line. ")
-     //() 
-
   | Action(bodyLines, rest) ->
     // we get multiple lines as a match, so for blank lines we return a hard line break, otherwise we 
     // call parse spans
@@ -441,13 +436,28 @@ let rec parseBlocks (ctx:ParsingContext) (lastParsedBlock:FountainBlockElement o
       if (bodyLine = "") then
         [HardLineBreak]
       else
-        parseSpans bodyLine
+        let kung = parseSpans bodyLine
+        let fu = [HardLineBreak]
+        List.concat ([kung;fu])
+
+    //HACK: Action is a block element, so we want ot pull the last HardLineBreak off.
+    // we have to do this here because we're adding it on above to every line.
+    let foo = List.collect mapFunc bodyLines
+    let goo = foo.GetSlice(Some(0), Some(foo.Length - 2))
 
     // collect is a magic function that concatenates lists
-    let item = Action(List.collect mapFunc bodyLines)
+    //let item = Action(List.collect mapFunc bodyLines)
+    let item = Action(goo)
+
     yield item
 
     // go on to parse the rest
     yield! parseBlocks ctx (Some(item)) rest
+
+  | Lines.TrimBlankStart [] ->
+     //yield Action([HardLineBreak])
+     System.Diagnostics.Debug.WriteLine("Trimming blank line. ")
+     () 
+
 
   | _ -> failwithf "Unexpectedly stopped!\n%A" lines }
