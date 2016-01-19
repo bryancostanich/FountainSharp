@@ -52,5 +52,6 @@
     <None Include="Test_Script.txt" />
     <None Include="FountainWorkingScript.fsx" />
     <None Include="FountainSyntaxDefinition.md" />
+    <None Include="FountainSyntaxDetails.md" />
   </ItemGroup>
 </Project>

@@ -73,13 +73,14 @@ let ``Known I/E Scene Head`` () =
 let ``Scene Heading with line breaks and action`` () =
    let doc = "EXT. BRICK'S PATIO - DAY\r\n\r\nSome Action" |> Fountain.Parse
    doc.Blocks
-   |> should equal [SceneHeading [Literal "EXT. BRICK'S PATIO - DAY"]; Action [Literal "Some Action"]]
+   |> should equal [SceneHeading [Literal "EXT. BRICK'S PATIO - DAY"]; Action [HardLineBreak; Literal "Some Action"]]
+
 
 [<Test>]
 let ``Scene Heading with more line breaks and action`` () =
    let doc = "EXT. BRICK'S PATIO - DAY\r\n\r\n\r\nSome Action" |> Fountain.Parse
    doc.Blocks
-   |> should equal [SceneHeading [Literal "EXT. BRICK'S PATIO - DAY"]; Action [Literal "\nSome Action"]]
+   |> should equal [SceneHeading [Literal "EXT. BRICK'S PATIO - DAY"]; Action [HardLineBreak]; Action [HardLineBreak]; Action [Literal "\nSome Action"]]
 
 
 //===== Synopses

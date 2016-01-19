@@ -330,7 +330,7 @@ let (|Action|_|) input =
     //| Title _ -> false
     | Synopses _ -> false
     | PageBreak _ -> false
-    | _ -> true) input with // if we found a match,a nd it's not empty, return the Action and the rest
+    | _ -> true) input with // if we found a match, and it's not empty, return the Action and the rest
       | matching, rest when matching <> [] ->
          Some(matching, rest)
       | _ -> None
@@ -429,12 +429,25 @@ let rec parseBlocks (ctx:ParsingContext) (lastParsedBlock:FountainBlockElement o
      yield item
      yield! parseBlocks ctx (Some(item)) rest
 
-  | Action(bodyLines, (*Lines.TrimBlankStart*) rest) ->
-     let item = Action(parseSpans (String.concat ctx.Newline bodyLines)) //get back multiple lines, so we concatenate them
-     yield item
-     yield! parseBlocks ctx (Some(item)) rest
+  | Lines.TrimBlankStart [] ->
+     yield Action([HardLineBreak])
+     //System.Diagnostics.Debug.WriteLine("Trimming blank line. ")
+     //() 
 
-  | Lines.TrimBlankStart [] -> 
-    System.Diagnostics.Debug.WriteLine("Trimming blank line. ")
-    () 
+  | Action(bodyLines, rest) ->
+    // we get multiple lines as a match, so for blank lines we return a hard line break, otherwise we 
+    // call parse spans
+    let mapFunc bodyLine : FountainSpans = 
+      if (bodyLine = "") then
+        [HardLineBreak]
+      else
+        parseSpans bodyLine
+
+    // collect is a magic function that concatenates lists
+    let item = Action(List.collect mapFunc bodyLines)
+    yield item
+
+    // go on to parse the rest
+    yield! parseBlocks ctx (Some(item)) rest
+
   | _ -> failwithf "Unexpectedly stopped!\n%A" lines }
