@@ -25,12 +25,13 @@ type Fountain =
   /// Parse the specified text into a MarkdownDocument. Line breaks in the
   /// inline HTML (etc.) will be stored using the specified string.
   static member Parse(text, newline) =
+    System.Diagnostics.Debug.WriteLine("Parsing: " + text)
     use reader = new StringReader(text)
     let lines = 
       [ let line = ref ""
         while (line := reader.ReadLine(); line.Value <> null) do
           yield line.Value ]
-    let (Lines.TrimBlank lines) = lines
+    //let (Lines.TrimBlank lines) = lines
     let ctx : ParsingContext = { Newline = newline }
     let blocks = lines |> parseBlocks ctx None |> List.ofSeq
     FountainDocument(blocks)

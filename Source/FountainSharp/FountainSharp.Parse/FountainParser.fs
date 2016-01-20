@@ -139,7 +139,7 @@ let rec parseChars acc input = seq {
 /// Parse body of a block into a list of Markdown inline spans
 // trimming off \r\n?
 //let parseSpans (s) = 
-let parseSpans (String.TrimBoth s) = 
+let parseSpans ((*String.TrimBoth*) s) = 
   System.Diagnostics.Debug.WriteLine(s);
   // why List.ofArray |> List.ofSeq?
   parseChars [] (s.ToCharArray() |> List.ofArray) |> List.ofSeq
@@ -173,7 +173,7 @@ let (|Section|_|) input = //function
           if noHash.Length > 0 && Char.IsWhiteSpace(noHash.Chars(noHash.Length - 1)) 
           then noHash else header
         else header        
-      Some(n, header.Trim(), rest)
+      Some(n, header, rest)
   | rest ->
       None
 
@@ -182,9 +182,9 @@ let (|Section|_|) input = //function
 let (|SceneHeading|_|) = function
   // TODO: Make this StartsWithAnyCaseInsensitive
   | String.StartsWithAny [ "INT"; "EXT"; "EST"; "INT./EXT."; "INT/EXT"; "I/E" ] heading:string :: rest ->
-     Some(heading.Trim(), rest)
+     Some(heading, rest)
   | String.StartsWith "." heading:string :: rest ->
-     Some(heading.Trim(), rest) 
+     Some(heading, rest) 
   | rest ->
      None
 
@@ -197,14 +197,14 @@ let (|Character|_|) (list:string list) =
       None
     // matches "@McAVOY"
     else if (head.StartsWith "@") then
-      Some(head.Trim().Substring(1), rest)
+      Some(head.Substring(1), rest)
     // matches "BOB" or "BOB JOHNSON" or "R2D2" but not "25D2"
 #if _MOBILEPCL_
     else if (System.Char.IsUpper (head.[0]) && head.ToCharArray() |> Seq.forall (fun c -> (System.Char.IsUpper c|| System.Char.IsWhiteSpace c || System.Char.IsNumber c))) then
 #else
     else if (System.Char.IsUpper (head.[0]) && head |> Seq.forall (fun c -> (System.Char.IsUpper c|| System.Char.IsWhiteSpace c || System.Char.IsNumber c))) then
 #endif
-      Some(head.Trim(), rest)
+      Some(head, rest)
     // matches "BOB (*)"
     //else if (
     else
@@ -235,7 +235,7 @@ let (|Synopses|_|) = function
 /// Recognizes a Lyric (prefixed with ~)
 let (|Lyric|_|) = function
   | String.StartsWith "~" lyric:string :: rest ->
-      Some(lyric.Trim(), rest)
+      Some(lyric, rest)
   | rest ->
       None
 
@@ -294,7 +294,7 @@ let (|Dialogue|_|) (lastParsedBlock:FountainSharp.Parse.FountainBlockElement opt
         if blockContent.StartsWith "!" then // guard against forced action
           None
         else
-          Some(blockContent.Trim(), rest)
+          Some(blockContent, rest)
      | [] -> None
   | _ -> None
 
@@ -383,48 +383,48 @@ let rec parseBlocks (ctx:ParsingContext) (lastParsedBlock:FountainBlockElement o
   // maybe SceneHeading, Section, etc. 
 
   // Recognize remaining types of blocks/paragraphs
-  | SceneHeading(body, (*Lines.TrimBlankStart*) rest) ->
+  | SceneHeading(body, rest) ->
      let item = SceneHeading(parseSpans body)
      yield item
      yield! parseBlocks ctx (Some(item)) rest
-  | Section(n, body, (*Lines.TrimBlankStart*) rest) ->
+  | Section(n, body, rest) ->
      let item = Section(n, parseSpans body)
      yield item
      yield! parseBlocks ctx (Some(item)) rest
-  | Character(body, (*Lines.TrimBlankStart*) rest) ->
+  | Character(body, rest) ->
      let item = Character(parseSpans body)
      yield item
      yield! parseBlocks ctx (Some(item)) rest
 
-  | PageBreak(body, (*Lines.TrimBlankStart*) rest) ->
+  | PageBreak(body, rest) ->
      let item = PageBreak
      yield item
      yield! parseBlocks ctx (Some(item)) rest
-  | Synopses(body, (*Lines.TrimBlankStart*) rest) ->
+  | Synopses(body, rest) ->
      let item = Synopses(parseSpans body)
      yield item
      yield! parseBlocks ctx (Some(item)) rest
-  | Lyric(body, (*Lines.TrimBlankStart*) rest) ->
+  | Lyric(body, rest) ->
      let item = Lyric(parseSpans body)
      yield item
      yield! parseBlocks ctx (Some(item)) rest
 
-  | Centered(body, (*Lines.TrimBlankStart*) rest) ->
+  | Centered(body, rest) ->
      let item = Centered(parseSpans body)
      yield item
      yield! parseBlocks ctx (Some(item)) rest
 
-  | Transition(body, (*Lines.TrimBlankStart*) rest) ->
+  | Transition(body, rest) ->
      let item = Transition(parseSpans body)
      yield item
      yield! parseBlocks ctx (Some(item)) rest
   
-  | Parenthetical lastParsedBlock (body, (*Lines.TrimBlankStart*) rest) ->
+  | Parenthetical lastParsedBlock (body, rest) ->
      let item = Parenthetical(parseSpans body)
      yield item
      yield! parseBlocks ctx (Some(item)) rest
 
-  | Dialogue lastParsedBlock (body, (*Lines.TrimBlankStart*) rest) ->
+  | Dialogue lastParsedBlock (body, rest) ->
      let item = Dialogue(parseSpans body)
      yield item
      yield! parseBlocks ctx (Some(item)) rest
