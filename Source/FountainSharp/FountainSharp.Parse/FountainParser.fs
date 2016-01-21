@@ -198,14 +198,14 @@ let (|Character|_|) (list:string list) =
       None
     // matches "@McAVOY"
     else if (head.StartsWith "@") then
-      Some(head.Substring(1), rest)
+      Some(true, head.Substring(1), rest)
     // matches "BOB" or "BOB JOHNSON" or "R2D2" but not "25D2"
 #if _MOBILEPCL_
     else if (System.Char.IsUpper (head.[0]) && head.ToCharArray() |> Seq.forall (fun c -> (System.Char.IsUpper c|| System.Char.IsWhiteSpace c || System.Char.IsNumber c))) then
 #else
     else if (System.Char.IsUpper (head.[0]) && head |> Seq.forall (fun c -> (System.Char.IsUpper c|| System.Char.IsWhiteSpace c || System.Char.IsNumber c))) then
 #endif
-      Some(head, rest)
+      Some(false, head, rest)
     // matches "BOB (*)"
     //else if (
     else
@@ -267,24 +267,6 @@ let (|Parenthetical|_|) (lastParsedBlock:FountainSharp.Parse.FountainBlockElemen
 
 //==== DIALOGUE
 
-//let (|IsLineBreak|_|) (input:string list) =
-//  match input with
-//  | 
-//  | _ -> None
-
-
-//// get all the dialogue lines (either line break or two spaces plus line break
-//let (|TakeDialogueLines|_|) (input:string list) =
-//  match List.partitionWhileLookahead(function
-//    | "  ":: rest ->
-//      match rest with 
-//      | "\r\n" :: moreRest
-//      | ("\n"|"\r") :: moreRest ->
-//        true // trim out something here? // also, how do i pass back a hardlinebreak, too?
-//      ) ->
-//        Some 
-//    | _ -> None)
- 
 // Dialogue
 let (|Dialogue|_|) (lastParsedBlock:FountainSharp.Parse.FountainBlockElement option) (input:string list) =
   match lastParsedBlock with
@@ -309,7 +291,7 @@ let (|Transition|_|) (input:string list) =
         None
       elif blockContent.EndsWith "TO:" || blockContent.StartsWith ">" then // TODO: need to check for a hard linebreak after
         if blockContent.StartsWith ">" then
-          Some(true, blockContent.Trim().Substring(1), rest) // true for forced
+          Some(true, blockContent.Substring(1), rest) // true for forced
         else
           Some(false, blockContent.Trim(), rest)
       else
@@ -392,8 +374,8 @@ let rec parseBlocks (ctx:ParsingContext) (lastParsedBlock:FountainBlockElement o
      let item = Section(n, parseSpans body)
      yield item
      yield! parseBlocks ctx (Some(item)) rest
-  | Character(body, rest) ->
-     let item = Character(parseSpans body)
+  | Character(forced, body, rest) ->
+     let item = Character(forced, parseSpans body)
      yield item
      yield! parseBlocks ctx (Some(item)) rest
 

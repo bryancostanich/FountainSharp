@@ -169,8 +169,10 @@ let rec formatBlockElement (ctx:FormattingContext) block =
       for span in spans do 
         formatSpan ctx span
       ctx.Writer.Write("</strong><br/></div>")
-  | Character spans ->
+  | Character (forced, spans) ->
       ctx.Writer.Write("""<div style="text-align:center;"><br/>""")
+      if forced then
+        ctx.Writer.Write("@")
       for span in spans do 
         formatSpan ctx span
       ctx.Writer.Write("</div>")
