@@ -322,25 +322,7 @@ let (|Action|_|) input =
             Some(true, hd.Substring(1)::tail, rest) // trim off the '!' and smash the list back together
           else
             Some(false, matching, rest)
-
-      //| matching, rest when matching <> [] ->
-      //  let first::_ = matching
-      //  if (first.StartsWith "!") then
-      //    Some(true, matching, rest)
-      //  else
-      //    Some(false, matching, rest)
       | _ -> None
-
-/// Recognizes Action basically anything not the other stuff (or starts with `!`)
-//let (|Action|_|) = function
-//  // TODO: do i really need this? i really just need to guard against elsewhere, yeah?
-//  | String.StartsWith "!" text:string :: rest -> 
-//     //Some(text.Trim(), rest)
-//     Some(text, rest)
-//  | head::tail ->
-//     Some(head,tail)
-//  | _ ->
-//     None
 
 //==== /ACTION
 
