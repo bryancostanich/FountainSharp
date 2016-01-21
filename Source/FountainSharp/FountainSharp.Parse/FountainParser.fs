@@ -314,8 +314,21 @@ let (|Action|_|) input =
     | Synopses _ -> false
     | PageBreak _ -> false
     | _ -> true) input with // if we found a match, and it's not empty, return the Action and the rest
-      | matching, rest when matching <> [] ->
-         Some(matching, rest)
+      | matching, rest ->
+        match input with
+        | [] -> None
+        | hd::tail ->
+          if (hd.StartsWith "!") then
+            Some(true, hd.Substring(1)::tail, rest) // trim off the '!' and smash the list back together
+          else
+            Some(false, matching, rest)
+
+      //| matching, rest when matching <> [] ->
+      //  let first::_ = matching
+      //  if (first.StartsWith "!") then
+      //    Some(true, matching, rest)
+      //  else
+      //    Some(false, matching, rest)
       | _ -> None
 
 /// Recognizes Action basically anything not the other stuff (or starts with `!`)
@@ -412,7 +425,7 @@ let rec parseBlocks (ctx:ParsingContext) (lastParsedBlock:FountainBlockElement o
      yield item
      yield! parseBlocks ctx (Some(item)) rest
 
-  | Action(bodyLines, rest) ->
+  | Action(forced, bodyLines, rest) ->
     // we get multiple lines as a match, so for blank lines we return a hard line break, otherwise we 
     // call parse spans
     let mapFunc bodyLine : FountainSpans = 
@@ -430,7 +443,7 @@ let rec parseBlocks (ctx:ParsingContext) (lastParsedBlock:FountainBlockElement o
 
     // collect is a magic function that concatenates lists
     //let item = Action(List.collect mapFunc bodyLines)
-    let item = Action(goo)
+    let item = Action(forced, goo)
 
     yield item
 

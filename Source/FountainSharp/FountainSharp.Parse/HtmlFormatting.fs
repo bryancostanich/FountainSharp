@@ -164,15 +164,15 @@ let rec formatBlockElement (ctx:FormattingContext) block =
       ctx.Writer.Write("</em></div>")
   | Transition (forced, spans) ->
       ctx.Writer.Write("""<div style="text-align:right;"><strong>""")
-      if forced then
-        ctx.Writer.Write("&gt;")
+      //if forced then
+      //  ctx.Writer.Write("&gt;")
       for span in spans do 
         formatSpan ctx span
       ctx.Writer.Write("</strong><br/></div>")
   | Character (forced, spans) ->
       ctx.Writer.Write("""<div style="text-align:center;"><br/>""")
-      if forced then
-        ctx.Writer.Write("@")
+      //if forced then
+      //  ctx.Writer.Write("@")
       for span in spans do 
         formatSpan ctx span
       ctx.Writer.Write("</div>")
@@ -187,7 +187,8 @@ let rec formatBlockElement (ctx:FormattingContext) block =
       for span in spans do 
         formatSpan ctx span
       ctx.Writer.Write(")</div>")
-  | Action spans
+  | Action (forced, spans) ->
+      formatSpans ctx spans
   | Span spans -> 
       formatSpans ctx spans
   ctx.LineBreak()
