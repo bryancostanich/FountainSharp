@@ -22,6 +22,7 @@ open FountainSharp.Parse.Patterns.String
 
 /// Succeeds when the specified character list starts with an escaped 
 /// character - in that case, returns the character and the tail of the list
+// TODO: some of these should be stripped out.
 let inline (|EscapedChar|_|) input = 
   match input with
   | '\\'::( ( '*' | '\\' | '`' | '_' | '{' | '}' | '[' | ']' 
@@ -307,10 +308,10 @@ let (|Transition|_|) (input:string list) =
       if blockContent.StartsWith "!" then // guard against forced action
         None
       elif blockContent.EndsWith "TO:" || blockContent.StartsWith ">" then // TODO: need to check for a hard linebreak after
-        if blockContent.StartsWith ">" then //TODO: can we combine this with the previous line? F#'ers?
-          Some(blockContent.Trim().Substring(1), rest)
+        if blockContent.StartsWith ">" then
+          Some(true, blockContent.Trim().Substring(1), rest) // true for forced
         else
-          Some(blockContent.Trim(), rest)
+          Some(false, blockContent.Trim(), rest)
       else
        None
    | [] -> None
@@ -414,8 +415,8 @@ let rec parseBlocks (ctx:ParsingContext) (lastParsedBlock:FountainBlockElement o
      yield item
      yield! parseBlocks ctx (Some(item)) rest
 
-  | Transition(body, rest) ->
-     let item = Transition(parseSpans body)
+  | Transition(forced, body, rest) ->
+     let item = Transition(forced, parseSpans body)
      yield item
      yield! parseBlocks ctx (Some(item)) rest
   
@@ -454,10 +455,13 @@ let rec parseBlocks (ctx:ParsingContext) (lastParsedBlock:FountainBlockElement o
     // go on to parse the rest
     yield! parseBlocks ctx (Some(item)) rest
 
-  | Lines.TrimBlankStart [] ->
-     //yield Action([HardLineBreak])
-     System.Diagnostics.Debug.WriteLine("Trimming blank line. ")
-     () 
+  //| Lines.TrimBlankStart [] ->
+  //   yield Action([HardLineBreak])
+  ////   System.Diagnostics.Debug.WriteLine("Trimming blank line. ")
+  //   () 
+  | _ as line -> 
+    System.Diagnostics.Debug.WriteLine("Not really sure what's here.")
+    ()
+  }
 
-
-  | _ -> failwithf "Unexpectedly stopped!\n%A" lines }
+  //| _ -> failwithf "Unexpectedly stopped!\n%A" lines }

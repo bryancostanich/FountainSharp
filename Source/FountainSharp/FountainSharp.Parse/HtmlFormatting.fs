@@ -162,8 +162,10 @@ let rec formatBlockElement (ctx:FormattingContext) block =
       for span in spans do 
         formatSpan ctx span
       ctx.Writer.Write("</em></div>")
-  | Transition spans ->
+  | Transition (forced, spans) ->
       ctx.Writer.Write("""<div style="text-align:right;"><strong>""")
+      if forced then
+        ctx.Writer.Write("&gt;")
       for span in spans do 
         formatSpan ctx span
       ctx.Writer.Write("</strong><br/></div>")
