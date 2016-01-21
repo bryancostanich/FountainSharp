@@ -145,7 +145,7 @@ let rec formatBlockElement (ctx:FormattingContext) block =
 //        formatSpans ctx spans
       formatSpans ctx spans
       ctx.Writer.Write("</h" + string n + ">")
-  | SceneHeading (spans) ->
+  | SceneHeading (forced, spans) ->
       ctx.Writer.Write("<div><strong>")
       for span in spans do 
         formatSpan ctx span

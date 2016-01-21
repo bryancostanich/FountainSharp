@@ -19,75 +19,75 @@ let properNewLines (text: string) = text.Replace("\r\n", System.Environment.NewL
 let ``Basic Scene Heading`` () =
    let doc = "EXT. BRICK'S PATIO - DAY" |> Fountain.Parse
    doc.Blocks
-   |> should equal [SceneHeading [Literal "EXT. BRICK'S PATIO - DAY"]]
+   |> should equal [SceneHeading (false, [Literal "EXT. BRICK'S PATIO - DAY"])]
 
 [<Test>]
 let ``Forced (".") Scene Heading`` () =
    let doc = ".BINOCULARS A FORCED SCENE HEADING - LATER" |> Fountain.Parse
    doc.Blocks
-   |> should equal [SceneHeading [Literal "BINOCULARS A FORCED SCENE HEADING - LATER"]]
+   |> should equal [SceneHeading (true, [Literal "BINOCULARS A FORCED SCENE HEADING - LATER"])]
 
 [<Test>]
 let ``Lowercase known scene heading`` () =
    let doc = "ext. brick's pool - day" |> Fountain.Parse
    doc.Blocks
-   |> should equal [SceneHeading [Literal "ext. brick's pool - day"]]
+   |> should equal [SceneHeading (false, [Literal "ext. brick's pool - day"])]
 
 [<Test>]
 let ``Known INT Scene Head`` () =
    let doc = "INT DOGHOUSE - DAY" |> Fountain.Parse
    doc.Blocks
-   |> should equal [SceneHeading [Literal "INT DOGHOUSE - DAY"]]
+   |> should equal [SceneHeading (false, [Literal "INT DOGHOUSE - DAY"])]
 
 [<Test>]
 let ``Known EXT Scene Head`` () =
    let doc = "EXT DOGHOUSE - DAY" |> Fountain.Parse
    doc.Blocks
-   |> should equal [SceneHeading [Literal "EXT DOGHOUSE - DAY"]]
+   |> should equal [SceneHeading (false, [Literal "EXT DOGHOUSE - DAY"])]
 
 [<Test>]
 let ``Known EST Scene Head`` () =
    let doc = "EST DOGHOUSE - DAY" |> Fountain.Parse
    doc.Blocks
-   |> should equal [SceneHeading [Literal "EST DOGHOUSE - DAY"]]
+   |> should equal [SceneHeading (false, [Literal "EST DOGHOUSE - DAY"])]
 
 [<Test>]
 let ``Known INT./EXT Scene Head`` () =
    let doc = "INT./EXT DOGHOUSE - DAY" |> Fountain.Parse
    doc.Blocks
-   |> should equal [SceneHeading [Literal "INT./EXT DOGHOUSE - DAY"]]
+   |> should equal [SceneHeading (false, [Literal "INT./EXT DOGHOUSE - DAY"])]
 
 [<Test>]
 let ``Known INT/EXT Scene Head`` () =
    let doc = "INT/EXT DOGHOUSE - DAY" |> Fountain.Parse
    doc.Blocks
-   |> should equal [SceneHeading [Literal "INT/EXT DOGHOUSE - DAY"]]
+   |> should equal [SceneHeading (false, [Literal "INT/EXT DOGHOUSE - DAY"])]
 
 [<Test>]
 let ``Known I/E Scene Head`` () =
    let doc = "I/E DOGHOUSE - DAY" |> Fountain.Parse
    doc.Blocks
-   |> should equal [SceneHeading [Literal "I/E DOGHOUSE - DAY"]]
+   |> should equal [SceneHeading (false, [Literal "I/E DOGHOUSE - DAY"])]
 
 [<Test>]
 let ``Scene Heading with line breaks and action`` () =
    let doc = "EXT. BRICK'S PATIO - DAY\r\n\r\nSome Action" |> Fountain.Parse
    doc.Blocks
-   |> should equal  [SceneHeading [Literal "EXT. BRICK'S PATIO - DAY"]; Action (false, [HardLineBreak; Literal "Some Action"])]
+   |> should equal  [SceneHeading (false, [Literal "EXT. BRICK'S PATIO - DAY"]); Action (false, [HardLineBreak; Literal "Some Action"])]
 
 
 [<Test>]
 let ``Scene Heading with more line breaks and action`` () =
    let doc = "EXT. BRICK'S PATIO - DAY\r\n\r\n\r\nSome Action" |> Fountain.Parse
    doc.Blocks
-   |> should equal  [SceneHeading [Literal "EXT. BRICK'S PATIO - DAY"]; Action (false, [HardLineBreak; HardLineBreak; Literal "Some Action"])]
+   |> should equal  [SceneHeading (false, [Literal "EXT. BRICK'S PATIO - DAY"]); Action (false, [HardLineBreak; HardLineBreak; Literal "Some Action"])]
 
 //===== Action
 [<Test>]
 let ``Action with line breaks`` () =
    let doc = "EXT. BRICK'S PATIO - DAY\r\n\r\nSome Action\r\n\r\nSome More Action" |> Fountain.Parse
    doc.Blocks
-   |> should equal  [SceneHeading [Literal "EXT. BRICK'S PATIO - DAY"]; Action (false, [HardLineBreak; Literal "Some Action"; HardLineBreak; HardLineBreak; Literal "Some More Action"])]
+   |> should equal  [SceneHeading (false, [Literal "EXT. BRICK'S PATIO - DAY"]); Action (false, [HardLineBreak; Literal "Some Action"; HardLineBreak; HardLineBreak; Literal "Some More Action"])]
 
 [<Test>]
 let ``Action with line breaks and no heading`` () =

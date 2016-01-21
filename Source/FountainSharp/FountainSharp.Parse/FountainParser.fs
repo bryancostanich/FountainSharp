@@ -183,9 +183,9 @@ let (|Section|_|) input = //function
 let (|SceneHeading|_|) = function
   // TODO: Make this StartsWithAnyCaseInsensitive
   | String.StartsWithAny [ "INT"; "EXT"; "EST"; "INT./EXT."; "INT/EXT"; "I/E" ] heading:string :: rest ->
-     Some(heading, rest)
+     Some(false, heading, rest)
   | String.StartsWith "." heading:string :: rest ->
-     Some(heading, rest) 
+     Some(true, heading, rest) 
   | rest ->
      None
 
@@ -345,24 +345,21 @@ let rec parseBlocks (ctx:ParsingContext) (lastParsedBlock:FountainBlockElement o
   // NOTE: Order of matching is important here. for instance, if you matched dialogue before 
   // parenthetical, you'd never get parenthetical
 
-  let foo =
-    match lines with 
-     | (line::rest) ->
-       match line with
-       | "" -> "Empty line"
-       | _ -> ""
-     | _ -> ""
+  //let foo =
+  //  match lines with 
+  //   | (line::rest) ->
+  //     match line with
+  //     | "" -> "Empty line"
+  //     | _ -> ""
+  //   | _ -> ""
 
-  if foo = "Empty line" then
-    System.Diagnostics.Debug.WriteLine("empty line")
+  //if foo = "Empty line" then
+  //  System.Diagnostics.Debug.WriteLine("empty line")
 
   match lines with
-  //TODO: some of these US should be trimmed, and some not, yeah? like for instance
-  // maybe SceneHeading, Section, etc. 
-
   // Recognize remaining types of blocks/paragraphs
-  | SceneHeading(body, rest) ->
-     let item = SceneHeading(parseSpans body)
+  | SceneHeading(forced, body, rest) ->
+     let item = SceneHeading(forced, parseSpans body)
      yield item
      yield! parseBlocks ctx (Some(item)) rest
   | Section(n, body, rest) ->

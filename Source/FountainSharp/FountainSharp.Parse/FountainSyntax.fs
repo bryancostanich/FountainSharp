@@ -29,7 +29,7 @@ type FountainBlockElement =
   | Synopses of FountainSpans 
   | Span of FountainSpans
   | Lyric of FountainSpans
-  | SceneHeading of FountainSpans //TODO: Should this really just be a single span? i mean, you shouldn't be able to style/inline a scene heading, right?
+  | SceneHeading of bool * FountainSpans //TODO: Should this really just be a single span? i mean, you shouldn't be able to style/inline a scene heading, right?
   | PageBreak
   | Transition of bool * FountainSpans
   | Centered of FountainSpans
