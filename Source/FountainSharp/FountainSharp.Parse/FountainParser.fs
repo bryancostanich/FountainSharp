@@ -140,7 +140,7 @@ let rec parseChars acc input = seq {
 /// Parse body of a block into a list of Markdown inline spans
 // trimming off \r\n?
 //let parseSpans (s) = 
-let parseSpans ((*String.TrimBoth*) s) = 
+let parseSpans ((*String.TrimBoth*) s:string) = 
   //System.Diagnostics.Debug.WriteLine(s);
   // why List.ofArray |> List.ofSeq?
   parseChars [] (s.ToCharArray() |> List.ofArray) |> List.ofSeq
