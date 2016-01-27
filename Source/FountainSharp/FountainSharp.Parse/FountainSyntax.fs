@@ -4,16 +4,23 @@ open System
 open System.IO
 open System.Collections.Generic
 
+[<Struct>]
+type Range(location:int,length:int) = 
+  member this.Location = location
+  member this.Length = length
+
+  override this.ToString() =
+    sprintf "Location: %d; Length: %d" this.Location this.Length
 
 /// Represents inline formatting inside a block. This can be literal (with text), various
 /// formattings (string, emphasis, etc.), hyperlinks, etc.
 type FountainSpanElement =
-  | Literal of string // some text
-  | Strong of FountainSpans // **some bold text**
-  | Italic of FountainSpans // *some italicized text*
-  | Underline of FountainSpans // _some underlined text_
-  | Note of FountainSpans // [[this is my note]]
-  | HardLineBreak
+  | Literal of string * Range // some text
+  | Strong of FountainSpans * Range // **some bold text**
+  | Italic of FountainSpans * Range // *some italicized text*
+  | Underline of FountainSpans * Range// _some underlined text_
+  | Note of FountainSpans * Range// [[this is my note]]
+  | HardLineBreak of Range
 
 /// A type alias for a list of `FountainSpan` values
 and FountainSpans = list<FountainSpanElement>
@@ -21,18 +28,18 @@ and FountainSpans = list<FountainSpanElement>
 /// A block represents a (possibly) multi-line element of a fountain document.
 /// Blocks are headings, action blocks, dialogue blocks, etc. 
 type FountainBlockElement = 
-  | Action of bool * FountainSpans
-  | Character of bool * FountainSpans //TODO: maybe just FountainSpanElement? or just string?
-  | Dialogue of FountainSpans
-  | Parenthetical of FountainSpans
-  | Section of int * FountainSpans
-  | Synopses of FountainSpans 
-  | Span of FountainSpans
-  | Lyric of FountainSpans
-  | SceneHeading of bool * FountainSpans //TODO: Should this really just be a single span? i mean, you shouldn't be able to style/inline a scene heading, right?
+  | Action of bool * FountainSpans * Range
+  | Character of bool * FountainSpans * Range //TODO: maybe just FountainSpanElement? or just string?
+  | Dialogue of FountainSpans * Range
+  | Parenthetical of FountainSpans * Range
+  | Section of int * FountainSpans * Range
+  | Synopses of FountainSpans * Range
+  | Span of FountainSpans * Range
+  | Lyric of FountainSpans * Range
+  | SceneHeading of bool * FountainSpans * Range //TODO: Should this really just be a single span? i mean, you shouldn't be able to style/inline a scene heading, right?
   | PageBreak
-  | Transition of bool * FountainSpans
-  | Centered of FountainSpans
+  | Transition of bool * FountainSpans * Range
+  | Centered of FountainSpans * Range
 
 /// A type alias for a list of blocks
 and FountainBlocks = list<FountainBlockElement>

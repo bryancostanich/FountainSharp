@@ -56,14 +56,14 @@ let (|Emphasized|_|) = function
   | (('_' | '*') :: tail) as input ->
     match input with
     // the *** case in which it is both italic and strong
-    | DelimitedText ['*'; '*'; '*'] (body, rest) -> 
-        Some(body, Italic >> List.singleton >> Strong, rest)
+    //| DelimitedText ['*'; '*'; '*'] (body, rest) ->
+    //  Some(body, Italic >> List.singleton >> Strong, rest)
     | DelimitedText['*'; '*'] (body, rest) -> 
-        Some(body, Strong, rest)
+      Some(body, Strong, rest)
     | DelimitedText['_'] (body, rest) ->
-        Some(body, Underline, rest)
+      Some(body, Underline, rest)
     | DelimitedText['*'] (body, rest) -> 
-        Some(body, Italic, rest)
+      Some(body, Italic, rest)
     | _ -> None
   | _ -> None
 
@@ -83,7 +83,7 @@ let rec parseChars acc input = seq {
   // 2015.01.07 Bryan Costanich - change Lazy.Create to Lazy<char []> because of some ambiguation err when building as a PCL
   let accLiterals = Lazy<char []>.Create(fun () ->
     if List.isEmpty acc then [] 
-    else [Literal(String(List.rev acc |> Array.ofList))] )
+    else [Literal(String(List.rev acc |> Array.ofList),(new Range(0,0)))] )
 
   match input with 
 
@@ -100,9 +100,9 @@ let rec parseChars acc input = seq {
   // Recognizes explicit line-break at the end of line
   | ('\n' | '\r')::rest
   | '\r'::'\n'::rest ->
-    System.Diagnostics.Debug.WriteLine("found a hardlinebreak")
+    //System.Diagnostics.Debug.WriteLine("found a hardlinebreak")
     yield! accLiterals.Value
-    yield HardLineBreak
+    yield HardLineBreak(new Range(0,0))
     yield! parseChars [] rest
 
 
@@ -119,7 +119,7 @@ let rec parseChars acc input = seq {
   | Emphasized (body, f, rest) ->
       yield! accLiterals.Value
       let body = parseChars [] body |> List.ofSeq
-      yield f(body)
+      yield f(body, (new Range(0,0)))
       yield! parseChars [] rest
 
   // Notes
@@ -141,7 +141,7 @@ let rec parseChars acc input = seq {
 // trimming off \r\n?
 //let parseSpans (s) = 
 let parseSpans ((*String.TrimBoth*) s) = 
-  System.Diagnostics.Debug.WriteLine(s);
+  //System.Diagnostics.Debug.WriteLine(s);
   // why List.ofArray |> List.ofSeq?
   parseChars [] (s.ToCharArray() |> List.ofArray) |> List.ofSeq
 
@@ -359,15 +359,15 @@ let rec parseBlocks (ctx:ParsingContext) (lastParsedBlock:FountainBlockElement o
   match lines with
   // Recognize remaining types of blocks/paragraphs
   | SceneHeading(forced, body, rest) ->
-     let item = SceneHeading(forced, parseSpans body)
+     let item = SceneHeading(forced, parseSpans body, new Range(0,0))
      yield item
      yield! parseBlocks ctx (Some(item)) rest
   | Section(n, body, rest) ->
-     let item = Section(n, parseSpans body)
+     let item = Section(n, parseSpans body, new Range(0,0))
      yield item
      yield! parseBlocks ctx (Some(item)) rest
   | Character(forced, body, rest) ->
-     let item = Character(forced, parseSpans body)
+     let item = Character(forced, parseSpans body, new Range(0,0))
      yield item
      yield! parseBlocks ctx (Some(item)) rest
 
@@ -376,31 +376,31 @@ let rec parseBlocks (ctx:ParsingContext) (lastParsedBlock:FountainBlockElement o
      yield item
      yield! parseBlocks ctx (Some(item)) rest
   | Synopses(body, rest) ->
-     let item = Synopses(parseSpans body)
+     let item = Synopses(parseSpans body, new Range(0,0))
      yield item
      yield! parseBlocks ctx (Some(item)) rest
   | Lyric(body, rest) ->
-     let item = Lyric(parseSpans body)
+     let item = Lyric(parseSpans body, new Range(0,0))
      yield item
      yield! parseBlocks ctx (Some(item)) rest
 
   | Centered(body, rest) ->
-     let item = Centered(parseSpans body)
+     let item = Centered(parseSpans body, new Range(0,0))
      yield item
      yield! parseBlocks ctx (Some(item)) rest
 
   | Transition(forced, body, rest) ->
-     let item = Transition(forced, parseSpans body)
+     let item = Transition(forced, parseSpans body, new Range(0,0))
      yield item
      yield! parseBlocks ctx (Some(item)) rest
   
   | Parenthetical lastParsedBlock (body, rest) ->
-     let item = Parenthetical(parseSpans body)
+     let item = Parenthetical(parseSpans body, new Range(0,0))
      yield item
      yield! parseBlocks ctx (Some(item)) rest
 
   | Dialogue lastParsedBlock (body, rest) ->
-     let item = Dialogue(parseSpans body)
+     let item = Dialogue(parseSpans body, new Range(0,0))
      yield item
      yield! parseBlocks ctx (Some(item)) rest
 
@@ -409,10 +409,10 @@ let rec parseBlocks (ctx:ParsingContext) (lastParsedBlock:FountainBlockElement o
     // call parse spans
     let mapFunc bodyLine : FountainSpans = 
       if (bodyLine = "") then
-        [HardLineBreak]
+        [HardLineBreak(new Range(0,0))]
       else
         let kung = parseSpans bodyLine
-        let fu = [HardLineBreak]
+        let fu = [HardLineBreak(new Range(0,0))]
         List.concat ([kung;fu])
 
     //HACK: Action is a block element, so we want ot pull the last HardLineBreak off.
@@ -422,7 +422,7 @@ let rec parseBlocks (ctx:ParsingContext) (lastParsedBlock:FountainBlockElement o
 
     // collect is a magic function that concatenates lists
     //let item = Action(List.collect mapFunc bodyLines)
-    let item = Action(forced, goo)
+    let item = Action(forced, goo, new Range(0,0))
 
     yield item
 
@@ -434,7 +434,7 @@ let rec parseBlocks (ctx:ParsingContext) (lastParsedBlock:FountainBlockElement o
   ////   System.Diagnostics.Debug.WriteLine("Trimming blank line. ")
   //   () 
   | _ as line -> 
-    System.Diagnostics.Debug.WriteLine("Not really sure what's here.")
+    //System.Diagnostics.Debug.WriteLine("Not really sure what's here.")
     ()
   }
 

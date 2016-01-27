@@ -25,7 +25,7 @@ type Fountain =
   /// Parse the specified text into a MarkdownDocument. Line breaks in the
   /// inline HTML (etc.) will be stored using the specified string.
   static member Parse(text, newline) =
-    System.Diagnostics.Debug.WriteLine("Parsing: " + text)
+    //System.Diagnostics.Debug.WriteLine("Parsing: " + text)
     use reader = new StringReader(text)
     let lines = 
       [ let line = ref ""
