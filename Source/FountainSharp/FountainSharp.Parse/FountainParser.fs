@@ -345,17 +345,6 @@ let rec parseBlocks (ctx:ParsingContext) (lastParsedBlock:FountainBlockElement o
   // NOTE: Order of matching is important here. for instance, if you matched dialogue before 
   // parenthetical, you'd never get parenthetical
 
-  //let foo =
-  //  match lines with 
-  //   | (line::rest) ->
-  //     match line with
-  //     | "" -> "Empty line"
-  //     | _ -> ""
-  //   | _ -> ""
-
-  //if foo = "Empty line" then
-  //  System.Diagnostics.Debug.WriteLine("empty line")
-
   match lines with
   // Recognize remaining types of blocks/paragraphs
   | SceneHeading(forced, body, rest) ->
@@ -439,3 +428,30 @@ let rec parseBlocks (ctx:ParsingContext) (lastParsedBlock:FountainBlockElement o
   }
 
   //| _ -> failwithf "Unexpectedly stopped!\n%A" lines }
+
+
+//let CountBlocks (blocks:FountainBlockElement list) :FountainBlockElement list =
+
+//  let i = 0
+//  let (countedBlocks:FountainBlockElement list) = [] 
+
+//  for block in blocks do
+//    match block with
+//    | Action (forced, spans, range)
+//    | Character (forced, spans, range)
+//    | SceneHeading (forced, spans, range)
+//    | Transition (forced, spans, range) -> ()
+
+//    | Dialogue (spans, range)
+//    | Parenthetical (spans, range)
+//    | Section(spans, range)
+//    | Synopses(spans, range)
+//    | Span(spans, range)
+//    | Lyric(spans, range)
+//    | Centered(spans, range) ->
+//      ()
+//    | PageBreak ->
+//      ()
+
+
+//  blocks

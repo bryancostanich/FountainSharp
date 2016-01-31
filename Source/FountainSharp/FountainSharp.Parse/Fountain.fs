@@ -33,7 +33,10 @@ type Fountain =
           yield line.Value ]
     //let (Lines.TrimBlank lines) = lines
     let ctx : ParsingContext = { Newline = newline }
-    let blocks = lines |> parseBlocks ctx None |> List.ofSeq
+    let blocks = 
+      lines 
+      |> parseBlocks ctx None 
+      |> List.ofSeq
     FountainDocument(blocks)
 
   /// Parse the specified text into a MarkdownDocument.
@@ -44,7 +47,10 @@ type Fountain =
   static member ParseLine(text:string, newline, (lastBlock:FountainBlockElement option)) =
     let ctx : ParsingContext = { Newline = Environment.NewLine }
     let line = text::[]
-    let blocks = line |> parseBlocks ctx lastBlock |> List.ofSeq
+    let blocks = 
+      line 
+      |> parseBlocks ctx lastBlock 
+      |> List.ofSeq
     FountainDocument(blocks)
 
   /// Transform Fountain document into HTML format. The result

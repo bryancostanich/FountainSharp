@@ -22,6 +22,31 @@ type FountainSpanElement =
   | Note of FountainSpans * Range// [[this is my note]]
   | HardLineBreak of Range
 
+  //let range:Range = new Range(0,0)
+
+  //member fs.Range =
+  //  with get () = range
+  //  and set (value) = range <- value
+
+  // Sigh, if F# allowed lets in DUs, we could cache the length. :(
+  //let mutable length = -1
+
+  member fs.GetLength() : int =
+    match fs with
+    | Strong(spans, r)
+    | Italic(spans, r)
+    | Underline(spans, r)
+    | Note(spans, r) ->
+      spans
+      |> List.map( fun span -> span.GetLength() )
+      |> List.sum
+    | HardLineBreak(r) -> 1
+    | Literal(str, r) -> str.Length
+  
+  member fs.GetRange(start:int):Range =
+    new Range(start, fs.GetLength() + start)
+
+
 /// A type alias for a list of `FountainSpan` values
 and FountainSpans = list<FountainSpanElement>
 
@@ -34,12 +59,40 @@ type FountainBlockElement =
   | Parenthetical of FountainSpans * Range
   | Section of int * FountainSpans * Range
   | Synopses of FountainSpans * Range
-  | Span of FountainSpans * Range
+  | Span of FountainSpans * Range //TODO: do we even use this?
   | Lyric of FountainSpans * Range
   | SceneHeading of bool * FountainSpans * Range //TODO: Should this really just be a single span? i mean, you shouldn't be able to style/inline a scene heading, right?
   | PageBreak
   | Transition of bool * FountainSpans * Range
   | Centered of FountainSpans * Range
+
+  member fb.GetLength() : int =
+    match fb with
+    | Action(forced, spans, r)
+    | SceneHeading(forced, spans, r)
+    | Character(forced, spans, r)
+    | Transition(forced, spans, r) ->
+      spans
+      |> List.map( fun span -> span.GetLength() )
+      |> List.sum
+    | Dialogue(spans, r)
+    | Parenthetical(spans, r)
+    | Span(spans, r)
+    | Synopses (spans, r)
+    | Lyric(spans, r)
+    | Centered(spans, r) ->
+      spans
+      |> List.map( fun span -> span.GetLength() )
+      |> List.sum
+    | Section(int, spans, r) -> 
+      spans
+      |> List.map( fun span -> span.GetLength() )
+      |> List.sum
+    | PageBreak -> 3 //TODO: should we actually parse and keep the actual literal that folks use to define a pagebreak?
+  
+  member fs.GetRange(start:int):Range =
+    new Range(start, fs.GetLength() + start)
+
 
 /// A type alias for a list of blocks
 and FountainBlocks = list<FountainBlockElement>
