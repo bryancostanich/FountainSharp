@@ -14,7 +14,7 @@ This project is a work in progress. For a detailed list of outstanding tasks, se
 
 ## Contributing 
  
-For contributing, please see the [Source Documentation](Source/FountainSharp/FountainSharp.Parse/Documentation.md)
+For contributing, please see the [Source Documentation](Source/FountainSharp/FountainSharp.Parse/Documentation.md). I <3 well documented pull requests. :)
 
 
 
