@@ -30,10 +30,12 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="mscorlib" />
-    <Reference Include="FSharp.Core" />
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Numerics" />
+    <Reference Include="FSharp.Core">
+      <HintPath>..\packages\FSharp.Core.4.0.0.1\lib\net40\FSharp.Core.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Common\AssemblyInfo.fs" />
@@ -53,5 +55,8 @@
     <None Include="FountainWorkingScript.fsx" />
     <None Include="FountainSyntaxDefinition.md" />
     <None Include="FountainSyntaxDetails.md" />
+    <None Include="ToDo.md" />
+    <None Include="Documentation.md" />
+    <None Include="packages.config" />
   </ItemGroup>
 </Project>

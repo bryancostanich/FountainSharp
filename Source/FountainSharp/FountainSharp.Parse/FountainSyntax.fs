@@ -14,6 +14,11 @@ type Range(location:int,length:int) =
 
 /// Represents inline formatting inside a block. This can be literal (with text), various
 /// formattings (string, emphasis, etc.), hyperlinks, etc.
+
+// TODO: implement a base class that has a mutable range, a la: 
+// http://stackoverflow.com/questions/10959335/how-add-setter-to-to-discriminated-unions-in-f
+// http://stackoverflow.com/questions/1332299/discriminated-union-let-binding
+
 type FountainSpanElement =
   | Literal of string * Range // some text
   | Strong of FountainSpans * Range // **some bold text**

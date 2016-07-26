@@ -6,26 +6,26 @@
 
   * [Scene Heading](#scene-heading) - √
   * [Action](#action) - √
-  * [Character](#character) - √ - Missing support for Parenthetical extensions, e.g. "BOB (OS)" or "AMY (on the radio)"
+  * [Character](#character) - √ - TODO: Missing support for Parenthetical extensions, e.g. "BOB (OS)" or "AMY (on the radio)"
   * [Dialogue](#dialogue) - √
   * [Parenthetical](#parenthetical) - √
-  * [Dual Dialogue](#dual-dialogue) - not supported
+  * [Dual Dialogue](#dual-dialogue) - TODO: not supported
   * [Lyrics](#lyrics) - √
   * [Transition](#transition) - √
   * [Centered Text](#centered-text) - √
   * [Sections](#sections) - √
   * [Synposes](#synopses) - √
-  * [Boneyard/Comments](#boneyard-comments) - not supported
+  * [Boneyard/Comments](#boneyard-comments) - TODO: not supported
   * [Title Page](#title-page) - not supported
 
 ## Span Elements
   * [Emphasis](#emphasis) - √
   * [Page Breaks](#page-breaks) - √
-  * [Notes](#notes) - √ - No support yet for double-space continuation.
+  * [Notes](#notes) - √ - TODO: No support yet for double-space continuation.
 
 ## Other Rules
   * [Punctuation](#punctuation) - √
-  * [Line Breaks](#line-breaks) - ~√; Actions - yes. Dialogue - No.
+  * [Line Breaks](#line-breaks) - ~√; Actions - yes. TODO: Dialogue - No.
   * [Indenting](#indenting) - ?
 
 
