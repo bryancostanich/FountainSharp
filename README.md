@@ -6,8 +6,11 @@ This project is a work in progress. To see where I'm at, check out the [syntax r
 For contributing, please see the [Source Documentation](Source/FountainSharp/FountainSharp.Parse/Documentation.md)
 
 
-## TODO:
- * Finish Parsing - Almost Done
- * Add custom templates to HTML rendering - Not Started
- * Create and Publish a Nuget Package - Not Started
- * Profit - Oh wait, open source. :)
+## TODO
+
+For a detailed list of outstanding tasks, see the [TODO](Source/FountainSharp/FountainSharp.Parse/ToDo.md), however, in general the following major items are outstanding:
+
+ * **Finish Syntax Parsing** - Nearly all of the Fountain syntax is supported, but a few small items remain.
+ * **Add Range Support** - Document elements should have an associated `Range` so that the document representation can be more effectively used in an editor.
+ * **Custom HTML CSS** - HTML transformation is largely done, but custom CSS templates should be allowed.
+ * **Nuget Package** - The library should be published as a Nuget package.
