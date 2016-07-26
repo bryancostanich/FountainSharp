@@ -1,4 +1,4 @@
-﻿# To Do
+# Remaining Work/TODO
 
 ## Add positional support to the parser.
 
@@ -20,8 +20,8 @@ Both `FountainSpanElement` and `FountainBlockElement` should probably inherit fr
 base class that is the Range, or has the Range or something. We can't put it directly 
 on those classes because they're discriminated unions. See:
 
-(SO Article 1)[http://stackoverflow.com/questions/10959335/how-add-setter-to-to-discriminated-unions-in-f]
-(SO 2)[http://stackoverflow.com/questions/1332299/discriminated-union-let-binding]
+* [SO Article 1](http://stackoverflow.com/questions/10959335/how-add-setter-to-to-discriminated-unions-in-f)
+* [SO 2](http://stackoverflow.com/questions/1332299/discriminated-union-let-binding)
 
 However, I have some temporary working code checked in right now that has the Range 
 directly on them, but it should be removed, see:
@@ -56,6 +56,8 @@ modifications themselves should be documented at the class level.
 
 ## Nuget Package Creation
 
+Probably both the FountainSharp.Parse and the FountainSharp.Parse.MobilePCL should be packaged up in a NuGet and published. 
+
 ## Remaining Syntax Support
 
 See [Syntax Definition](FountainSyntaxDefinition.md). Several outstanding syntax 
@@ -77,4 +79,10 @@ items need to be added and/or modified:
 Each one of these also need associated unit tests for parsing, as well as HTML
 transformation.
 
+## Custom CSS Styling
+
+
 ## Pagination Support
+
+
+## Developer Documentation
