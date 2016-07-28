@@ -81,8 +81,13 @@ transformation.
 
 ## Custom CSS Styling
 
+The HTML transformation works well, but it would be nice to allow developers to pass in their own custom css stylesheet that was embedded into the html output. We may even consider allowing a URL to a style sheet.
+
 
 ## Pagination Support
 
+Scripts should keep a running tally of page breaks, both manual, and automatic (based on number of lines on a page and such). HTML transformation should also respect this and show pages.
 
 ## Developer Documentation
+
+A tutorial on how to use the FountainSharp library should be written, as well as some basic API docs.
