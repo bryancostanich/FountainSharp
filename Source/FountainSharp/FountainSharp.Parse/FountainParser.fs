@@ -322,7 +322,7 @@ let (|Action|_|) input =
             Some(true, hd.Substring(1)::tail, rest) // trim off the '!' and smash the list back together
           else
             Some(false, matching, rest)
-      | _ -> None
+      //| _ -> None
 
 //==== /ACTION
 
