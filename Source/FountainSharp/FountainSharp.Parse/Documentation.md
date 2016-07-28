@@ -1,4 +1,4 @@
-﻿# Understanding the Parser
+# Understanding the Parser
 
 ## A note about idealogy, and a caveat on code quality.
 
@@ -35,7 +35,7 @@ approach. I am open to suggestions.
   the parsing).
 
 * **FountanSharp.Parse** - The actual source files that are consumed by the PCL 
-  projects.
+  projects. *Note* that this is a shared project, not a Library. If we wish to create any libraries beyond the PCL, we'll need to create an actual library project.
 
 ### FountainSharp.Parse Files
 
