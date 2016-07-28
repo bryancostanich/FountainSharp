@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <PropertyGroup>
+ <PropertyGroup>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectTypeGuids>{A3F8F2AB-B479-4A4A-A458-A89E7DC349F1};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
@@ -84,9 +85,9 @@
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Xamarin\Mac\Xamarin.Mac.CSharp.targets" />
   <ItemGroup>
-    <ProjectReference Include="..\..\..\FountainSharp.Parse\FountainSharp.Parse.fsproj">
-      <Project>{5C25E5F6-6E91-4497-9DA0-CC5F6A1083B7}</Project>
-      <Name>FountainSharp.Parse</Name>
+    <ProjectReference Include="..\..\..\PortableProjects\FountainSharp.Parse.MobilePCL\FountainSharp.Parse.MobilePCL.fsproj">
+      <Project>{EF7FFC79-964B-41EC-A90F-BBDE329D2DFD}</Project>
+      <Name>FountainSharp.Parse.MobilePCL</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
