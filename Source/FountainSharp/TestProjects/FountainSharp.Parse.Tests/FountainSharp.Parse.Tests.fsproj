@@ -16,18 +16,32 @@
     <DefineConstants>DEBUG</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <Externalconsole>true</Externalconsole>
-    <PlatformTarget></PlatformTarget>
+    <PlatformTarget>
+    </PlatformTarget>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugSymbols>false</DebugSymbols>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release</OutputPath>
-    <DefineConstants></DefineConstants>
+    <DefineConstants>
+    </DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <Externalconsole>true</Externalconsole>
     <GenerateTailCalls>true</GenerateTailCalls>
-    <PlatformTarget></PlatformTarget>
+    <PlatformTarget>
+    </PlatformTarget>
   </PropertyGroup>
+  <Import Project="$(MSBuildExtensionsPath32)\..\Microsoft SDKs\F#\4.0\Framework\v4.0\Microsoft.FSharp.Targets" />
+  <ItemGroup>
+    <Compile Include="FountainTests.fs" />
+    <Compile Include="AssemblyInfo.fs" />
+    <Compile Include="Resources.fs" />
+    <Compile Include="Exec.fs" />
+    <Compile Include="Program.fs" />
+    <EmbeddedResource Include="TestFiles\SimpleTest.fountain" />
+    <None Include="packages.config" />
+    <Content Include="App.config" />
+  </ItemGroup>
   <ItemGroup>
     <Reference Include="mscorlib" />
     <Reference Include="System" />
@@ -46,25 +60,6 @@
     <Reference Include="NHamcrest">
       <HintPath>..\..\packages\FsUnit.2.3.1\lib\net45\NHamcrest.dll</HintPath>
     </Reference>
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Include="FountainTests.fs" />
-    <Compile Include="AssemblyInfo.fs" />
-    <Compile Include="Resources.fs" />
-    <Compile Include="Exec.fs" />
-    <Compile Include="Program.fs" />
-  </ItemGroup>
-  <Import Project="$(MSBuildExtensionsPath32)\..\Microsoft SDKs\F#\3.1\Framework\v4.0\Microsoft.FSharp.Targets" />
-  <ItemGroup>
-    <EmbeddedResource Include="TestFiles\SimpleTest.fountain" />
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="TestFiles\" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="packages.config" />
-  </ItemGroup>
-  <ItemGroup>
     <ProjectReference Include="..\..\PortableProjects\FountainSharp.Parse.MobilePCL\FountainSharp.Parse.MobilePCL.fsproj">
       <Project>{EF7FFC79-964B-41EC-A90F-BBDE329D2DFD}</Project>
       <Name>FountainSharp.Parse.MobilePCL</Name>
