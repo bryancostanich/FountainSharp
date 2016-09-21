@@ -10,6 +10,7 @@ module internal FountainSharp.Parse.Parser
 open System
 open System.IO
 open System.Collections.Generic
+open System.Text.RegularExpressions
 
 open FSharp.Collections
 open FountainSharp.Parse.Collections
@@ -196,23 +197,31 @@ let (|Character|_|) (list:string list) =
   match list with
   | [] -> None
   | head :: rest ->
-    if (head.Length = 0) then 
-      None
+    if (head.Length = 0) then
+        None
     // matches "@McAVOY"
     else if (head.StartsWith "@") then
       Some(true, head.Substring(1), rest)
-    // matches "BOB" or "BOB JOHNSON" or "R2D2" but not "25D2"
-#if _MOBILEPCL_
-    else if (System.Char.IsUpper (head.[0]) && head.ToCharArray() |> Seq.forall (fun c -> (System.Char.IsUpper c|| System.Char.IsWhiteSpace c || System.Char.IsNumber c))) then
-#else
-    else if (System.Char.IsUpper (head.[0]) && head |> Seq.forall (fun c -> (System.Char.IsUpper c|| System.Char.IsWhiteSpace c || System.Char.IsNumber c))) then
-#endif
-      Some(false, head, rest)
-    // matches "BOB (*)"
-    //else if (
+    //  else if (System.Char.IsUpper (head.[0]) && head.ToCharArray() |> Seq.forall (fun c -> (System.Char.IsUpper c|| System.Char.IsWhiteSpace c || System.Char.IsNumber c))) then
+    // matches "BOB" or "BOB JOHNSON" or "BOB (on the radio)" or "R2D2" but not "25D2"
     else
-      None
-
+      let m = Regex.Match(head, @"^\p{Lu}[\p{Lu}\d\s]*(\(.*\))?")
+      if m.Value = head then
+        if m.Groups.Count > 1 then
+          // check parenthetical extension for lowercase or uppercase
+          // TODO: this should be done more succint I think
+          let extension = m.Groups.[1].Value.ToCharArray() |> Seq.where(fun c -> Char.IsLetter(c))
+          let allUpper = extension |> Seq.forall(fun c -> Char.IsUpper(c)) // all uppercase
+          let allLower = extension |> Seq.forall(fun c -> Char.IsLower(c)) // all lowercase
+          if allUpper || allLower then
+            Some(false, head, rest)
+          else
+            None
+        else // no parenthetical extension found
+          Some(false, head, rest)
+      // does not match Character rules
+      else
+        None
 
 /// Recognizes a PageBreak (3 or more consecutive equals and nothign more)
 let (|PageBreak|_|) input = //function

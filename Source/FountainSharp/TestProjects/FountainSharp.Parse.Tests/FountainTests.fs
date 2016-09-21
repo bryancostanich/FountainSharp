@@ -119,9 +119,17 @@ let ``Character - Normal`` () =
 
 [<Test>]
 let ``Character - With parenthetical extension`` () =
-   let doc = "LINDSEY (on the radio)" |> Fountain.Parse
+   let character = "LINDSEY (on the radio)"
+   let doc = character |> Fountain.Parse
    doc.Blocks
-   |> should equal [Character (false, [Literal ("LINDSEY (on the radio)", new Range(0,0))], new Range(0,0))]
+   |> should equal [Character (false, [Literal (character, new Range(0,0))], new Range(0,0))]
+
+[<Test>]
+let ``Character - With invalid parenthetical extension`` () =
+   let character = "LINDSEY (on the Radio)"
+   let doc = character |> Fountain.Parse
+   doc.Blocks
+   |> should equal [Action (false, [Literal (character, new Range(0,0))], new Range(0,0))]
 
 [<Test>]
 let ``Character - With whitespace`` () =
