@@ -38,7 +38,7 @@
     <Compile Include="Common\AssemblyInfo.fs" />
     <Compile Include="Collections.fs" />
   </ItemGroup>
-  <Import Project="$(MSBuildExtensionsPath32)\..\Microsoft SDKs\F#\3.1\Framework\v4.0\Microsoft.FSharp.Targets" />
+  <Import Project="$(MSBuildExtensionsPath32)\..\Microsoft SDKs\F#\4.0\Framework\v4.0\Microsoft.FSharp.Targets" />
   <ItemGroup>
     <Folder Include="Common\" />
   </ItemGroup>
