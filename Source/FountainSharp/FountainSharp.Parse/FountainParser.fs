@@ -209,7 +209,8 @@ let (|Character|_|) (list:string list) =
       if m.Value = head then
         if m.Groups.Count > 1 then
           // check parenthetical extension for lowercase or uppercase
-          // TODO: this should be done more succint I think
+          // TODO: Do we really need to do this? The specification is not crystal clear about this.
+          // If the extension can consist of mixed letters, than this block can be discarded
           let extension = m.Groups.[1].Value.ToCharArray() |> Seq.where(fun c -> Char.IsLetter(c))
           let allUpper = extension |> Seq.forall(fun c -> Char.IsUpper(c)) // all uppercase
           let allLower = extension |> Seq.forall(fun c -> Char.IsLower(c)) // all lowercase
