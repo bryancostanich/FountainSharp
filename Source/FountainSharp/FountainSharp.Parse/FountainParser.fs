@@ -178,16 +178,6 @@ let (|Section|_|) input = //function
   | rest ->
       None
 
-// TODO: Scene heading should also look for a line break before and after. 
-/// Recognizes a SceneHeading (prefixed with INT/EXT, etc. or a single period)
-//let (|SceneHeading|_|) = function
-//  | String.StartsWithAnyCaseInsensitive [ "INT"; "EXT"; "EST"; "INT./EXT."; "INT/EXT"; "I/E" ] heading:string :: rest ->
-//     Some(false, heading, rest)
-//  | String.StartsWith "." heading:string :: rest ->
-//     Some(true, heading, rest) 
-//  | rest ->
-//     None
-
 // TODO: Should we also look for a line break before? 
 let (|SceneHeading|_|) = function
   | String.StartsWithAnyCaseInsensitive [ "INT"; "EXT"; "EST"; "INT./EXT."; "INT/EXT"; "I/E" ] heading:string :: rest ->
