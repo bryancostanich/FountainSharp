@@ -179,16 +179,25 @@ let (|Section|_|) input = //function
   | rest ->
       None
 
-// TODO: Should we also look for a line break before? 
-let (|SceneHeading|_|) = function
-  | String.StartsWithAnyCaseInsensitive [ "INT"; "EXT"; "EST"; "INT./EXT."; "INT/EXT"; "I/E" ] heading:string :: rest ->
-     // look for a line break after the heading
+let NewLineAfterFirstElement (forced, list) = 
+  match list with
+  | [] ->
+    None
+  | head::rest ->
+     // look for a line break after the first element (first of the rest)
      if rest.Length = 0 || String.IsNullOrWhiteSpace rest.[0] then
-        Some(false, heading, rest)
+        Some(forced, head, rest)
      else
         None
+
+// TODO: Should we also look for a line break before? 
+let (|SceneHeading|_|) = function
+  // look for normal heading
+  | String.StartsWithAnyCaseInsensitive [ "INT"; "EXT"; "EST"; "INT./EXT."; "INT/EXT"; "I/E" ] heading:string :: rest ->
+     NewLineAfterFirstElement (false, heading :: rest)
+  // look for forced heading
   | String.StartsWith "." heading:string :: rest ->
-     Some(true, heading, rest)  // forced heading
+     NewLineAfterFirstElement (true, heading :: rest)
   | rest ->
      None
 

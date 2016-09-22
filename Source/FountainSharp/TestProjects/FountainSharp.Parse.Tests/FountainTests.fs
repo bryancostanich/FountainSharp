@@ -28,6 +28,26 @@ let ``Forced (".") Scene Heading`` () =
    |> should equal [SceneHeading (true, [Literal ("BINOCULARS A FORCED SCENE HEADING - LATER", new Range(0,0))], new Range(0,0))]
 
 [<Test>]
+let ``Forced (".") Scene Heading with line breaks and action`` () =
+   let heading = "BRICK'S PATIO - DAY";
+   let doc = "." + heading + "\r\n\r\nSome Action" |> Fountain.Parse
+   doc.Blocks
+   |> should equal  [SceneHeading (true, [Literal (heading, new Range(0,0))], new Range(0,0)); Action (false, [HardLineBreak(new Range(0,0)); Literal ("Some Action", new Range(0,0))], new Range(0,0))]
+
+[<Test>]
+let ``Forced (".") Scene Heading with more line breaks and action`` () =
+   let heading = "BRICK'S PATIO - DAY";
+   let doc = "." + heading + "\r\n\r\n\r\nSome Action" |> Fountain.Parse
+   doc.Blocks
+   |> should equal  [SceneHeading (true, [Literal (heading, new Range(0,0))], new Range(0,0)); Action(false, [HardLineBreak(new Range(0,0)); HardLineBreak(new Range(0,0)); Literal("Some Action", new Range(0,0))], new Range(0,0))]
+
+[<Test>]
+let ``Forced (".") Scene Heading - No empty line after`` () =
+   let doc = ".BINOCULARS A FORCED SCENE HEADING - LATER\r\nSome Action" |> Fountain.Parse
+   doc.Blocks
+   |> should equal  [Action (false, [Literal ("BINOCULARS A FORCED SCENE HEADING - LATER", new Range(0,0))], new Range(0,0)); Action (false, [HardLineBreak(new Range(0,0)); Literal ("Some Action", new Range(0,0))], new Range(0,0))]
+
+[<Test>]
 let ``Lowercase known scene heading`` () =
    let doc = "ext. brick's pool - day" |> Fountain.Parse
    doc.Blocks
@@ -75,12 +95,17 @@ let ``Scene Heading with line breaks and action`` () =
    doc.Blocks
    |> should equal  [SceneHeading (false, [Literal ("EXT. BRICK'S PATIO - DAY", new Range(0,0))], new Range(0,0)); Action (false, [HardLineBreak(new Range(0,0)); Literal ("Some Action", new Range(0,0))], new Range(0,0))]
 
-
 [<Test>]
 let ``Scene Heading with more line breaks and action`` () =
    let doc = "EXT. BRICK'S PATIO - DAY\r\n\r\n\r\nSome Action" |> Fountain.Parse
    doc.Blocks
    |> should equal  [SceneHeading (false, [Literal ("EXT. BRICK'S PATIO - DAY", new Range(0,0))], new Range(0,0)); Action(false, [HardLineBreak(new Range(0,0)); HardLineBreak(new Range(0,0)); Literal("Some Action", new Range(0,0))], new Range(0,0))]
+
+[<Test>]
+let ``Scene Heading - No empty line after`` () =
+   let doc = "EXT. BRICK'S PATIO - DAY\r\nSome Action" |> Fountain.Parse
+   doc.Blocks
+   |> should equal  [Action (false, [Literal ("EXT. BRICK'S PATIO - DAY", new Range(0,0))], new Range(0,0)); Action (false, [HardLineBreak(new Range(0,0)); Literal ("Some Action", new Range(0,0))], new Range(0,0))]
 
 //===== Action
 [<Test>]
