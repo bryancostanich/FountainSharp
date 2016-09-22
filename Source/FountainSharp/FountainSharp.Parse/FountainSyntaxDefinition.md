@@ -6,7 +6,7 @@
 
   * [Scene Heading](#scene-heading) - √
   * [Action](#action) - √
-  * [Character](#character) - √ - TODO: Missing support for Parenthetical extensions, e.g. "BOB (OS)" or "AMY (on the radio)"
+  * [Character](#character) - √
   * [Dialogue](#dialogue) - √
   * [Parenthetical](#parenthetical) - √
   * [Dual Dialogue](#dual-dialogue) - TODO: not supported
