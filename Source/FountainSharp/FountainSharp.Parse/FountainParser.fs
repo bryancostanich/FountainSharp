@@ -18,6 +18,10 @@ open FountainSharp.Parse.Patterns
 open FountainSharp.Parse.Patterns.List
 open FountainSharp.Parse.Patterns.String
 
+let printDebug fmt par =
+    let s = FSharp.Core.Printf.sprintf fmt par
+    System.Diagnostics.Debug.WriteLine s
+
 //====== Parser
 // Part 1: Inline Formatting
 
@@ -34,36 +38,47 @@ let inline (|EscapedChar|_|) input =
 /// delimiter bracket, (like ['*'; '*'] for bold) that occurs at the beginning and the end of the text.
 /// returns a wrapped list and then the rest of the characters after the delimited text.
 let (|DelimitedText|_|) delimiterBracket input =
-  let startl, endl = delimiterBracket, delimiterBracket
+  let endl = delimiterBracket // end limiter
   // Like List.partitionUntilEquals, but skip over escaped characters
-  let rec loop acc = function
-    | EscapedChar(x, xs) -> loop (x::'\\'::acc) xs
-    | input when List.startsWith endl input -> Some(List.rev acc, input)
-    | x::xs -> loop (x::acc) xs
-    | [] -> None
-  // If it starts with 'startl', let's search for 'endl'
+  let rec loop acc found input =
+    match input with
+    | EscapedChar(x, xs) -> loop (x::'\\'::acc) found xs // skip the escaped char
+    | x::xs -> 
+      if List.startsWith endl input then
+        loop (x::acc) true xs // found a delimiter, but we have to found the furthermost
+      else
+        if found then // now not matching, but in the previous iteration it was ok
+          Some(List.rev acc.Tail, List.last acc :: input)
+        else
+          loop (x::acc) found xs // search further
+    | _ when found -> Some(List.rev acc.Tail, List.last acc :: input) // input has 1 or zero elements and previous iteration matched
+    | [] -> None // not found the delimiter and traversed the list
+  // If it starts with 'delimiterBracket', let's search for 'endl'
   if List.startsWith delimiterBracket input then
-    match loop [] (List.skip delimiterBracket.Length input) with
+    match loop [] false (List.skip delimiterBracket.Length input) with
     | Some(pre, post) -> Some(pre, List.skip delimiterBracket.Length post)
     | None -> None
   else None
 
 /// recognizes emphasized text of Italic, Bold, etc.
-/// take somethign like "*some text* some more text" and return a sequence of TextSpans: italic<"some text">::rest
+/// take something like "*some text* some more text" and return a sequence of TextSpans: italic<"some text">::rest
 let (|Emphasized|_|) = function
   // if it starts with either `_` or `*`
   //   1) the code `(('_' | '*')` :: tail)` decomposes the input into a sequence of either `'_'::tail` or `'*'::tail`
   //   2) `as input` binds that sequence to a variable
-  | (('_' | '*') :: tail) as input ->
+  | ('_' :: tail) as input ->
     match input with
-    // the *** case in which it is both italic and strong
-    //| DelimitedText ['*'; '*'; '*'] (body, rest) ->
-    //  Some(body, Italic >> List.singleton >> Strong, rest)
-    | DelimitedText['*'; '*'] (body, rest) -> 
-      Some(body, Strong, rest)
-    | DelimitedText['_'] (body, rest) ->
+    | DelimitedText ['_'] (body, rest) ->
       Some(body, Underline, rest)
-    | DelimitedText['*'] (body, rest) -> 
+    | _ -> None
+  | ('*' :: '*' :: tail) as input ->
+    match input with
+    | DelimitedText ['*'; '*'] (body, rest) -> 
+      Some(body, Strong, rest)
+    | _ -> None
+  | ('*' :: tail) as input ->
+    match input with
+    | DelimitedText ['*'] (body, rest) -> 
       Some(body, Italic, rest)
     | _ -> None
   | _ -> None
@@ -144,6 +159,7 @@ let rec parseChars acc input = seq {
 let parseSpans ((*String.TrimBoth*) s:string) = 
   //System.Diagnostics.Debug.WriteLine(s);
   // why List.ofArray |> List.ofSeq?
+  // printDebug "parseSpans %s" s
   parseChars [] (s.ToCharArray() |> List.ofArray) |> List.ofSeq
 
 //======================================================================================

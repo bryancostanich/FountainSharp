@@ -342,19 +342,17 @@ let ``Emphasis - Bold Italic`` () =
    doc.Blocks
    |> should equal [Action (false, [Strong ([Italic ([Literal ("This is bold Text", new Range(0,0))], new Range(0,0))], new Range(0,0))], new Range(0,0))]
 
-//TODO: i don't even know how to write this test. it fails anyway. (look at next one, for clues)
 [<Test>]
 let ``Emphasis - Nested Bold Italic`` () =
  let doc = "**This is bold *and Italic Text***" |> Fountain.Parse
  doc.Blocks
-   |> should equal [Action (false, [Literal ("need to figure out how to write the value here.", new Range(0,0))], new Range(0,0))]
-// |> should equal [Action [Strong [Literal "This is bold "] [Italic [Literal "and Italic Text"]]]]
+   |> should equal [Action (false, [Strong ([Literal ("This is bold ", new Range(0,0)); Italic ([Literal ("and Italic Text", new Range(0,0)) ], new Range(0,0)) ], new Range(0,0))], new Range(0,0))]
 
 [<Test>]
-let ``Emphasis - Nested Italic Bold`` () =
+let ``Emphasis - Nested Underline Italic`` () =
    let doc = "From what seems like only INCHES AWAY.  _Steel's face FILLS the *Leupold Mark 4* scope_." |> Fountain.Parse
    doc.Blocks
-   |> should equal ""//[Action (false, [Literal ("From what seems like only INCHES AWAY.  ", new Range(0,0))]; Underline ([Literal ("Steel's face FILLS the ", new Range(0,0)); Italic [Literal ("Leupold Mark 4", new Range(0,0))]; Literal (" scope", new Range(0,0))]; Literal (".", new Range(0,0)), new Range(0,0))]
+   |> should equal [Action (false, [Literal ("From what seems like only INCHES AWAY.  ", new Range(0,0)); Underline ([Literal ("Steel's face FILLS the ", new Range(0,0)); Italic ([Literal ("Leupold Mark 4", new Range(0,0))], new Range(0,0)); Literal (" scope", new Range(0,0))], new Range(0,0)); Literal (".", new Range(0,0))], new Range(0,0))]
 
 [<Test>]
 let ``Emphasis - with escapes`` () =
