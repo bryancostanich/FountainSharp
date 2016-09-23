@@ -358,28 +358,28 @@ let ``Emphasis - Nested Underline Italic`` () =
 let ``Emphasis - with escapes`` () =
    let doc = "Steel enters the code on the keypad: **\*9765\***" |> Fountain.Parse
    doc.Blocks
-   |> should equal ""//[Action (false, [Literal ("Steel enters the code on the keypad: ", new Range(0,0)), new Range(0,0)]
+   |> should equal [Action (false, [Literal ("Steel enters the code on the keypad: ", new Range(0,0)); Strong ([Literal("*9765*", Range.empty)], Range.empty)], Range.empty)]
 
 [<Test>]
 let ``Emphasis - italics with spaces to left`` () =
+   // this is not italic, as there is a space on the left of the second one
    let doc = "He dialed *69 and then *23, and then hung up." |> Fountain.Parse
    doc.Blocks
-   |> should equal ""//[Action (false, [Literal "He dialed "; Italic [Literal "69 and then "]; Literal "23, and then hung up."])]
+   |> should equal [Action (false, [Literal ("He dialed *69 and then *23, and then hung up.", Range.empty)], Range.empty)]
 
 [<Test>]
 let ``Emphasis - italics with spaces to left but escaped`` () =
    let doc = "He dialed *69 and then 23\*, and then hung up.." |> Fountain.Parse
    doc.Blocks
-   |> should equal ""// [Action (false, [Literal "He dialed *69 and then 23*, and then hung up.."])]
+   |> should equal [Action (false, [Literal( "He dialed *69 and then 23*, and then hung up..", Range.empty)], Range.empty)]
 
-// TODO: are line breaks being recognized properly here? i think not. i think i need more line break cases
 [<Test>]
 let ``Emphasis - between line breaks`` () =
    let doc = "As he rattles off the long list, Brick and Steel *share a look.\r\n\
              \r\n\
              This is going to be BAD.*" |> Fountain.Parse
    doc.Blocks
-   |> should equal ""//[Action (false, [Literal @"As he rattles off the long list, Brick and Steel *share a look."; HardLineBreak(new Range(0,0)); HardLineBreak(new Range(0,0)); Literal "This is going to be BAD.*"])]
+   |> should equal [Action (false, [Literal( "As he rattles off the long list, Brick and Steel *share a look.", Range.empty); HardLineBreak(Range.empty); HardLineBreak(Range.empty); Literal ("This is going to be BAD.*", Range.empty)], Range.empty)]
 
 //===== Indenting
 // TODO

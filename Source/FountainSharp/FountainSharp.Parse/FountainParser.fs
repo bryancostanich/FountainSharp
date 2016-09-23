@@ -44,7 +44,7 @@ let (|DelimitedText|_|) delimiterBracket input =
     match input with
     | EscapedChar(x, xs) -> loop (x::'\\'::acc) found xs // skip the escaped char
     | x::xs -> 
-      if List.startsWith endl input then
+      if List.startsWith endl input && Char.IsWhiteSpace acc.Head = false then
         loop (x::acc) true xs // found a delimiter, but we have to found the furthermost
       else
         if found then // now not matching, but in the previous iteration it was ok

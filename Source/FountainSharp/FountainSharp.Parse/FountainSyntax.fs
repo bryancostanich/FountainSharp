@@ -12,6 +12,8 @@ type Range(location:int,length:int) =
   override this.ToString() =
     sprintf "Location: %d; Length: %d" this.Location this.Length
 
+  static member empty = new Range(0, 0)
+
 /// Represents inline formatting inside a block. This can be literal (with text), various
 /// formattings (string, emphasis, etc.), hyperlinks, etc.
 
