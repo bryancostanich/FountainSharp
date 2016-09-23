@@ -328,7 +328,7 @@ let (|Transition|_|) (input:string list) =
         None
       elif blockContent.EndsWith "TO:" || blockContent.StartsWith ">" then // TODO: need to check for a hard linebreak after
         if blockContent.StartsWith ">" then
-          Some(true, blockContent.Substring(1), rest) // true for forced
+          Some(true, blockContent.Substring(1).Trim(), rest) // true for forced
         else
           Some(false, blockContent.Trim(), rest)
       else
