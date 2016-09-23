@@ -28,6 +28,26 @@ let ``Forced (".") Scene Heading`` () =
    |> should equal [SceneHeading (true, [Literal ("BINOCULARS A FORCED SCENE HEADING - LATER", new Range(0,0))], new Range(0,0))]
 
 [<Test>]
+let ``Forced (".") Scene Heading with line breaks and action`` () =
+   let heading = "BRICK'S PATIO - DAY";
+   let doc = "." + heading + "\r\n\r\nSome Action" |> Fountain.Parse
+   doc.Blocks
+   |> should equal  [SceneHeading (true, [Literal (heading, new Range(0,0))], new Range(0,0)); Action (false, [HardLineBreak(new Range(0,0)); Literal ("Some Action", new Range(0,0))], new Range(0,0))]
+
+[<Test>]
+let ``Forced (".") Scene Heading with more line breaks and action`` () =
+   let heading = "BRICK'S PATIO - DAY";
+   let doc = "." + heading + "\r\n\r\n\r\nSome Action" |> Fountain.Parse
+   doc.Blocks
+   |> should equal  [SceneHeading (true, [Literal (heading, new Range(0,0))], new Range(0,0)); Action(false, [HardLineBreak(new Range(0,0)); HardLineBreak(new Range(0,0)); Literal("Some Action", new Range(0,0))], new Range(0,0))]
+
+[<Test>]
+let ``Forced (".") Scene Heading - No empty line after`` () =
+   let doc = ".BINOCULARS A FORCED SCENE HEADING - LATER\r\nSome Action" |> Fountain.Parse
+   doc.Blocks
+   |> should equal  [Action (false, [Literal ("BINOCULARS A FORCED SCENE HEADING - LATER", new Range(0,0))], new Range(0,0)); Action (false, [HardLineBreak(new Range(0,0)); Literal ("Some Action", new Range(0,0))], new Range(0,0))]
+
+[<Test>]
 let ``Lowercase known scene heading`` () =
    let doc = "ext. brick's pool - day" |> Fountain.Parse
    doc.Blocks
@@ -75,12 +95,17 @@ let ``Scene Heading with line breaks and action`` () =
    doc.Blocks
    |> should equal  [SceneHeading (false, [Literal ("EXT. BRICK'S PATIO - DAY", new Range(0,0))], new Range(0,0)); Action (false, [HardLineBreak(new Range(0,0)); Literal ("Some Action", new Range(0,0))], new Range(0,0))]
 
-
 [<Test>]
 let ``Scene Heading with more line breaks and action`` () =
    let doc = "EXT. BRICK'S PATIO - DAY\r\n\r\n\r\nSome Action" |> Fountain.Parse
    doc.Blocks
    |> should equal  [SceneHeading (false, [Literal ("EXT. BRICK'S PATIO - DAY", new Range(0,0))], new Range(0,0)); Action(false, [HardLineBreak(new Range(0,0)); HardLineBreak(new Range(0,0)); Literal("Some Action", new Range(0,0))], new Range(0,0))]
+
+[<Test>]
+let ``Scene Heading - No empty line after`` () =
+   let doc = "EXT. BRICK'S PATIO - DAY\r\nSome Action" |> Fountain.Parse
+   doc.Blocks
+   |> should equal  [Action (false, [Literal ("EXT. BRICK'S PATIO - DAY", new Range(0,0))], new Range(0,0)); Action (false, [HardLineBreak(new Range(0,0)); Literal ("Some Action", new Range(0,0))], new Range(0,0))]
 
 //===== Action
 [<Test>]
@@ -317,46 +342,44 @@ let ``Emphasis - Bold Italic`` () =
    doc.Blocks
    |> should equal [Action (false, [Strong ([Italic ([Literal ("This is bold Text", new Range(0,0))], new Range(0,0))], new Range(0,0))], new Range(0,0))]
 
-//TODO: i don't even know how to write this test. it fails anyway. (look at next one, for clues)
 [<Test>]
 let ``Emphasis - Nested Bold Italic`` () =
  let doc = "**This is bold *and Italic Text***" |> Fountain.Parse
  doc.Blocks
-   |> should equal [Action (false, [Literal ("need to figure out how to write the value here.", new Range(0,0))], new Range(0,0))]
-// |> should equal [Action [Strong [Literal "This is bold "] [Italic [Literal "and Italic Text"]]]]
+   |> should equal [Action (false, [Strong ([Literal ("This is bold ", new Range(0,0)); Italic ([Literal ("and Italic Text", new Range(0,0)) ], new Range(0,0)) ], new Range(0,0))], new Range(0,0))]
 
 [<Test>]
-let ``Emphasis - Nested Italic Bold`` () =
+let ``Emphasis - Nested Underline Italic`` () =
    let doc = "From what seems like only INCHES AWAY.  _Steel's face FILLS the *Leupold Mark 4* scope_." |> Fountain.Parse
    doc.Blocks
-   |> should equal ""//[Action (false, [Literal ("From what seems like only INCHES AWAY.  ", new Range(0,0))]; Underline ([Literal ("Steel's face FILLS the ", new Range(0,0)); Italic [Literal ("Leupold Mark 4", new Range(0,0))]; Literal (" scope", new Range(0,0))]; Literal (".", new Range(0,0)), new Range(0,0))]
+   |> should equal [Action (false, [Literal ("From what seems like only INCHES AWAY.  ", new Range(0,0)); Underline ([Literal ("Steel's face FILLS the ", new Range(0,0)); Italic ([Literal ("Leupold Mark 4", new Range(0,0))], new Range(0,0)); Literal (" scope", new Range(0,0))], new Range(0,0)); Literal (".", new Range(0,0))], new Range(0,0))]
 
 [<Test>]
 let ``Emphasis - with escapes`` () =
    let doc = "Steel enters the code on the keypad: **\*9765\***" |> Fountain.Parse
    doc.Blocks
-   |> should equal ""//[Action (false, [Literal ("Steel enters the code on the keypad: ", new Range(0,0)), new Range(0,0)]
+   |> should equal [Action (false, [Literal ("Steel enters the code on the keypad: ", new Range(0,0)); Strong ([Literal("*9765*", Range.empty)], Range.empty)], Range.empty)]
 
 [<Test>]
 let ``Emphasis - italics with spaces to left`` () =
+   // this is not italic, as there is a space on the left of the second one
    let doc = "He dialed *69 and then *23, and then hung up." |> Fountain.Parse
    doc.Blocks
-   |> should equal ""//[Action (false, [Literal "He dialed "; Italic [Literal "69 and then "]; Literal "23, and then hung up."])]
+   |> should equal [Action (false, [Literal ("He dialed *69 and then *23, and then hung up.", Range.empty)], Range.empty)]
 
 [<Test>]
 let ``Emphasis - italics with spaces to left but escaped`` () =
    let doc = "He dialed *69 and then 23\*, and then hung up.." |> Fountain.Parse
    doc.Blocks
-   |> should equal ""// [Action (false, [Literal "He dialed *69 and then 23*, and then hung up.."])]
+   |> should equal [Action (false, [Literal( "He dialed *69 and then 23*, and then hung up..", Range.empty)], Range.empty)]
 
-// TODO: are line breaks being recognized properly here? i think not. i think i need more line break cases
 [<Test>]
 let ``Emphasis - between line breaks`` () =
    let doc = "As he rattles off the long list, Brick and Steel *share a look.\r\n\
              \r\n\
              This is going to be BAD.*" |> Fountain.Parse
    doc.Blocks
-   |> should equal ""//[Action (false, [Literal @"As he rattles off the long list, Brick and Steel *share a look."; HardLineBreak(new Range(0,0)); HardLineBreak(new Range(0,0)); Literal "This is going to be BAD.*"])]
+   |> should equal [Action (false, [Literal( "As he rattles off the long list, Brick and Steel *share a look.", Range.empty); HardLineBreak(Range.empty); HardLineBreak(Range.empty); Literal ("This is going to be BAD.*", Range.empty)], Range.empty)]
 
 //===== Indenting
 // TODO
