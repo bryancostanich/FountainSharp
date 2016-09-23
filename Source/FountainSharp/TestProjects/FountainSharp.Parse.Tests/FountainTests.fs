@@ -281,14 +281,13 @@ let ``Transition - forced`` () =
 let ``Centered `` () =
    let doc = ">The End<" |> Fountain.Parse
    doc.Blocks
-   |> should equal [Centered ([Literal ("The End", new Range(0,0))], new Range(0,0))]
+   |> should equal [Centered ([Literal ("The End", Range.empty)], Range.empty)]
 
-// TODO: wtf doesn't this compile either?
 [<Test>]
 let ``Centered - with spaces`` () =
    let doc = "> The End <" |> Fountain.Parse
    doc.Blocks
-   |> should equal [Centered ([Literal ("The End", new Range(0,0))], new Range(0,0))]
+   |> should equal [Centered ([Literal ("The End", Range.empty)], Range.empty)]
 
 //===== Line Breaks
 

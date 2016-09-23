@@ -281,7 +281,7 @@ let (|Lyric|_|) = function
 let (|Centered|_|) = function
   | String.StartsWith ">" text:string :: rest ->
      if text.EndsWith "<" then //TODO: i'm sure an F# ninja can find a way to combine this with previous line
-       Some(text.Trim().TrimEnd [|'<'|], rest)
+       Some(text.TrimEnd([|'<'|]).Trim(), rest)
      else
        None
   | rest ->
