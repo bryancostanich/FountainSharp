@@ -45,7 +45,7 @@ let ``Forced (".") Scene Heading with more line breaks and action`` () =
 let ``Forced (".") Scene Heading - No empty line after`` () =
    let doc = ".BINOCULARS A FORCED SCENE HEADING - LATER\r\nSome Action" |> Fountain.Parse
    doc.Blocks
-   |> should equal  [Action (false, [Literal ("BINOCULARS A FORCED SCENE HEADING - LATER", new Range(0,0))], new Range(0,0)); Action (false, [HardLineBreak(new Range(0,0)); Literal ("Some Action", new Range(0,0))], new Range(0,0))]
+   |> should equal  [Action (false, [Literal (".BINOCULARS A FORCED SCENE HEADING - LATER", Range.empty); HardLineBreak(Range.empty); Literal ("Some Action", Range.empty)], Range.empty)]
 
 [<Test>]
 let ``Lowercase known scene heading`` () =
@@ -105,7 +105,7 @@ let ``Scene Heading with more line breaks and action`` () =
 let ``Scene Heading - No empty line after`` () =
    let doc = "EXT. BRICK'S PATIO - DAY\r\nSome Action" |> Fountain.Parse
    doc.Blocks
-   |> should equal  [Action (false, [Literal ("EXT. BRICK'S PATIO - DAY", new Range(0,0))], new Range(0,0)); Action (false, [HardLineBreak(new Range(0,0)); Literal ("Some Action", new Range(0,0))], new Range(0,0))]
+   |> should equal  [Action (false, [Literal ("EXT. BRICK'S PATIO - DAY", Range.empty); HardLineBreak(Range.empty); Literal ("Some Action", Range.empty)], Range.empty)]
 
 //===== Action
 [<Test>]
@@ -281,14 +281,13 @@ let ``Transition - forced`` () =
 let ``Centered `` () =
    let doc = ">The End<" |> Fountain.Parse
    doc.Blocks
-   |> should equal [Centered ([Literal ("The End", new Range(0,0))], new Range(0,0))]
+   |> should equal [Centered ([Literal ("The End", Range.empty)], Range.empty)]
 
-// TODO: wtf doesn't this compile either?
 [<Test>]
 let ``Centered - with spaces`` () =
    let doc = "> The End <" |> Fountain.Parse
    doc.Blocks
-   |> should equal [Centered ([Literal ("The End", new Range(0,0))], new Range(0,0))]
+   |> should equal [Centered ([Literal ("The End", Range.empty)], Range.empty)]
 
 //===== Line Breaks
 
@@ -296,26 +295,22 @@ let ``Centered - with spaces`` () =
 let ``Line Breaks`` () =
    let doc = "Murtaugh, springing...\n\nAn explosion of sound...\nAs it rises like an avenging angel ...\nHovers, shattering the air \n\nScreaming, chaos, frenzy.\nThree words that apply to this scene." |> Fountain.Parse
    doc.Blocks
-   |> should equal "" (*[Action (false, [Literal "Murtaugh, springing..."; HardLineBreak(new Range(0,0)); HardLineBreak(new Range(0,0)); Literal "An explosion of sound..."; HardLineBreak(new Range(0,0)); 
-      Literal "As it rises like an avenging angel ..."; HardLineBreak(new Range(0,0));Literal "Hovers, shattering the air"; HardLineBreak(new Range(0,0)); HardLineBreak(new Range(0,0));
-      Literal "Screaming, chaos, frenzy."; HardLineBreak(new Range(0,0)); Literal "Three words that apply to this scene."])]*)
-  
-
+   |> should equal ([Action (false, [Literal( "Murtaugh, springing...", Range.empty); HardLineBreak(Range.empty); HardLineBreak(Range.empty); Literal("An explosion of sound...", Range.empty); HardLineBreak(Range.empty); 
+      Literal("As it rises like an avenging angel ...", Range.empty); HardLineBreak(Range.empty); Literal("Hovers, shattering the air ", Range.empty); HardLineBreak(Range.empty); HardLineBreak(Range.empty);
+      Literal ("Screaming, chaos, frenzy.", Range.empty); HardLineBreak(Range.empty); Literal( "Three words that apply to this scene.", Range.empty)], Range.empty)])
 
 //===== Notes
 [<Test>]
 let ``Notes - Inline`` () =
-   let doc = "Some text and then a [[bit a of a note]]. And some more text." |> Fountain.Parse
+   let doc = "Some text and then a [[bit of a note]]. And some more text." |> Fountain.Parse
    doc.Blocks
-   // TODO: figure out the right output here. 
-   |> should equal [Action (false, [Literal ("fails anyway, it drops the note right now.", new Range(0,0))], new Range(0,0))]
-   //|> should equal [Action [Literal "Some text and then a "];[Note [Literal"bit of a note"]]; Literal ". And some more text."]
+   |> should equal [Action (false, [Literal ("Some text and then a ", Range.empty); Note ([Literal( "bit of a note", Range.empty)], Range.empty); Literal( ". And some more text.", Range.empty)], Range.empty)]
 
 [<Test>]
 let ``Notes - Block`` () =
    let doc = "[[It was supposed to be Vietnamese, right?]]" |> Fountain.Parse
    doc.Blocks
-   |> should equal [Note ([Literal ("It was supposed to be Vietnamese, right?", new Range(0,0))], new Range(0,0))]
+   |> should equal [Action(false, [Note ([Literal ("It was supposed to be Vietnamese, right?", Range.empty)], Range.empty)], Range.empty)]
 
 //===== Boneyard (Comments)
 //TODO: not implemented yet.

@@ -87,7 +87,7 @@ let (|Emphasized|_|) = function
 let (|Note|_|) = function
   // the *** case in which it is both italic and strong
   | DelimitedWith ['['; '['] [']';']'] (body, rest) -> 
-      Some (body, Note, rest)
+      Some (body, rest)
   | _ -> None
 
 
@@ -139,12 +139,10 @@ let rec parseChars acc input = seq {
       yield! parseChars [] rest
 
   // Notes
-  | Note (body, f, rest) ->
+  | Note (body, rest) ->
       yield! accLiterals.Value
       let body = parseChars [] body |> List.ofSeq
-      //TODO: why won't it accept this?
-      // until i figure out what's happening here, Note won't work, because it just pulls the text out entirely.
-      //yield f(body)
+      yield Note(body, Range.empty)
       yield! parseChars [] rest
 
   // This calls itself recursively on the rest of the list
@@ -281,7 +279,7 @@ let (|Lyric|_|) = function
 let (|Centered|_|) = function
   | String.StartsWith ">" text:string :: rest ->
      if text.EndsWith "<" then //TODO: i'm sure an F# ninja can find a way to combine this with previous line
-       Some(text.Trim().TrimEnd [|'<'|], rest)
+       Some(text.TrimEnd([|'<'|]).Trim(), rest)
      else
        None
   | rest ->
@@ -328,7 +326,7 @@ let (|Transition|_|) (input:string list) =
         None
       elif blockContent.EndsWith "TO:" || blockContent.StartsWith ">" then // TODO: need to check for a hard linebreak after
         if blockContent.StartsWith ">" then
-          Some(true, blockContent.Substring(1), rest) // true for forced
+          Some(true, blockContent.Substring(1).Trim(), rest) // true for forced
         else
           Some(false, blockContent.Trim(), rest)
       else
