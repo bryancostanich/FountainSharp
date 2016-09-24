@@ -45,7 +45,7 @@ let ``Forced (".") Scene Heading with more line breaks and action`` () =
 let ``Forced (".") Scene Heading - No empty line after`` () =
    let doc = ".BINOCULARS A FORCED SCENE HEADING - LATER\r\nSome Action" |> Fountain.Parse
    doc.Blocks
-   |> should equal  [Action (false, [Literal ("BINOCULARS A FORCED SCENE HEADING - LATER", new Range(0,0))], new Range(0,0)); Action (false, [HardLineBreak(new Range(0,0)); Literal ("Some Action", new Range(0,0))], new Range(0,0))]
+   |> should equal  [Action (false, [Literal (".BINOCULARS A FORCED SCENE HEADING - LATER", Range.empty); HardLineBreak(Range.empty); Literal ("Some Action", Range.empty)], Range.empty)]
 
 [<Test>]
 let ``Lowercase known scene heading`` () =
@@ -105,7 +105,7 @@ let ``Scene Heading with more line breaks and action`` () =
 let ``Scene Heading - No empty line after`` () =
    let doc = "EXT. BRICK'S PATIO - DAY\r\nSome Action" |> Fountain.Parse
    doc.Blocks
-   |> should equal  [Action (false, [Literal ("EXT. BRICK'S PATIO - DAY", new Range(0,0))], new Range(0,0)); Action (false, [HardLineBreak(new Range(0,0)); Literal ("Some Action", new Range(0,0))], new Range(0,0))]
+   |> should equal  [Action (false, [Literal ("EXT. BRICK'S PATIO - DAY", Range.empty); HardLineBreak(Range.empty); Literal ("Some Action", Range.empty)], Range.empty)]
 
 //===== Action
 [<Test>]
