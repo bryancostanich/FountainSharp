@@ -295,11 +295,9 @@ let ``Centered - with spaces`` () =
 let ``Line Breaks`` () =
    let doc = "Murtaugh, springing...\n\nAn explosion of sound...\nAs it rises like an avenging angel ...\nHovers, shattering the air \n\nScreaming, chaos, frenzy.\nThree words that apply to this scene." |> Fountain.Parse
    doc.Blocks
-   |> should equal "" (*[Action (false, [Literal "Murtaugh, springing..."; HardLineBreak(new Range(0,0)); HardLineBreak(new Range(0,0)); Literal "An explosion of sound..."; HardLineBreak(new Range(0,0)); 
-      Literal "As it rises like an avenging angel ..."; HardLineBreak(new Range(0,0));Literal "Hovers, shattering the air"; HardLineBreak(new Range(0,0)); HardLineBreak(new Range(0,0));
-      Literal "Screaming, chaos, frenzy."; HardLineBreak(new Range(0,0)); Literal "Three words that apply to this scene."])]*)
-  
-
+   |> should equal ([Action (false, [Literal( "Murtaugh, springing...", Range.empty); HardLineBreak(Range.empty); HardLineBreak(Range.empty); Literal("An explosion of sound...", Range.empty); HardLineBreak(Range.empty); 
+      Literal("As it rises like an avenging angel ...", Range.empty); HardLineBreak(Range.empty); Literal("Hovers, shattering the air ", Range.empty); HardLineBreak(Range.empty); HardLineBreak(Range.empty);
+      Literal ("Screaming, chaos, frenzy.", Range.empty); HardLineBreak(Range.empty); Literal( "Three words that apply to this scene.", Range.empty)], Range.empty)])
 
 //===== Notes
 [<Test>]
