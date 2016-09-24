@@ -87,7 +87,7 @@ let (|Emphasized|_|) = function
 let (|Note|_|) = function
   // the *** case in which it is both italic and strong
   | DelimitedWith ['['; '['] [']';']'] (body, rest) -> 
-      Some (body, Note, rest)
+      Some (body, rest)
   | _ -> None
 
 
@@ -139,12 +139,10 @@ let rec parseChars acc input = seq {
       yield! parseChars [] rest
 
   // Notes
-  | Note (body, f, rest) ->
+  | Note (body, rest) ->
       yield! accLiterals.Value
       let body = parseChars [] body |> List.ofSeq
-      //TODO: why won't it accept this?
-      // until i figure out what's happening here, Note won't work, because it just pulls the text out entirely.
-      //yield f(body)
+      yield Note(body, Range.empty)
       yield! parseChars [] rest
 
   // This calls itself recursively on the rest of the list

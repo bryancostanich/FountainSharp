@@ -302,17 +302,15 @@ let ``Line Breaks`` () =
 //===== Notes
 [<Test>]
 let ``Notes - Inline`` () =
-   let doc = "Some text and then a [[bit a of a note]]. And some more text." |> Fountain.Parse
+   let doc = "Some text and then a [[bit of a note]]. And some more text." |> Fountain.Parse
    doc.Blocks
-   // TODO: figure out the right output here. 
-   |> should equal [Action (false, [Literal ("fails anyway, it drops the note right now.", new Range(0,0))], new Range(0,0))]
-   //|> should equal [Action [Literal "Some text and then a "];[Note [Literal"bit of a note"]]; Literal ". And some more text."]
+   |> should equal [Action (false, [Literal ("Some text and then a ", Range.empty); Note ([Literal( "bit of a note", Range.empty)], Range.empty); Literal( ". And some more text.", Range.empty)], Range.empty)]
 
 [<Test>]
 let ``Notes - Block`` () =
    let doc = "[[It was supposed to be Vietnamese, right?]]" |> Fountain.Parse
    doc.Blocks
-   |> should equal [Note ([Literal ("It was supposed to be Vietnamese, right?", new Range(0,0))], new Range(0,0))]
+   |> should equal [Action(false, [Note ([Literal ("It was supposed to be Vietnamese, right?", Range.empty)], Range.empty)], Range.empty)]
 
 //===== Boneyard (Comments)
 //TODO: not implemented yet.
