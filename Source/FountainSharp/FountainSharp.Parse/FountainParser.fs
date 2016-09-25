@@ -285,11 +285,15 @@ let (|Centered|_|) = function
   | rest ->
       None
 
+let isForcedAction (input:string) =
+    input.StartsWith("!")
+
 // Parenthetical
-let (|Parenthetical|_|) (lastParsedBlock:FountainSharp.Parse.FountainBlockElement option) (input:string list) =
+let (|Parenthetical|_|) (lastParsedBlock:FountainBlockElement option) (input:string list) =
   match lastParsedBlock with
   // parenthetical can come after character OR dialogue
   | Some (FountainSharp.Parse.Character(_)) 
+  | Some (FountainSharp.Parse.Parenthetical(_)) // parenthetical can occur in a dialog which preceded by a character-parenthetical duo (in this case parenthetical is the last parsed block)
   | Some (FountainSharp.Parse.Dialogue(_)) ->
      match input with
      | blockContent :: rest ->
@@ -303,17 +307,52 @@ let (|Parenthetical|_|) (lastParsedBlock:FountainSharp.Parse.FountainBlockElemen
 //==== DIALOGUE
 
 // Dialogue
-let (|Dialogue|_|) (lastParsedBlock:FountainSharp.Parse.FountainBlockElement option) (input:string list) =
+let (|Dialogue|_|) (lastParsedBlock:FountainBlockElement option) (input:string list) =
   match lastParsedBlock with
   | Some (FountainSharp.Parse.Character(_)) 
   | Some (FountainSharp.Parse.Parenthetical(_)) ->
-     match input with
-     | blockContent :: rest ->
-        if blockContent.StartsWith "!" then // guard against forced action
-          None
-        else
-          Some(blockContent, rest)
-     | [] -> None
+     // Dialogue starts after Character or Character (parenthetical)
+     // look ahead and keep matching while it's none of these.
+     match List.partitionWhileLookahead (function
+     | SceneHeading _ -> false //note: it's decomposing the match and the rest and discarding the rest: `SceneHeading _` 
+     | Character _ -> false
+     | Lyric _ -> false
+     //| Transition _ -> false // ugh. need to pass the last parsed block. TODO: why does this not compile?
+     | Centered _ -> false
+     | Section _ -> false
+     | Synopses _ -> false
+     | PageBreak _ -> false
+     | Parenthetical lastParsedBlock _ -> false
+     | _ -> true) input with // if we found a match, and it's not empty, return the Action and the rest
+        | [], _ -> None
+        | matching, rest ->
+          // parsing dialogue's lines
+          let rec addLines (acc: string list) = function
+            // TODO: the following matches could be simpler, I think
+            | first :: second :: tail as input ->
+                if first = "" then
+                    if second.StartsWith("  ") then // dialogue continues
+                        addLines (second.Substring(2) :: first :: acc) tail
+                    else
+                        Some(List.rev acc, List.append(second :: first :: tail) rest)
+                elif isForcedAction(first) then // stop at forced Action
+                    Some(List.rev acc, List.append input rest)
+                else if second = "" then
+                    addLines (first :: acc) (second :: tail)
+                else
+                    addLines (second :: first :: acc) tail
+            | [head] ->
+                if isForcedAction(head) then // stop at forced Action
+                    Some(List.rev acc, rest)
+                else
+                    addLines (head :: acc) []
+            | [] ->
+                Some(List.rev acc, rest) // traversed all the lines
+
+          match addLines [] matching with
+          | Some([], rest) -> None // no lines found
+          | Some(body, rest) -> Some(body, rest)
+          | _ -> None
   | _ -> None
 
 //==== /DIALOGUE
@@ -377,6 +416,16 @@ type ParsingContext =
 /// 
 let rec parseBlocks (ctx:ParsingContext) (lastParsedBlock:FountainBlockElement option) (lines: _ list) = seq {
 
+  // we get multiple lines as a match, so for blank lines we return a hard line break, otherwise we 
+  // call parse spans
+  let mapFunc bodyLine : FountainSpans = 
+    if (bodyLine = "") then
+      [HardLineBreak(new Range(0,0))]
+    else
+      let kung = parseSpans bodyLine
+      let fu = [HardLineBreak(new Range(0,0))]
+      List.concat ([kung;fu])
+
   // NOTE: Order of matching is important here. for instance, if you matched dialogue before 
   // parenthetical, you'd never get parenthetical
 
@@ -424,21 +473,17 @@ let rec parseBlocks (ctx:ParsingContext) (lastParsedBlock:FountainBlockElement o
      yield! parseBlocks ctx (Some(item)) rest
 
   | Dialogue lastParsedBlock (body, rest) ->
-     let item = Dialogue(parseSpans body, new Range(0,0))
-     yield item
-     yield! parseBlocks ctx (Some(item)) rest
+//     let item = Dialogue(parseSpans body, new Range(0,0))
+//     yield item
+//     yield! parseBlocks ctx (Some(item)) rest
+    let foo = List.collect mapFunc body
+    let goo = foo.GetSlice(Some(0), Some(foo.Length - 2))
+    let item = Dialogue(goo, Range.empty)
+    yield item
+    // go on to parse the rest
+    yield! parseBlocks ctx (Some(item)) rest
 
   | Action(forced, bodyLines, rest) ->
-    // we get multiple lines as a match, so for blank lines we return a hard line break, otherwise we 
-    // call parse spans
-    let mapFunc bodyLine : FountainSpans = 
-      if (bodyLine = "") then
-        [HardLineBreak(new Range(0,0))]
-      else
-        let kung = parseSpans bodyLine
-        let fu = [HardLineBreak(new Range(0,0))]
-        List.concat ([kung;fu])
-
     //HACK: Action is a block element, so we want ot pull the last HardLineBreak off.
     // we have to do this here because we're adding it on above to every line.
     let foo = List.collect mapFunc bodyLines

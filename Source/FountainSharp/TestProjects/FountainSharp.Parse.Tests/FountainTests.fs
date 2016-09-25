@@ -109,13 +109,13 @@ let ``Scene Heading - No empty line after`` () =
 
 //===== Action
 [<Test>]
-let ``Action with line breaks`` () =
+let ``Action - With line breaks`` () =
    let doc = "EXT. BRICK'S PATIO - DAY\r\n\r\nSome Action\r\n\r\nSome More Action" |> Fountain.Parse
    doc.Blocks
    |> should equal   [SceneHeading (false, [Literal ("EXT. BRICK'S PATIO - DAY", new Range(0,0))], new Range(0,0)); Action (false, [HardLineBreak(new Range(0,0)); Literal ("Some Action", new Range(0,0)); HardLineBreak(new Range(0,0)); HardLineBreak(new Range(0,0)); Literal ("Some More Action", new Range(0,0))], new Range(0,0))]
 
 [<Test>]
-let ``Action with line breaks and no heading`` () =
+let ``Action - With line breaks and no heading`` () =
    let doc = "Natalie looks around at the group, TIM, ROGER, NATE, and VEEK.\n
 TIM, is smiling broadly." |> Fountain.Parse
    doc.Blocks
@@ -199,7 +199,7 @@ let ``Parenthetical `` () =
 let ``Parenthetical - After Dialogue`` () =
    let doc = "LINDSEY\r\n(quietly)\r\nHello, friend.\r\n(loudly)\r\nFriendo!" |> Fountain.Parse
    doc.Blocks
-   |> should equal [Character (false, [Literal ("LINDSEY", new Range(0,0))], new Range(0,0)); Parenthetical ([Literal ("quietly", new Range(0,0))], new Range(0,0)); Dialogue ([Literal ("Hello, friend.", new Range(0,0))], new Range(0,0)); Parenthetical ([Literal ("loudly", new Range(0,0))], new Range(0,0)); Dialogue ([Literal ("Friendo!", new Range(0,0))], new Range(0,0))];
+   |> should equal [Character (false, [Literal ("LINDSEY", Range.empty)], Range.empty); Parenthetical ([Literal ("quietly", Range.empty)], Range.empty); Dialogue ([Literal ("Hello, friend.", Range.empty)], Range.empty); Parenthetical ([Literal ("loudly", Range.empty)], Range.empty); Dialogue ([Literal ("Friendo!", Range.empty)], Range.empty)];
 
 
 //===== Dialogue
@@ -215,6 +215,12 @@ let ``Dialogue - After Parenthetical`` () =
    let doc = "LINDSEY\r\n(quietly)\r\nHello, friend." |> Fountain.Parse
    doc.Blocks
    |> should equal [Character (false, [Literal ("LINDSEY", new Range(0,0))], new Range(0,0)); Parenthetical ([Literal ("quietly", new Range(0,0))], new Range(0,0)); Dialogue ([Literal ("Hello, friend.", new Range(0,0))], new Range(0,0))]
+
+[<Test>]
+let ``Dialogue - With line break`` () =
+   let doc = "DEALER\r\nTen.\r\nFour.\r\nDealer gets a seven.\r\n\r\n  Hit or stand sir?" |> Fountain.Parse
+   doc.Blocks
+   |> should equal [Character (false, [Literal ("DEALER", Range.empty)], Range.empty);  Dialogue ([Literal ("Ten.", Range.empty); HardLineBreak(Range.empty); Literal ("Four.", Range.empty); HardLineBreak(Range.empty); Literal ("Dealer gets a seven.", Range.empty); HardLineBreak(Range.empty); HardLineBreak(Range.empty); Literal ("Hit or stand sir?", Range.empty)], Range.empty)]
 
 
 //===== Page Break
