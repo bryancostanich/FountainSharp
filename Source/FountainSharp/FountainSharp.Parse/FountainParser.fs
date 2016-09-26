@@ -334,7 +334,7 @@ let (|Dialogue|_|) (lastParsedBlock:FountainBlockElement option) (input:string l
                     if second.StartsWith("  ") then // dialogue continues
                         addLines (second.Substring(2) :: first :: acc) tail
                     else
-                        Some(List.rev acc, List.append(second :: first :: tail) rest)
+                        Some(List.rev acc, List.append(second :: tail) rest)
                 elif isForcedAction(first) then // stop at forced Action
                     Some(List.rev acc, List.append input rest)
                 else if second = "" then
@@ -418,13 +418,16 @@ let rec parseBlocks (ctx:ParsingContext) (lastParsedBlock:FountainBlockElement o
 
   // we get multiple lines as a match, so for blank lines we return a hard line break, otherwise we 
   // call parse spans
-  let mapFunc bodyLine : FountainSpans = 
-    if (bodyLine = "") then
-      [HardLineBreak(new Range(0,0))]
-    else
-      let kung = parseSpans bodyLine
-      let fu = [HardLineBreak(new Range(0,0))]
-      List.concat ([kung;fu])
+  let mapFunc bodyLines =
+    let mapFuncInternal bodyLine : FountainSpans = 
+      if (bodyLine = "") then
+        [HardLineBreak(new Range(0,0))]
+      else
+        let kung = parseSpans bodyLine
+        let fu = [HardLineBreak(new Range(0,0))]
+        List.concat ([kung;fu])
+    let foo = List.collect mapFuncInternal bodyLines
+    foo.GetSlice(Some(0), Some(foo.Length - 2))
 
   // NOTE: Order of matching is important here. for instance, if you matched dialogue before 
   // parenthetical, you'd never get parenthetical
@@ -473,31 +476,19 @@ let rec parseBlocks (ctx:ParsingContext) (lastParsedBlock:FountainBlockElement o
      yield! parseBlocks ctx (Some(item)) rest
 
   | Dialogue lastParsedBlock (body, rest) ->
-//     let item = Dialogue(parseSpans body, new Range(0,0))
-//     yield item
-//     yield! parseBlocks ctx (Some(item)) rest
-    let foo = List.collect mapFunc body
-    let goo = foo.GetSlice(Some(0), Some(foo.Length - 2))
-    let item = Dialogue(goo, Range.empty)
+    let spans = mapFunc body
+    let item = Dialogue(spans, Range.empty)
     yield item
-    // go on to parse the rest
-    yield! parseBlocks ctx (Some(item)) rest
+    yield! parseBlocks ctx (Some(item)) rest // go on to parse the rest
 
-  | Action(forced, bodyLines, rest) ->
-    //HACK: Action is a block element, so we want ot pull the last HardLineBreak off.
+  | Action(forced, body, rest) ->
+    //HACK: Action is a block element, so we want to pull the last HardLineBreak off.
     // we have to do this here because we're adding it on above to every line.
-    let foo = List.collect mapFunc bodyLines
-    let goo = foo.GetSlice(Some(0), Some(foo.Length - 2))
-
-    // collect is a magic function that concatenates lists
-    //let item = Action(List.collect mapFunc bodyLines)
-    let item = Action(forced, goo, new Range(0,0))
-
+    let spans = mapFunc body
+    let item = Action(forced, spans, new Range(0,0))
     yield item
-
-    // go on to parse the rest
-    yield! parseBlocks ctx (Some(item)) rest
-
+    yield! parseBlocks ctx (Some(item)) rest // go on to parse the rest
+    
   //| Lines.TrimBlankStart [] ->
   //   yield Action([HardLineBreak])
   ////   System.Diagnostics.Debug.WriteLine("Trimming blank line. ")

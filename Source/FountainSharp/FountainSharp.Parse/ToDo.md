@@ -69,8 +69,6 @@ items need to be added and/or modified:
 
  * **Notes** - No support yet for double-space continuation.
 
- * **Line Breaks** - Not supported correctly in Dialogue.
-
  * **Indenting** - Unknown support.
 
 Each one of these also need associated unit tests for parsing, as well as HTML
