@@ -62,34 +62,47 @@ let (|DelimitedText|_|) delimiterBracket input =
 
 /// recognizes emphasized text of Italic, Bold, etc.
 /// take something like "*some text* some more text" and return a sequence of TextSpans: italic<"some text">::rest
-let (|Emphasized|_|) = function
+let (|Emphasized|_|) span =
+  let check (body: char list, empType, rest) =
+//    let str = new String(body |> Array.ofList)
+    if String.containsNewLine body then
+        None
+    else
+        Some(body, empType, rest)
+
+  match span with
   // if it starts with either `_` or `*`
   //   1) the code `(('_' | '*')` :: tail)` decomposes the input into a sequence of either `'_'::tail` or `'*'::tail`
   //   2) `as input` binds that sequence to a variable
-  | ('_' :: tail) as input ->
+  | ('_' :: tail) as input -> // Underline
     match input with
     | DelimitedText ['_'] (body, rest) ->
-      Some(body, Underline, rest)
+      check(body, Underline, rest)
     | _ -> None
-  | ('*' :: '*' :: tail) as input ->
+  | ('*' :: '*' :: tail) as input -> // Bold
     match input with
     | DelimitedText ['*'; '*'] (body, rest) -> 
-      Some(body, Strong, rest)
+      check(body, Strong, rest)
     | _ -> None
-  | ('*' :: tail) as input ->
+  | ('*' :: tail) as input -> // Italic
     match input with
     | DelimitedText ['*'] (body, rest) -> 
-      Some(body, Italic, rest)
+      check(body, Italic, rest)
     | _ -> None
   | _ -> None
 
 /// recognizes notes which start with "[[" and end with "]]"
-let (|Note|_|) = function
-  // the *** case in which it is both italic and strong
+let (|Note|_|) input =
+  match input with
   | DelimitedWith ['['; '['] [']';']'] (body, rest) -> 
       Some (body, rest)
   | _ -> None
 
+  // This works just for a single line
+//  match input with
+//  | DelimitedWith ['['; '['] [']';']'] (body, rest) -> 
+//      Some (body, rest)
+//  | _ -> None
 
 /// Parses a body of a block and recognizes all inline tags.
 /// returns a sequence of FountainSpan
@@ -114,13 +127,12 @@ let rec parseChars acc input = seq {
   // markdown requires two spaces and then \r or \n, but fountain 
   // recognizes without
   // Recognizes explicit line-break at the end of line
-  | ('\n' | '\r')::rest
-  | '\r'::'\n'::rest ->
+  | '\r'::'\n'::rest
+  | ('\n' | '\r')::rest ->
     //System.Diagnostics.Debug.WriteLine("found a hardlinebreak")
     yield! accLiterals.Value
-    yield HardLineBreak(new Range(0,0))
+    yield HardLineBreak(Range.empty)
     yield! parseChars [] rest
-
 
   // Encode & as an HTML entity
   | '&'::'a'::'m'::'p'::';'::rest 
@@ -304,7 +316,24 @@ let (|Parenthetical|_|) (lastParsedBlock:FountainBlockElement option) (input:str
      | [] -> None
   | _ -> None
 
-//==== DIALOGUE
+//==== Transition
+
+// Transition
+let (|Transition|_|) (input:string list) =
+   match input with
+   | blockContent :: rest ->
+      if blockContent.StartsWith "!" then // guard against forced action
+        None
+      elif blockContent.EndsWith "TO:" || blockContent.StartsWith ">" then // TODO: need to check for a hard linebreak after
+        if blockContent.StartsWith ">" then
+          Some(true, blockContent.Substring(1).Trim(), rest) // true for forced
+        else
+          Some(false, blockContent.Trim(), rest)
+      else
+       None
+   | [] -> None
+
+//==== Dialogue
 
 // Dialogue
 let (|Dialogue|_|) (lastParsedBlock:FountainBlockElement option) (input:string list) =
@@ -317,7 +346,7 @@ let (|Dialogue|_|) (lastParsedBlock:FountainBlockElement option) (input:string l
      | SceneHeading _ -> false //note: it's decomposing the match and the rest and discarding the rest: `SceneHeading _` 
      | Character _ -> false
      | Lyric _ -> false
-     //| Transition _ -> false // ugh. need to pass the last parsed block. TODO: why does this not compile?
+     | Transition _ -> false // ugh. need to pass the last parsed block.
      | Centered _ -> false
      | Section _ -> false
      | Synopses _ -> false
@@ -355,24 +384,9 @@ let (|Dialogue|_|) (lastParsedBlock:FountainBlockElement option) (input:string l
           | _ -> None
   | _ -> None
 
-//==== /DIALOGUE
+//==== /Dialogue
 
-// Transition
-let (|Transition|_|) (input:string list) =
-   match input with
-   | blockContent :: rest ->
-      if blockContent.StartsWith "!" then // guard against forced action
-        None
-      elif blockContent.EndsWith "TO:" || blockContent.StartsWith ">" then // TODO: need to check for a hard linebreak after
-        if blockContent.StartsWith ">" then
-          Some(true, blockContent.Substring(1).Trim(), rest) // true for forced
-        else
-          Some(false, blockContent.Trim(), rest)
-      else
-       None
-   | [] -> None
-
-//==== ACTION
+//==== Action
 
 let (|Action|_|) input =
   // look ahead and keep matching while it's none of these.
@@ -392,13 +406,18 @@ let (|Action|_|) input =
         match input with
         | [] -> None
         | hd::tail ->
-          if (hd.StartsWith "!") then
-            Some(true, hd.Substring(1)::tail, rest) // trim off the '!' and smash the list back together
+          let sb = new System.Text.StringBuilder()
+          List.iter (fun x -> sb.AppendLine(x:string) |> ignore) (hd::tail)
+          if (hd.StartsWith "!") then // forced Action
+            Some(true, sb.ToString().Substring(1).TrimEnd(), rest)
+            //Some(true, hd.Substring(1)::tail, rest) // trim off the '!' and smash the list back together
           else
-            Some(false, matching, rest)
+            Some(false, sb.ToString().TrimEnd(), rest)
+          
+            //Some(false, matching, rest)
       //| _ -> None
 
-//==== /ACTION
+//==== /Action
 
 
 /// Defines a context for the main `parseBlocks` function
@@ -421,10 +440,10 @@ let rec parseBlocks (ctx:ParsingContext) (lastParsedBlock:FountainBlockElement o
   let mapFunc bodyLines =
     let mapFuncInternal bodyLine : FountainSpans = 
       if (bodyLine = "") then
-        [HardLineBreak(new Range(0,0))]
+        [HardLineBreak(Range.empty)]
       else
         let kung = parseSpans bodyLine
-        let fu = [HardLineBreak(new Range(0,0))]
+        let fu = [HardLineBreak(Range.empty)]
         List.concat ([kung;fu])
     let foo = List.collect mapFuncInternal bodyLines
     foo.GetSlice(Some(0), Some(foo.Length - 2))
@@ -482,13 +501,20 @@ let rec parseBlocks (ctx:ParsingContext) (lastParsedBlock:FountainBlockElement o
     yield! parseBlocks ctx (Some(item)) rest // go on to parse the rest
 
   | Action(forced, body, rest) ->
-    //HACK: Action is a block element, so we want to pull the last HardLineBreak off.
-    // we have to do this here because we're adding it on above to every line.
-    let spans = mapFunc body
-    let item = Action(forced, spans, new Range(0,0))
+    // body: as a single string. this can be parsed for spans much better
+    let spans = parseSpans body
+    let item = Action(forced, spans, Range.empty)
     yield item
     yield! parseBlocks ctx (Some(item)) rest // go on to parse the rest
+
+    //HACK: Action is a block element, so we want to pull the last HardLineBreak off.
+    // we have to do this here because we're adding it on above to every line.
+//    let spans = mapFunc body
+//    let item = Action(forced, spans, new Range(0,0))
+//    yield item
+//    yield! parseBlocks ctx (Some(item)) rest // go on to parse the rest
     
+
   //| Lines.TrimBlankStart [] ->
   //   yield Action([HardLineBreak])
   ////   System.Diagnostics.Debug.WriteLine("Trimming blank line. ")
