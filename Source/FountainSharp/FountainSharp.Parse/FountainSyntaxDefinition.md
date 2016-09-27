@@ -21,7 +21,7 @@
 ## Span Elements
   * [Emphasis](#emphasis) - √
   * [Page Breaks](#page-breaks) - √
-  * [Notes](#notes) - √ - TODO: No support yet for double-space continuation.
+  * [Notes](#notes) - √
 
 ## Other Rules
   * [Punctuation](#punctuation) - √

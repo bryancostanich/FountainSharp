@@ -67,8 +67,6 @@ items need to be added and/or modified:
 
  * **Boneyard/Comments** - Not supported at all yet.
 
- * **Notes** - No support yet for double-space continuation.
-
  * **Indenting** - Unknown support.
 
 Each one of these also need associated unit tests for parsing, as well as HTML

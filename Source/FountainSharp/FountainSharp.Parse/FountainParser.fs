@@ -10,6 +10,7 @@ module internal FountainSharp.Parse.Parser
 open System
 open System.IO
 open System.Collections.Generic
+open System.Text
 open System.Text.RegularExpressions
 
 open FSharp.Collections
@@ -63,13 +64,14 @@ let (|DelimitedText|_|) delimiterBracket input =
 /// recognizes emphasized text of Italic, Bold, etc.
 /// take something like "*some text* some more text" and return a sequence of TextSpans: italic<"some text">::rest
 let (|Emphasized|_|) span =
+  
+  // Emphasis is not valid across multiple lines. this function checks for it
   let check (body: char list, empType, rest) =
-//    let str = new String(body |> Array.ofList)
     if String.containsNewLine body then
         None
     else
         Some(body, empType, rest)
-
+  
   match span with
   // if it starts with either `_` or `*`
   //   1) the code `(('_' | '*')` :: tail)` decomposes the input into a sequence of either `'_'::tail` or `'*'::tail`
@@ -93,16 +95,19 @@ let (|Emphasized|_|) span =
 
 /// recognizes notes which start with "[[" and end with "]]"
 let (|Note|_|) input =
+  // replace double space with new line
+  let rec transform chars = 
+      // TODO: new lines should be uniform through the whole library.
+      // Action active pattern places '\n' as new line, that's what we expect here
+      match chars with
+      | '\n' :: ' ' :: ' ' :: '\n' :: tail -> '\n' :: '\n' :: (transform tail)
+      | head :: tail -> head :: (transform tail)
+      | [] -> []
+
   match input with
   | DelimitedWith ['['; '['] [']';']'] (body, rest) -> 
-      Some (body, rest)
+      Some (transform body, rest)
   | _ -> None
-
-  // This works just for a single line
-//  match input with
-//  | DelimitedWith ['['; '['] [']';']'] (body, rest) -> 
-//      Some (body, rest)
-//  | _ -> None
 
 /// Parses a body of a block and recognizes all inline tags.
 /// returns a sequence of FountainSpan
@@ -406,8 +411,8 @@ let (|Action|_|) input =
         match input with
         | [] -> None
         | hd::tail ->
-          let sb = new System.Text.StringBuilder()
-          List.iter (fun x -> sb.AppendLine(x:string) |> ignore) (hd::tail)
+          let sb = new StringBuilder()
+          List.iter (fun x -> sb.Append(x:string) |> ignore; sb.Append('\n') |> ignore) (hd::tail)
           if (hd.StartsWith "!") then // forced Action
             Some(true, sb.ToString().Substring(1).TrimEnd(), rest)
             //Some(true, hd.Substring(1)::tail, rest) // trim off the '!' and smash the list back together
@@ -506,14 +511,6 @@ let rec parseBlocks (ctx:ParsingContext) (lastParsedBlock:FountainBlockElement o
     let item = Action(forced, spans, Range.empty)
     yield item
     yield! parseBlocks ctx (Some(item)) rest // go on to parse the rest
-
-    //HACK: Action is a block element, so we want to pull the last HardLineBreak off.
-    // we have to do this here because we're adding it on above to every line.
-//    let spans = mapFunc body
-//    let item = Action(forced, spans, new Range(0,0))
-//    yield item
-//    yield! parseBlocks ctx (Some(item)) rest // go on to parse the rest
-    
 
   //| Lines.TrimBlankStart [] ->
   //   yield Action([HardLineBreak])
