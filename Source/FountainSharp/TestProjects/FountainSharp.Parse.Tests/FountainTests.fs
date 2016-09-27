@@ -109,13 +109,13 @@ let ``Scene Heading - No empty line after`` () =
 
 //===== Action
 [<Test>]
-let ``Action with line breaks`` () =
+let ``Action - With line breaks`` () =
    let doc = "EXT. BRICK'S PATIO - DAY\r\n\r\nSome Action\r\n\r\nSome More Action" |> Fountain.Parse
    doc.Blocks
    |> should equal   [SceneHeading (false, [Literal ("EXT. BRICK'S PATIO - DAY", new Range(0,0))], new Range(0,0)); Action (false, [HardLineBreak(new Range(0,0)); Literal ("Some Action", new Range(0,0)); HardLineBreak(new Range(0,0)); HardLineBreak(new Range(0,0)); Literal ("Some More Action", new Range(0,0))], new Range(0,0))]
 
 [<Test>]
-let ``Action with line breaks and no heading`` () =
+let ``Action - With line breaks and no heading`` () =
    let doc = "Natalie looks around at the group, TIM, ROGER, NATE, and VEEK.\n
 TIM, is smiling broadly." |> Fountain.Parse
    doc.Blocks
@@ -199,7 +199,7 @@ let ``Parenthetical `` () =
 let ``Parenthetical - After Dialogue`` () =
    let doc = "LINDSEY\r\n(quietly)\r\nHello, friend.\r\n(loudly)\r\nFriendo!" |> Fountain.Parse
    doc.Blocks
-   |> should equal [Character (false, [Literal ("LINDSEY", new Range(0,0))], new Range(0,0)); Parenthetical ([Literal ("quietly", new Range(0,0))], new Range(0,0)); Dialogue ([Literal ("Hello, friend.", new Range(0,0))], new Range(0,0)); Parenthetical ([Literal ("loudly", new Range(0,0))], new Range(0,0)); Dialogue ([Literal ("Friendo!", new Range(0,0))], new Range(0,0))];
+   |> should equal [Character (false, [Literal ("LINDSEY", Range.empty)], Range.empty); Parenthetical ([Literal ("quietly", Range.empty)], Range.empty); Dialogue ([Literal ("Hello, friend.", Range.empty)], Range.empty); Parenthetical ([Literal ("loudly", Range.empty)], Range.empty); Dialogue ([Literal ("Friendo!", Range.empty)], Range.empty)];
 
 
 //===== Dialogue
@@ -216,6 +216,18 @@ let ``Dialogue - After Parenthetical`` () =
    doc.Blocks
    |> should equal [Character (false, [Literal ("LINDSEY", new Range(0,0))], new Range(0,0)); Parenthetical ([Literal ("quietly", new Range(0,0))], new Range(0,0)); Dialogue ([Literal ("Hello, friend.", new Range(0,0))], new Range(0,0))]
 
+[<Test>]
+let ``Dialogue - With line break`` () =
+   let doc = "DEALER\r\nTen.\r\nFour.\r\nDealer gets a seven.\r\n\r\n  Hit or stand sir?" |> Fountain.Parse
+   doc.Blocks
+   |> should equal [Character (false, [Literal ("DEALER", Range.empty)], Range.empty);  Dialogue ([Literal ("Ten.", Range.empty); HardLineBreak(Range.empty); Literal ("Four.", Range.empty); HardLineBreak(Range.empty); Literal ("Dealer gets a seven.", Range.empty); HardLineBreak(Range.empty); HardLineBreak(Range.empty); Literal ("Hit or stand sir?", Range.empty)], Range.empty)]
+
+[<Test>]
+let ``Dialogue - With invalid line break`` () =
+   let doc = "DEALER\r\nTen.\r\nFour.\r\nDealer gets a seven.\r\n\r\nHit or stand sir?" |> Fountain.Parse
+   doc.Blocks
+   |> should equal [Character (false, [Literal ("DEALER", Range.empty)], Range.empty);  Dialogue ([Literal ("Ten.", Range.empty); HardLineBreak(Range.empty); Literal ("Four.", Range.empty); HardLineBreak(Range.empty); Literal ("Dealer gets a seven.", Range.empty)], Range.empty); Action (false, [Literal ("Hit or stand sir?", Range.empty)], Range.empty)]
+   // this test now fails: parsing places line break be after last Action
 
 //===== Page Break
 
@@ -311,6 +323,18 @@ let ``Notes - Block`` () =
    let doc = "[[It was supposed to be Vietnamese, right?]]" |> Fountain.Parse
    doc.Blocks
    |> should equal [Action(false, [Note ([Literal ("It was supposed to be Vietnamese, right?", Range.empty)], Range.empty)], Range.empty)]
+
+[<Test>]
+let ``Notes - Line breaks`` () =
+   let doc = "His hand is an inch from the receiver when the phone RINGS. Scott pauses for a moment, suspicious for some reason.[[This section needs work.\r\nEither that, or I need coffee.\r\nDefinitely coffee.]] He looks around. Phone ringing." |> Fountain.Parse
+   doc.Blocks
+   |> should equal [Action(false, [Literal ("His hand is an inch from the receiver when the phone RINGS. Scott pauses for a moment, suspicious for some reason.", Range.empty); Note([Literal("This section needs work.", Range.empty); HardLineBreak(Range.empty); Literal("Either that, or I need coffee.", Range.empty); HardLineBreak(Range.empty); Literal("Definitely coffee.", Range.empty);], Range.empty); Literal(" He looks around. Phone ringing.", Range.empty)], Range.empty)]
+
+[<Test>]
+let ``Notes - Line breaks with empty line`` () =
+   let doc = "His hand is an inch from the receiver when the phone RINGS. Scott pauses for a moment, suspicious for some reason.[[This section needs work.\r\nEither that, or I need coffee.\r\n  \r\nDefinitely coffee.]] He looks around. Phone ringing." |> Fountain.Parse
+   doc.Blocks
+   |> should equal [Action(false, [Literal ("His hand is an inch from the receiver when the phone RINGS. Scott pauses for a moment, suspicious for some reason.", Range.empty); Note([Literal("This section needs work.", Range.empty); HardLineBreak(Range.empty); Literal("Either that, or I need coffee.", Range.empty); HardLineBreak(Range.empty); HardLineBreak(Range.empty); Literal("Definitely coffee.", Range.empty);], Range.empty); Literal(" He looks around. Phone ringing.", Range.empty)], Range.empty)]
 
 //===== Boneyard (Comments)
 //TODO: not implemented yet.

@@ -21,11 +21,11 @@
 ## Span Elements
   * [Emphasis](#emphasis) - √
   * [Page Breaks](#page-breaks) - √
-  * [Notes](#notes) - √ - TODO: No support yet for double-space continuation.
+  * [Notes](#notes) - √
 
 ## Other Rules
   * [Punctuation](#punctuation) - √
-  * [Line Breaks](#line-breaks) - ~√; Actions - yes. TODO: Dialogue - No.
+  * [Line Breaks](#line-breaks) - √
   * [Indenting](#indenting) - ?
 
 

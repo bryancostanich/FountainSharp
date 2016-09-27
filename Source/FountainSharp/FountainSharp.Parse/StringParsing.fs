@@ -13,6 +13,12 @@ open FountainSharp.Parse.Collections
 // --------------------------------------------------------------------------------------
 
 module String =
+  // Returns whether a string contains new line character
+  let containsNewLine (s:seq<char>) =
+    match Seq.tryFindIndex (fun x -> x = '\n' || x = '\r') s with
+    | None -> false
+    | _ -> true
+
   /// Matches when a string is a whitespace or null
   let (|WhiteSpace|_|) s = 
     if String.IsNullOrWhiteSpace(s) then Some() else None
