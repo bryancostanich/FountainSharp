@@ -210,7 +210,7 @@ let (|Section|_|) input = //function
   | rest ->
       None
 
-let NewLineAfterFirstElement (forced, list) = 
+let hasNewLineAfterFirstElement (forced, list) = 
   match list with
   | [] ->
     None
@@ -221,14 +221,32 @@ let NewLineAfterFirstElement (forced, list) =
      else
         None
 
+let (|Boneyard|_|) input =
+    // recongizing lines inside of the boneyard
+    // TODO: now /* and */ should stand alone in a line. if it's not appropriate, Boneyard should be implemented as a span (it would be weird though :))
+    let rec addLines (acc : string list) = 
+        function 
+        | [] -> None // no beginning or ending of comment found
+        | String.StartsWith "/*" head:string :: tail ->
+            addLines acc tail // beginning of comment
+        | String.StartsWith "*/" head:string :: tail -> 
+            Some(List.rev acc, tail) // end of comment
+        | head :: tail ->
+            addLines (head :: acc) tail // inside or outside of comment
+
+    match addLines [] input with
+    | Some([], rest) -> None // no comment found
+    | Some(body, rest) -> Some(body, rest)
+    | _ -> None
+
 // TODO: Should we also look for a line break before? 
 let (|SceneHeading|_|) = function
   // look for normal heading
   | String.StartsWithAnyCaseInsensitive [ "INT"; "EXT"; "EST"; "INT./EXT."; "INT/EXT"; "I/E" ] heading:string :: rest ->
-     NewLineAfterFirstElement (false, heading :: rest)
+     hasNewLineAfterFirstElement (false, heading :: rest)
   // look for forced heading
   | String.StartsWith "." heading:string :: rest ->
-     NewLineAfterFirstElement (true, heading :: rest)
+     hasNewLineAfterFirstElement (true, heading :: rest)
   | rest ->
      None
 
@@ -457,6 +475,10 @@ let rec parseBlocks (ctx:ParsingContext) (lastParsedBlock:FountainBlockElement o
   // parenthetical, you'd never get parenthetical
 
   match lines with
+  | Boneyard(body, rest) ->
+     let item = Boneyard(String.asSingleString(body, "\n"), Range.empty)
+     yield item
+     yield! parseBlocks ctx (Some(item)) rest
   // Recognize remaining types of blocks/paragraphs
   | SceneHeading(forced, body, rest) ->
      let item = SceneHeading(forced, parseSpans body, new Range(0,0))

@@ -14,6 +14,15 @@ let properNewLines (text: string) = text.Replace("\r\n", System.Environment.NewL
 
 //===== Block Elements ==============================================================
 
+//===== Boneyard
+
+// TODO: should we support boneyards in a single line? Also in the middle of the line?
+[<Test>]
+let ``Boneyard`` () =
+   let doc = "/*\r\nThis is a simple comment\r\n*/" |> Fountain.Parse
+   doc.Blocks
+   |> should equal [Boneyard ("This is a simple comment", Range.empty)]
+
 //===== Scene Headings
 [<Test>]
 let ``Basic Scene Heading`` () =
@@ -307,9 +316,7 @@ let ``Centered - with spaces`` () =
 let ``Line Breaks`` () =
    let doc = "Murtaugh, springing...\n\nAn explosion of sound...\nAs it rises like an avenging angel ...\nHovers, shattering the air \n\nScreaming, chaos, frenzy.\nThree words that apply to this scene." |> Fountain.Parse
    doc.Blocks
-   |> should equal ([Action (false, [Literal( "Murtaugh, springing...", Range.empty); HardLineBreak(Range.empty); HardLineBreak(Range.empty); Literal("An explosion of sound...", Range.empty); HardLineBreak(Range.empty); 
-      Literal("As it rises like an avenging angel ...", Range.empty); HardLineBreak(Range.empty); Literal("Hovers, shattering the air ", Range.empty); HardLineBreak(Range.empty); HardLineBreak(Range.empty);
-      Literal ("Screaming, chaos, frenzy.", Range.empty); HardLineBreak(Range.empty); Literal( "Three words that apply to this scene.", Range.empty)], Range.empty)])
+   |> should equal ([Action (false, [Literal( "Murtaugh, springing...", Range.empty); HardLineBreak(Range.empty); HardLineBreak(Range.empty); Literal("An explosion of sound...", Range.empty); HardLineBreak(Range.empty); Literal("As it rises like an avenging angel ...", Range.empty); HardLineBreak(Range.empty); Literal("Hovers, shattering the air ", Range.empty); HardLineBreak(Range.empty); HardLineBreak(Range.empty); Literal ("Screaming, chaos, frenzy.", Range.empty); HardLineBreak(Range.empty); Literal( "Three words that apply to this scene.", Range.empty)], Range.empty)])
 
 //===== Notes
 [<Test>]

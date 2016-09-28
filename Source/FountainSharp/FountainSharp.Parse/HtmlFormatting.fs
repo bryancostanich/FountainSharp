@@ -134,6 +134,7 @@ let withInner ctx f =
 /// Write a FountainBlockElement value to a TextWriter
 let rec formatBlockElement (ctx:FormattingContext) block =
   match block with
+  | Boneyard(_, _) -> ()
   | Section(n, spans, range) -> 
       ctx.Writer.Write("<h" + string n + ">")
 //      if ctx.GenerateHeaderAnchors then

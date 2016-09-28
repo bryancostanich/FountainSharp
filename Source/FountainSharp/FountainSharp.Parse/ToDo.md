@@ -65,7 +65,7 @@ items need to be added and/or modified:
 
  * **Dual Dialogue** - Not supported at all yet.
 
- * **Boneyard/Comments** - Not supported at all yet.
+ * **Boneyard/Comments** - Only recognized when /\* and \*/ stand alone in their lines.
 
  * **Indenting** - Unknown support.
 

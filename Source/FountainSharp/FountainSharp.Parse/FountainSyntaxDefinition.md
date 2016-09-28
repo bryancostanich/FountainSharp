@@ -15,7 +15,7 @@
   * [Centered Text](#centered-text) - √
   * [Sections](#sections) - √
   * [Synposes](#synopses) - √
-  * [Boneyard/Comments](#boneyard-comments) - TODO: not supported
+  * [Boneyard/Comments](#boneyard-comments) - Only recognized when /\* and \*/ stand alone in their lines.
   * [Title Page](#title-page) - not supported
 
 ## Span Elements
