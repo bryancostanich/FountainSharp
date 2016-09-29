@@ -9,12 +9,8 @@ This project is a work in progress. For a detailed list of outstanding tasks, se
  * **Finish Syntax Parsing** - Nearly all of the Fountain syntax is supported, but a few small items remain.
  * **Add Range Support** - Document elements should have an associated `Range` so that the document representation can be more effectively used in an editor.
  * **Custom HTML CSS** - HTML transformation is largely done, but custom CSS templates should be allowed.
- * **Nuget Package** - The library should be published as a Nuget package.
  * **Usage Documentation** - The library should be documented from a consumer perspective.
 
-## Contributing 
- 
+## Contributing
+
 For contributing, please see the [Source Documentation](Source/FountainSharp/FountainSharp.Parse/Documentation.md). I <3 well documented pull requests. :)
-
-
-
