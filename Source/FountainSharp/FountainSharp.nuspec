@@ -1,0 +1,28 @@
+<?xml version="1.0"?>
+<package >
+  <metadata>
+    <id>FountainSharp</id>
+    <version>1.0.0</version>
+    <title>FountainSharp</title>
+    <authors>Bryan Costanich</authors>
+    <owners>Bryan Costanich</owners>
+    <licenseUrl>https://github.com/bryancostanich/FountainSharp/blob/master/LICENSE</licenseUrl>
+    <projectUrl>https://github.com/bryancostanich/FountainSharp/</projectUrl>
+<!--    <iconUrl>http://ICON_URL_HERE_OR_DELETE_THIS_LINE</iconUrl>-->
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>An F# based Fountain Markdown processor that's based on the FSharp.Formatting library by Tomas Petricek.</description>
+    <releaseNotes>First release on Nuget.</releaseNotes>
+    <copyright>Copyright - Bryan Costanich © 2015-2016</copyright>
+    <tags>fountain screenwriters</tags>
+    <dependencies>
+      <group targetFramework="portable-net45+win+MonoTouch10+MonoAndroid10+xamarinmac20+xamarintvos10+xamarinwatchos10+xamarinios10">
+        <dependency id="FSharp.Core" version="4.0.0.1 " />
+      </group>
+    </dependencies>
+  </metadata>
+  <files>
+    <!-- Portable -->
+    <file src="FountainSharp.Parse/bin/Release/FountainSharp.Parse.dll" target="lib/portable-net45+win+MonoTouch10+MonoAndroid10+xamarinmac20+xamarintvos10+xamarinwatchos10+xamarinios10" />
+    <file src="PortableProjects/FountainSharp.Parse.MobilePCL/bin/Release/FountainSharp.Parse.MobilePCL.dll" target="lib/portable-net45+win+MonoTouch10+MonoAndroid10+xamarinmac20+xamarintvos10+xamarinwatchos10+xamarinios10" />
+  </files>
+</package>

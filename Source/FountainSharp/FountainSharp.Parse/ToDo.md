@@ -54,10 +54,6 @@ Along with the actual range calculation and class modifications, unit tests shou
 created that validate the ranges for all elements. Additionally, the class
 modifications themselves should be documented at the class level.
 
-## Nuget Package Creation
-
-Probably both the FountainSharp.Parse and the FountainSharp.Parse.MobilePCL should be packaged up in a NuGet and published.
-
 ## Remaining Syntax Support
 
 See [Syntax Definition](FountainSyntaxDefinition.md). Several outstanding syntax
@@ -65,7 +61,7 @@ items need to be added and/or modified:
 
  * **Dual Dialogue** - Not supported at all yet.
 
- * **Boneyard/Comments** - Not supported at all yet.
+ * **Boneyard/Comments** - Only recognized when /\* and \*/ stand alone in their lines.
 
  * **Indenting** - Unknown support.
 

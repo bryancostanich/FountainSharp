@@ -72,9 +72,11 @@ type FountainBlockElement =
   | PageBreak
   | Transition of bool * FountainSpans * Range
   | Centered of FountainSpans * Range
+  | Boneyard of string * Range
 
   member fb.GetLength() : int =
     match fb with
+    | Boneyard(text, r) -> text.Length
     | Action(forced, spans, r)
     | SceneHeading(forced, spans, r)
     | Character(forced, spans, r)
