@@ -10,6 +10,7 @@ This project is a work in progress. For a detailed list of outstanding tasks, se
  * **Add Range Support** - Document elements should have an associated `Range` so that the document representation can be more effectively used in an editor.
  * **Custom HTML CSS** - HTML transformation is largely done, but custom CSS templates should be allowed.
  * **Usage Documentation** - The library should be documented from a consumer perspective.
+ * **Net Standard** - We should investigate moving this to .NET Standard and get rid of the PCL.
 
 ## Contributing
 
