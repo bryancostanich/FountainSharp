@@ -238,6 +238,13 @@ let ``Dialogue - With invalid line break`` () =
    |> should equal [Character (false, [Literal ("DEALER", Range.empty)], Range.empty);  Dialogue ([Literal ("Ten.", Range.empty); HardLineBreak(Range.empty); Literal ("Four.", Range.empty); HardLineBreak(Range.empty); Literal ("Dealer gets a seven.", Range.empty)], Range.empty); Action (false, [Literal ("Hit or stand sir?", Range.empty)], Range.empty)]
    // this test now fails: parsing places line break be after last Action
 
+[<Test>]
+let ``Dual Dialogue - Simple`` () =
+   let doc = "LINDSEY     ^\r\nHello, friend." |> Fountain.Parse
+   doc.Blocks
+   |> should equal [Character (false, [Literal ("LINDSEY", Range.empty)], Range.empty); Dialogue ([Literal ("Hello, friend.", Range.empty)], Range.empty)]
+
+
 //===== Page Break
 
 [<Test>]

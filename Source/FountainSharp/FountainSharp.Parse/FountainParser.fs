@@ -263,9 +263,10 @@ let (|Character|_|) (list:string list) =
     //  else if (System.Char.IsUpper (head.[0]) && head.ToCharArray() |> Seq.forall (fun c -> (System.Char.IsUpper c|| System.Char.IsWhiteSpace c || System.Char.IsNumber c))) then
     // matches "BOB" or "BOB JOHNSON" or "BOB (on the radio)" or "R2D2" but not "25D2"
     else
-      let m = Regex.Match(head, @"^\p{Lu}[\p{Lu}\d\s]*(\(.*\))?")
+      let pattern = @"^\p{Lu}[\p{Lu}\d\s]*(\(.*\))?(\s+\^)?$"
+      let m = Regex.Match(head, pattern)
       if m.Value = head then
-        if m.Groups.Count > 1 then
+        if m.Groups.Count > 1 && String.IsNullOrEmpty(m.Groups.[1].Value) = false then
           // check parenthetical extension for lowercase or uppercase
           // TODO: Do we really need to do this? The specification is not crystal clear about this.
           // If the extension can consist of mixed letters, than this block can be discarded
@@ -277,7 +278,11 @@ let (|Character|_|) (list:string list) =
           else
             None
         else // no parenthetical extension found
-          Some(false, head, rest)
+          if m.Value.EndsWith("^") then
+            // character for dual dialogue
+            Some(false, m.Value.Remove(m.Value.Length - 1).Trim(), rest)
+          else
+            Some(false, head, rest)
       // does not match Character rules
       else
         None
