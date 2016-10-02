@@ -170,6 +170,11 @@ let rec formatBlockElement (ctx:FormattingContext) block =
       for span in spans do 
         formatSpan ctx span
       ctx.Writer.Write("</strong><br/></div>")
+  | DualDialogueSection(blocks, range) ->
+      // TODO: add proper formatting for Dual Dialogues, this coloring has been applied just for testing
+      ctx.Writer.Write("""<div style="color:#f00">""");
+      blocks |> List.iter( fun b -> formatBlockElement ctx b )
+      ctx.Writer.Write("</div>");
   | Character (forced, spans, range) ->
       ctx.Writer.Write("""<div style="text-align:center;"><br/>""")
       //if forced then

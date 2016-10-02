@@ -180,6 +180,19 @@ let parseSpans ((*String.TrimBoth*) s:string) =
   // printDebug "parseSpans %s" s
   parseChars [] (s.ToCharArray() |> List.ofArray) |> List.ofSeq
 
+  // we get multiple lines as a match, so for blank lines we return a hard line break, otherwise we 
+  // call parse spans
+let mapFunc bodyLines =
+    let mapFuncInternal bodyLine : FountainSpans = 
+      if (bodyLine = "") then
+        [HardLineBreak(Range.empty)]
+      else
+        let kung = parseSpans bodyLine
+        let fu = [HardLineBreak(Range.empty)]
+        List.concat ([kung;fu])
+    let foo = List.collect mapFuncInternal bodyLines
+    foo.GetSlice(Some(0), Some(foo.Length - 2))
+
 //======================================================================================
 // Part 2: Block Formatting
 
@@ -418,6 +431,33 @@ let (|Dialogue|_|) (lastParsedBlock:FountainBlockElement option) (input:string l
 
 //==== /Dialogue
 
+//==== Dual Dialogue
+
+let (|DualDialogue|_|) (lastParsedBlock:FountainBlockElement option) (input:string list) =
+  // parse input for (Character, Dialogue) pairs and return the list of them  
+  let rec parse (input:string list, acc, lastParsedBlock:FountainBlockElement option) = 
+    match input with
+    | Character(forced, body, rest) as item -> 
+        let characterItem = Character(forced, parseSpans body, Range.empty)
+        let lastParsedBlock = Some(characterItem)
+        match rest with
+        | Dialogue lastParsedBlock (dialogBody, rest) -> 
+          let dialogueItem = Dialogue(mapFunc dialogBody, Range.empty)
+          parse (rest, dialogueItem :: characterItem :: acc, Some(dialogueItem))
+        | _ -> None
+    | _ -> Some(List.rev acc, input)
+
+  match parse (input, [], lastParsedBlock) with
+  | Some([], _) -> None
+  | Some(list, rest) ->
+    if list.Length > 2 then
+       Some(list, rest)
+    else
+       None
+  | _ -> None
+
+//==== /Dual Dialogue
+
 //==== Action
 
 let (|Action|_|) input =
@@ -467,19 +507,6 @@ type ParsingContext =
 /// 
 let rec parseBlocks (ctx:ParsingContext) (lastParsedBlock:FountainBlockElement option) (lines: _ list) = seq {
 
-  // we get multiple lines as a match, so for blank lines we return a hard line break, otherwise we 
-  // call parse spans
-  let mapFunc bodyLines =
-    let mapFuncInternal bodyLine : FountainSpans = 
-      if (bodyLine = "") then
-        [HardLineBreak(Range.empty)]
-      else
-        let kung = parseSpans bodyLine
-        let fu = [HardLineBreak(Range.empty)]
-        List.concat ([kung;fu])
-    let foo = List.collect mapFuncInternal bodyLines
-    foo.GetSlice(Some(0), Some(foo.Length - 2))
-
   // NOTE: Order of matching is important here. for instance, if you matched dialogue before 
   // parenthetical, you'd never get parenthetical
 
@@ -495,6 +522,10 @@ let rec parseBlocks (ctx:ParsingContext) (lastParsedBlock:FountainBlockElement o
      yield! parseBlocks ctx (Some(item)) rest
   | Section(n, body, rest) ->
      let item = Section(n, parseSpans body, new Range(0,0))
+     yield item
+     yield! parseBlocks ctx (Some(item)) rest
+  | DualDialogue lastParsedBlock (blocks, rest) ->
+     let item = DualDialogueSection(blocks, Range.empty)
      yield item
      yield! parseBlocks ctx (Some(item)) rest
   | Character(forced, body, rest) ->

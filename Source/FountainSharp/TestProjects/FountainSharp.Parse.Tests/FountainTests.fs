@@ -241,7 +241,7 @@ let ``Dialogue - With invalid line break`` () =
 [<Test>]
 let ``Dual Dialogue`` () =
    let doc = "\r\nBRICK\r\nScrew retirement.\r\n\r\nSTEEL ^\r\nScrew retirement." |> Fountain.Parse
-   let expected = [Character (false, [Literal ("BRICK", Range.empty)], Range.empty); Dialogue ([Literal ("Screw retirement.", Range.empty)], Range.empty); Character (false, [Literal ("STEEL", Range.empty)], Range.empty); Dialogue ([Literal ("Screw retirement.", Range.empty)], Range.empty)]
+   let expected = [DualDialogueSection([Character (false, [Literal ("BRICK", Range.empty)], Range.empty); Dialogue ([Literal ("Screw retirement.", Range.empty)], Range.empty); Character (false, [Literal ("STEEL", Range.empty)], Range.empty); Dialogue ([Literal ("Screw retirement.", Range.empty)], Range.empty)], Range.empty)]
    doc.Blocks
    |> should equal expected
 
