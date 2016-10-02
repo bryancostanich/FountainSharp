@@ -170,11 +170,23 @@ let rec formatBlockElement (ctx:FormattingContext) block =
       for span in spans do 
         formatSpan ctx span
       ctx.Writer.Write("</strong><br/></div>")
-  | DualDialogueSection(blocks, range) ->
+  | DualDialogue(blocks, range) ->
       // TODO: add proper formatting for Dual Dialogues, this coloring has been applied just for testing
-      ctx.Writer.Write("""<div style="color:#f00">""");
-      blocks |> List.iter( fun (character, dialogue) -> formatBlockElement ctx character; formatBlockElement ctx dialogue )
-      ctx.Writer.Write("</div>");
+      ctx.Writer.Write("""<table style="width:100%">""");
+      let mutable columnIndex = 0
+      blocks |> List.iter( fun (character, dialogue) -> 
+        if columnIndex = 0 then
+          ctx.Writer.Write("<tr>"); // first column, open the line
+        ctx.Writer.Write("<td>");
+        formatBlockElement ctx character;
+        formatBlockElement ctx dialogue;
+        ctx.Writer.Write("</td>");
+        if columnIndex = 1 then
+           ctx.Writer.Write("</tr>"); // second column, close the line
+           columnIndex <- 0
+        else
+           columnIndex <- 1 )
+      ctx.Writer.Write("</table>");
   | Character (forced, main, spans, range) ->
       ctx.Writer.Write("""<div style="text-align:center;"><br/>""")
       //if forced then

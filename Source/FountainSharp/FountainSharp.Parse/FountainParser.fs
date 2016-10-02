@@ -539,7 +539,7 @@ let rec parseBlocks (ctx:ParsingContext) (lastParsedBlock:FountainBlockElement o
      yield item
      yield! parseBlocks ctx (Some(item)) rest
   | DualDialogue lastParsedBlock (blocks, rest) ->
-     let item = DualDialogueSection(blocks, Range.empty)
+     let item = DualDialogue(blocks, Range.empty)
      yield item
      yield! parseBlocks ctx (Some(item)) rest
   | Character(forced, main, body, rest) ->

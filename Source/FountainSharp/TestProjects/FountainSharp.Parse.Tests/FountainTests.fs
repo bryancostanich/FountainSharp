@@ -241,9 +241,8 @@ let ``Dialogue - With invalid line break`` () =
 [<Test>]
 let ``Dual Dialogue`` () =
    let doc = "\r\nBRICK\r\nScrew retirement.\r\n\r\nSTEEL ^\r\nScrew retirement." |> Fountain.Parse
-   let expected = [DualDialogueSection([(Character (false, true, [Literal ("BRICK", Range.empty)], Range.empty), Dialogue ([Literal ("Screw retirement.", Range.empty)], Range.empty)); (Character (false, false, [Literal ("STEEL", Range.empty)], Range.empty), Dialogue ([Literal ("Screw retirement.", Range.empty)], Range.empty))], Range.empty)]
    doc.Blocks
-   |> should equal expected
+   |> should equal [DualDialogue([(Character (false, true, [Literal ("BRICK", Range.empty)], Range.empty), Dialogue ([Literal ("Screw retirement.", Range.empty)], Range.empty)); (Character (false, false, [Literal ("STEEL", Range.empty)], Range.empty), Dialogue ([Literal ("Screw retirement.", Range.empty)], Range.empty))], Range.empty)]
 
 [<Test>]
 let ``Dual Dialogue - Second character`` () =
@@ -257,6 +256,13 @@ let ``Dual Dialogue - invalid`` () =
    let doc = "\r\nSTEEL\r\nBeer's ready!\r\nBRICK\r\nAre they cold?" |> Fountain.Parse
    doc.Blocks
    |> should equal [Character (false, true, [Literal ("STEEL", Range.empty)], Range.empty); Dialogue ([Literal ("Beer's ready!", Range.empty); HardLineBreak(Range.empty); Literal("BRICK", Range.empty); HardLineBreak(Range.empty); Literal("Are they cold?", Range.empty)], Range.empty)]
+
+//[<Test>]
+//let ``Dual Dialogue - Parenthesis`` () =
+//   let doc = "\r\nSTEEL\r\n(beer raised)\r\nTo retirement.\r\n\r\nBRICK ^\r\nTo retirement." |> Fountain.Parse
+//   let expected = [DualDialogue([(Character (false, true, [Literal ("STEEL", Range.empty)], Range.empty), Dialogue ([Literal ("To retirement.", Range.empty)], Range.empty)); (Character (false, false, [Literal ("BRICK", Range.empty)], Range.empty), Dialogue ([Literal ("To retirement.", Range.empty)], Range.empty))], Range.empty)]
+//   doc.Blocks
+//   |> should equal expected
 
 //===== Page Break
 
