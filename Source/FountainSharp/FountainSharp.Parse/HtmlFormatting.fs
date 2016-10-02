@@ -175,7 +175,7 @@ let rec formatBlockElement (ctx:FormattingContext) block =
       ctx.Writer.Write("""<div style="color:#f00">""");
       blocks |> List.iter( fun (character, dialogue) -> formatBlockElement ctx character; formatBlockElement ctx dialogue )
       ctx.Writer.Write("</div>");
-  | Character (forced, spans, range) ->
+  | Character (forced, main, spans, range) ->
       ctx.Writer.Write("""<div style="text-align:center;"><br/>""")
       //if forced then
       //  ctx.Writer.Write("@")
