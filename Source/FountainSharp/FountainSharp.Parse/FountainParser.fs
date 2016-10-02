@@ -443,14 +443,15 @@ let (|DualDialogue|_|) (lastParsedBlock:FountainBlockElement option) (input:stri
         match rest with
         | Dialogue lastParsedBlock (dialogBody, rest) -> 
           let dialogueItem = Dialogue(mapFunc dialogBody, Range.empty)
-          parse (rest, dialogueItem :: characterItem :: acc, Some(dialogueItem))
+          parse (rest, (characterItem, dialogueItem) :: acc, Some(dialogueItem))
         | _ -> None
     | _ -> Some(List.rev acc, input)
 
   match parse (input, [], lastParsedBlock) with
   | Some([], _) -> None
   | Some(list, rest) ->
-    if list.Length > 2 then
+    // TODO: have to check whether the second character has a caret
+    if list.Length > 1 then
        Some(list, rest)
     else
        None
