@@ -23,6 +23,9 @@ let printDebug fmt par =
     let s = FSharp.Core.Printf.sprintf fmt par
     System.Diagnostics.Debug.WriteLine s
 
+[<Literal>]
+let EmptyLine = ""
+
 //====== Parser
 // Part 1: Inline Formatting
 
@@ -250,22 +253,22 @@ let (|SceneHeading|_|) = function
   | rest ->
      None
 
-// CHARACTER TODO: "BOB (OS)"
 let (|Character|_|) (list:string list) =
   match list with
   | [] -> None
-  | head :: rest ->
+  | EmptyLine :: head :: rest ->
+    // Character has to be preceded by empty line
     if (head.Length = 0) then
         None
     // matches "@McAVOY"
     else if (head.StartsWith "@") then
       Some(true, head.Substring(1), rest)
-    //  else if (System.Char.IsUpper (head.[0]) && head.ToCharArray() |> Seq.forall (fun c -> (System.Char.IsUpper c|| System.Char.IsWhiteSpace c || System.Char.IsNumber c))) then
     // matches "BOB" or "BOB JOHNSON" or "BOB (on the radio)" or "R2D2" but not "25D2"
     else
-      let m = Regex.Match(head, @"^\p{Lu}[\p{Lu}\d\s]*(\(.*\))?")
+      let pattern = @"^\p{Lu}[\p{Lu}\d\s]*(\(.*\))?(\s+\^)?$"
+      let m = Regex.Match(head, pattern)
       if m.Value = head then
-        if m.Groups.Count > 1 then
+        if m.Groups.Count > 1 && String.IsNullOrEmpty(m.Groups.[1].Value) = false then
           // check parenthetical extension for lowercase or uppercase
           // TODO: Do we really need to do this? The specification is not crystal clear about this.
           // If the extension can consist of mixed letters, than this block can be discarded
@@ -277,10 +280,15 @@ let (|Character|_|) (list:string list) =
           else
             None
         else // no parenthetical extension found
-          Some(false, head, rest)
+          if m.Value.EndsWith("^") then
+            // character for dual dialogue
+            Some(false, m.Value.Remove(m.Value.Length - 1).Trim(), rest)
+          else
+            Some(false, head, rest)
       // does not match Character rules
       else
         None
+  | _ -> None
 
 /// Recognizes a PageBreak (3 or more consecutive equals and nothign more)
 let (|PageBreak|_|) input = //function
@@ -382,14 +390,14 @@ let (|Dialogue|_|) (lastParsedBlock:FountainBlockElement option) (input:string l
           let rec addLines (acc: string list) = function
             // TODO: the following matches could be simpler, I think
             | first :: second :: tail as input ->
-                if first = "" then
+                if first = EmptyLine then
                     if second.StartsWith("  ") then // dialogue continues
                         addLines (second.Substring(2) :: first :: acc) tail
                     else
                         Some(List.rev acc, List.append(second :: tail) rest)
                 elif isForcedAction(first) then // stop at forced Action
                     Some(List.rev acc, List.append input rest)
-                else if second = "" then
+                else if second = EmptyLine then
                     addLines (first :: acc) (second :: tail)
                 else
                     addLines (second :: first :: acc) tail
@@ -401,7 +409,8 @@ let (|Dialogue|_|) (lastParsedBlock:FountainBlockElement option) (input:string l
             | [] ->
                 Some(List.rev acc, rest) // traversed all the lines
 
-          match addLines [] matching with
+          let lines = addLines [] matching
+          match lines with
           | Some([], rest) -> None // no lines found
           | Some(body, rest) -> Some(body, rest)
           | _ -> None
@@ -426,7 +435,7 @@ let (|Action|_|) input =
     | PageBreak _ -> false
     | _ -> true) input with // if we found a match, and it's not empty, return the Action and the rest
       | matching, rest ->
-        match input with
+        match matching with
         | [] -> None
         | hd::tail ->
           let sb = new StringBuilder()
