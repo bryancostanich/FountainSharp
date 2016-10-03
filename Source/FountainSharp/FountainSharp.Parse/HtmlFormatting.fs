@@ -171,21 +171,30 @@ let rec formatBlockElement (ctx:FormattingContext) block =
         formatSpan ctx span
       ctx.Writer.Write("</strong><br/></div>")
   | DualDialogue(blocks, range) ->
-      // TODO: add proper formatting for Dual Dialogues, this coloring has been applied just for testing
       ctx.Writer.Write("""<table style="width:100%">""");
       let mutable columnIndex = 0
-      blocks |> List.iter( fun (character, dialogue) -> 
-        if columnIndex = 0 then
-          ctx.Writer.Write("<tr>"); // first column, open the line
-        ctx.Writer.Write("<td>");
-        formatBlockElement ctx character;
-        formatBlockElement ctx dialogue;
-        ctx.Writer.Write("</td>");
-        if columnIndex = 1 then
-           ctx.Writer.Write("</tr>"); // second column, close the line
-           columnIndex <- 0
-        else
-           columnIndex <- 1 )
+      let mutable first = true
+      blocks |> List.iter( fun block -> 
+        match block with
+        | FountainBlockElement.Character(forced, main, spans, r) ->
+          if not first then
+            // finish previous column
+            ctx.Writer.Write("</td>")
+            if columnIndex = 1 then
+               ctx.Writer.Write("</tr>") // second column, close the line
+            // change column
+            if columnIndex = 1 then
+               columnIndex <- 0
+            else
+               columnIndex <- 1
+          else
+            first <- false
+          // start this column
+          if columnIndex = 0 then
+            ctx.Writer.Write("<tr>") // first column, open the line
+          ctx.Writer.Write("<td>")
+          formatBlockElement ctx block // write content
+        | _ -> formatBlockElement ctx block )
       ctx.Writer.Write("</table>");
   | Character (forced, main, spans, range) ->
       ctx.Writer.Write("""<div style="text-align:center;"><br/>""")

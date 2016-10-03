@@ -242,7 +242,7 @@ let ``Dialogue - With invalid line break`` () =
 let ``Dual Dialogue`` () =
    let doc = "\r\nBRICK\r\nScrew retirement.\r\n\r\nSTEEL ^\r\nScrew retirement." |> Fountain.Parse
    doc.Blocks
-   |> should equal [DualDialogue([(Character (false, true, [Literal ("BRICK", Range.empty)], Range.empty), Dialogue ([Literal ("Screw retirement.", Range.empty)], Range.empty)); (Character (false, false, [Literal ("STEEL", Range.empty)], Range.empty), Dialogue ([Literal ("Screw retirement.", Range.empty)], Range.empty))], Range.empty)]
+   |> should equal [DualDialogue([Character (false, true, [Literal ("BRICK", Range.empty)], Range.empty); Dialogue ([Literal ("Screw retirement.", Range.empty)], Range.empty); Character (false, false, [Literal ("STEEL", Range.empty)], Range.empty); Dialogue ([Literal ("Screw retirement.", Range.empty)], Range.empty)], Range.empty)]
 
 [<Test>]
 let ``Dual Dialogue - Second character`` () =

@@ -73,7 +73,7 @@ type FountainBlockElement =
   | Transition of bool * FountainSpans * Range
   | Centered of FountainSpans * Range
   | Boneyard of string * Range
-  | DualDialogue of list<FountainBlockElement * FountainBlockElement> * Range
+  | DualDialogue of FountainBlocks * Range
   
   member private this.GetLength(spans:FountainSpans) : int =
     spans
@@ -84,7 +84,7 @@ type FountainBlockElement =
     match fb with
     | DualDialogue(blocks, r) ->
       blocks
-      |> List.map( fun (character, dialogue) -> character.GetLength() + dialogue.GetLength() )
+      |> List.map( fun b -> b.GetLength() )
       |> List.sum
     | Character(forced, main, spans, r) ->
         fb.GetLength(spans)
