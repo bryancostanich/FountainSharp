@@ -170,12 +170,41 @@ let rec formatBlockElement (ctx:FormattingContext) block =
       for span in spans do 
         formatSpan ctx span
       ctx.Writer.Write("</strong><br/></div>")
-  | DualDialogueSection(blocks, range) ->
-      // TODO: add proper formatting for Dual Dialogues, this coloring has been applied just for testing
-      ctx.Writer.Write("""<div style="color:#f00">""");
-      blocks |> List.iter( fun (character, dialogue) -> formatBlockElement ctx character; formatBlockElement ctx dialogue )
-      ctx.Writer.Write("</div>");
-  | Character (forced, main, spans, range) ->
+  | DualDialogue(blocks, range) ->
+      ctx.Writer.Write("""<table style="width:100%">""");
+
+      // writes the list of blocks into a table cell
+      let writeDualDialogueBlocks primary blocks = 
+          if primary then ctx.Writer.Write("<tr>"); // new line for primary character
+          ctx.Writer.Write("<td>");
+          for block in blocks do
+            formatBlockElement ctx block
+          ctx.Writer.Write("</td>");
+          if not primary then ctx.Writer.Write("</tr>"); // end line after the secondary character
+      
+      // formatting list of dual dialogue's internal blocks as chunks of (Character, Parenthetical, Dialogue, Parenthetical)
+      // Parenthetical blocks are optional
+      let rec formatDualDialogueBlocks blocks =
+        match blocks with
+        | [] -> ()
+        | (Character(_, main, _, _) as c) :: (Parenthetical(_, _) as pc) :: (Dialogue(_, _) as d) :: (Parenthetical(_, _) as pd) :: tail ->
+          writeDualDialogueBlocks main [c; pc; d; pd]
+          formatDualDialogueBlocks tail
+        | (Character(_, main, _, _) as c) :: (Dialogue(_, _) as d) :: (Parenthetical(_, _) as pd) :: tail ->
+          writeDualDialogueBlocks main [c; d; pd]
+          formatDualDialogueBlocks tail
+        | (Character(_, main, _, _) as c) :: (Parenthetical(_, _) as pc) :: (Dialogue(_, _) as d) :: tail ->
+          writeDualDialogueBlocks main [c; pc; d]
+          formatDualDialogueBlocks tail
+        | (Character(_, main, _, _) as c) :: (Dialogue(_, _) as d) :: tail ->
+          writeDualDialogueBlocks main [c; d]
+          formatDualDialogueBlocks tail
+        | _ -> ()
+
+      formatDualDialogueBlocks blocks
+
+      ctx.Writer.Write("</table>");
+  | Character (forced, primary, spans, range) ->
       ctx.Writer.Write("""<div style="text-align:center;"><br/>""")
       //if forced then
       //  ctx.Writer.Write("@")

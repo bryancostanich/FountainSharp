@@ -440,31 +440,65 @@ let (|Dialogue|_|) (lastParsedBlock:FountainBlockElement option) (input:string l
 //==== Dual Dialogue
 
 let (|DualDialogue|_|) (lastParsedBlock:FountainBlockElement option) (input:string list) =
-  // parse input for (Character, Dialogue) pairs and return the list of them  
-  let rec parse (input:string list, acc, lastParsedBlock:FountainBlockElement option) = 
+  // parse input for Character or Character, Parenthetical and return the list of them  
+  let rec parseCharacter (input:string list, acc, lastParsedBlock:FountainBlockElement option) = 
     match input with
-    | Character(forced, main, body, rest) as item -> 
-        let characterItem = Character(forced, main, parseSpans body, Range.empty)
+    | Character(forced, primary, body, rest) as item -> 
+        let characterItem = Character(forced, primary, parseSpans body, Range.empty)
         let lastParsedBlock = Some(characterItem)
         match rest with
-        | Dialogue lastParsedBlock (dialogBody, rest) -> 
-          let dialogueItem = Dialogue(mapFunc dialogBody, Range.empty)
-          parse (rest, (characterItem, dialogueItem) :: acc, Some(dialogueItem))
-        | _ -> None
-    | _ -> Some(List.rev acc, input)
+        | Parenthetical lastParsedBlock (body, rest) ->
+            let parentheticalItem = Parenthetical(parseSpans body, Range.empty)
+            parseCharacter (rest, parentheticalItem :: characterItem :: acc, Some(characterItem))
+        | _ ->
+            parseCharacter (rest, characterItem :: acc, Some(characterItem))
+    | _ -> if acc.Length = 0 then None else Some(acc, input, lastParsedBlock)
+
+  // parse input for Dialogue or Dialogue, Parenthetical and return the list of them  
+  let rec parseDialogue (input:string list, acc, lastParsedBlock:FountainBlockElement option) = 
+    match input with
+    | Dialogue lastParsedBlock (dialogBody, rest) -> 
+        let dialogueItem = Dialogue(mapFunc dialogBody, Range.empty)
+        let lastParsedBlock = Some(dialogueItem)
+        match rest with
+        | Parenthetical lastParsedBlock (body, rest) ->
+            let parentheticalItem = Parenthetical(parseSpans body, Range.empty)
+            parseDialogue (rest, parentheticalItem :: dialogueItem :: acc, Some(dialogueItem))
+        | _ ->
+            parseDialogue (rest, dialogueItem :: acc, Some(dialogueItem))
+    | _ -> if acc.Length = 0 then None else Some(acc, input, lastParsedBlock)
+
+  // parse input for (Character, Dialogue) pairs and return the list of them  
+  let rec parse (input:string list, acc, lastParsedBlock:FountainBlockElement option) = 
+    if input.Length = 0 then
+        Some(List.rev acc, input)
+    else
+      match parseCharacter(input, [], lastParsedBlock) with
+      | Some(characterBlocks, rest, lastParsedBlock) -> 
+          match parseDialogue(rest, [], lastParsedBlock) with
+          | Some(dialogueBlocks, rest, lastParsedBlock) ->
+              parse (rest, List.concat [dialogueBlocks; characterBlocks; acc], lastParsedBlock)
+          | _ -> Some(List.rev acc, input)
+      | _ -> Some(List.rev acc, input)
+
+  let isSecondary block =
+    match block with
+    | FountainBlockElement.Character(forced, primary, spans, r) ->
+      not primary
+    | _ -> false
+
+  let isPrimary block = 
+    match block with
+    | FountainBlockElement.Character(forced, primary, spans, r) ->
+      primary
+    | _ -> false
 
   // at least 2 (Character, Dialogue) blocks have to be found and at least one of them should be secondary character (marked by a caret)
-  let findSecondaryCharacter = List.tryFind (fun (character, dialogue) ->
-    match character with
-    | FountainBlockElement.Character(forced, main, spans, r) ->
-      not main
-    | _ -> false)
     
   match parse (input, [], lastParsedBlock) with
   | Some([], _) -> None // no (Character, Dialogue) blocks found
   | Some(list, rest) ->
-    let foundSecondary = findSecondaryCharacter list
-    if foundSecondary <> None && list.Length > 1 then
+    if List.tryFind isPrimary list <> None &&  List.tryFind isSecondary list <> None then
        Some(list, rest)
     else
        None
@@ -539,11 +573,11 @@ let rec parseBlocks (ctx:ParsingContext) (lastParsedBlock:FountainBlockElement o
      yield item
      yield! parseBlocks ctx (Some(item)) rest
   | DualDialogue lastParsedBlock (blocks, rest) ->
-     let item = DualDialogueSection(blocks, Range.empty)
+     let item = DualDialogue(blocks, Range.empty)
      yield item
      yield! parseBlocks ctx (Some(item)) rest
-  | Character(forced, main, body, rest) ->
-     let item = Character(forced, main, parseSpans body, new Range(0,0))
+  | Character(forced, primary, body, rest) ->
+     let item = Character(forced, primary, parseSpans body, new Range(0,0))
      yield item
      yield! parseBlocks ctx (Some(item)) rest
 
