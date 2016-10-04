@@ -257,12 +257,12 @@ let ``Dual Dialogue - invalid`` () =
    doc.Blocks
    |> should equal [Character (false, true, [Literal ("STEEL", Range.empty)], Range.empty); Dialogue ([Literal ("Beer's ready!", Range.empty); HardLineBreak(Range.empty); Literal("BRICK", Range.empty); HardLineBreak(Range.empty); Literal("Are they cold?", Range.empty)], Range.empty)]
 
-//[<Test>]
-//let ``Dual Dialogue - Parenthesis`` () =
-//   let doc = "\r\nSTEEL\r\n(beer raised)\r\nTo retirement.\r\n\r\nBRICK ^\r\nTo retirement." |> Fountain.Parse
-//   let expected = [DualDialogue([(Character (false, true, [Literal ("STEEL", Range.empty)], Range.empty), Dialogue ([Literal ("To retirement.", Range.empty)], Range.empty)); (Character (false, false, [Literal ("BRICK", Range.empty)], Range.empty), Dialogue ([Literal ("To retirement.", Range.empty)], Range.empty))], Range.empty)]
-//   doc.Blocks
-//   |> should equal expected
+[<Test>]
+let ``Dual Dialogue - Parenthetical`` () =
+   let doc = "\r\nSTEEL\r\n(beer raised)\r\nTo retirement.\r\n\r\nBRICK ^\r\nTo retirement." |> Fountain.Parse
+   let expected = [DualDialogue([Character (false, true, [Literal ("STEEL", Range.empty)], Range.empty); Parenthetical([Literal("beer raised", Range.empty)], Range.empty); Dialogue ([Literal ("To retirement.", Range.empty)], Range.empty); Character (false, false, [Literal ("BRICK", Range.empty)], Range.empty); Dialogue ([Literal ("To retirement.", Range.empty)], Range.empty)], Range.empty)]
+   doc.Blocks
+   |> should equal expected
 
 //===== Page Break
 

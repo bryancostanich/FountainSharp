@@ -443,8 +443,8 @@ let (|DualDialogue|_|) (lastParsedBlock:FountainBlockElement option) (input:stri
   // parse input for Character or Character, Parenthetical and return the list of them  
   let rec parseCharacter (input:string list, acc, lastParsedBlock:FountainBlockElement option) = 
     match input with
-    | Character(forced, main, body, rest) as item -> 
-        let characterItem = Character(forced, main, parseSpans body, Range.empty)
+    | Character(forced, primary, body, rest) as item -> 
+        let characterItem = Character(forced, primary, parseSpans body, Range.empty)
         let lastParsedBlock = Some(characterItem)
         match rest with
         | Parenthetical lastParsedBlock (body, rest) ->
@@ -483,14 +483,14 @@ let (|DualDialogue|_|) (lastParsedBlock:FountainBlockElement option) (input:stri
 
   let isSecondary block =
     match block with
-    | FountainBlockElement.Character(forced, main, spans, r) ->
-      not main
+    | FountainBlockElement.Character(forced, primary, spans, r) ->
+      not primary
     | _ -> false
 
   let isPrimary block = 
     match block with
-    | FountainBlockElement.Character(forced, main, spans, r) ->
-      main
+    | FountainBlockElement.Character(forced, primary, spans, r) ->
+      primary
     | _ -> false
 
   // at least 2 (Character, Dialogue) blocks have to be found and at least one of them should be secondary character (marked by a caret)
@@ -576,8 +576,8 @@ let rec parseBlocks (ctx:ParsingContext) (lastParsedBlock:FountainBlockElement o
      let item = DualDialogue(blocks, Range.empty)
      yield item
      yield! parseBlocks ctx (Some(item)) rest
-  | Character(forced, main, body, rest) ->
-     let item = Character(forced, main, parseSpans body, new Range(0,0))
+  | Character(forced, primary, body, rest) ->
+     let item = Character(forced, primary, parseSpans body, new Range(0,0))
      yield item
      yield! parseBlocks ctx (Some(item)) rest
 
