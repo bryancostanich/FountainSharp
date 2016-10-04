@@ -61,7 +61,7 @@ and FountainSpans = list<FountainSpanElement>
 /// Blocks are headings, action blocks, dialogue blocks, etc. 
 type FountainBlockElement = 
   | Action of bool * FountainSpans * Range
-  | Character of bool * FountainSpans * Range //TODO: maybe just FountainSpanElement? or just string?
+  | Character of bool * bool * FountainSpans * Range //TODO: maybe just FountainSpanElement? or just string?
   | Dialogue of FountainSpans * Range
   | Parenthetical of FountainSpans * Range
   | Section of int * FountainSpans * Range
@@ -73,35 +73,39 @@ type FountainBlockElement =
   | Transition of bool * FountainSpans * Range
   | Centered of FountainSpans * Range
   | Boneyard of string * Range
+  | DualDialogueSection of list<FountainBlockElement * FountainBlockElement> * Range
+  
+  member private this.GetLength(spans:FountainSpans) : int =
+    spans
+    |> List.map( fun span -> span.GetLength() )
+    |> List.sum
 
   member fb.GetLength() : int =
     match fb with
+    | DualDialogueSection(blocks, r) ->
+      blocks
+      |> List.map( fun (character, dialogue) -> character.GetLength() + dialogue.GetLength() )
+      |> List.sum
+    | Character(forced, main, spans, r) ->
+        fb.GetLength(spans)
     | Boneyard(text, r) -> text.Length
     | Action(forced, spans, r)
     | SceneHeading(forced, spans, r)
-    | Character(forced, spans, r)
     | Transition(forced, spans, r) ->
-      spans
-      |> List.map( fun span -> span.GetLength() )
-      |> List.sum
+        fb.GetLength(spans)
     | Dialogue(spans, r)
     | Parenthetical(spans, r)
     | Span(spans, r)
     | Synopses (spans, r)
     | Lyric(spans, r)
     | Centered(spans, r) ->
-      spans
-      |> List.map( fun span -> span.GetLength() )
-      |> List.sum
-    | Section(int, spans, r) -> 
-      spans
-      |> List.map( fun span -> span.GetLength() )
-      |> List.sum
+        fb.GetLength(spans)
+    | Section(int, spans, r) ->
+        fb.GetLength(spans)
     | PageBreak -> 3 //TODO: should we actually parse and keep the actual literal that folks use to define a pagebreak?
   
   member fs.GetRange(start:int):Range =
     new Range(start, fs.GetLength() + start)
-
 
 /// A type alias for a list of blocks
 and FountainBlocks = list<FountainBlockElement>

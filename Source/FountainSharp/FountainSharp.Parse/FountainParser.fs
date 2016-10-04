@@ -180,6 +180,19 @@ let parseSpans ((*String.TrimBoth*) s:string) =
   // printDebug "parseSpans %s" s
   parseChars [] (s.ToCharArray() |> List.ofArray) |> List.ofSeq
 
+  // we get multiple lines as a match, so for blank lines we return a hard line break, otherwise we 
+  // call parse spans
+let mapFunc bodyLines =
+    let mapFuncInternal bodyLine : FountainSpans = 
+      if (bodyLine = "") then
+        [HardLineBreak(Range.empty)]
+      else
+        let kung = parseSpans bodyLine
+        let fu = [HardLineBreak(Range.empty)]
+        List.concat ([kung;fu])
+    let foo = List.collect mapFuncInternal bodyLines
+    foo.GetSlice(Some(0), Some(foo.Length - 2))
+
 //======================================================================================
 // Part 2: Block Formatting
 
@@ -262,7 +275,10 @@ let (|Character|_|) (list:string list) =
         None
     // matches "@McAVOY"
     else if (head.StartsWith "@") then
-      Some(true, head.Substring(1), rest)
+      if head.EndsWith(" ^") then
+        Some(true, false, head.Substring(1), rest)
+      else
+        Some(true, true, head.Substring(1), rest)
     // matches "BOB" or "BOB JOHNSON" or "BOB (on the radio)" or "R2D2" but not "25D2"
     else
       let pattern = @"^\p{Lu}[\p{Lu}\d\s]*(\(.*\))?(\s+\^)?$"
@@ -276,15 +292,18 @@ let (|Character|_|) (list:string list) =
           let allUpper = extension |> Seq.forall(fun c -> Char.IsUpper(c)) // all uppercase
           let allLower = extension |> Seq.forall(fun c -> Char.IsLower(c)) // all lowercase
           if allUpper || allLower then
-            Some(false, head, rest)
+            if m.Value.EndsWith("^") then
+              Some(false, false, head, rest)
+            else
+              Some(false, true, head, rest)
           else
             None
         else // no parenthetical extension found
           if m.Value.EndsWith("^") then
             // character for dual dialogue
-            Some(false, m.Value.Remove(m.Value.Length - 1).Trim(), rest)
+            Some(false, false, m.Value.Remove(m.Value.Length - 1).Trim(), rest)
           else
-            Some(false, head, rest)
+            Some(false, true, head, rest)
       // does not match Character rules
       else
         None
@@ -418,6 +437,41 @@ let (|Dialogue|_|) (lastParsedBlock:FountainBlockElement option) (input:string l
 
 //==== /Dialogue
 
+//==== Dual Dialogue
+
+let (|DualDialogue|_|) (lastParsedBlock:FountainBlockElement option) (input:string list) =
+  // parse input for (Character, Dialogue) pairs and return the list of them  
+  let rec parse (input:string list, acc, lastParsedBlock:FountainBlockElement option) = 
+    match input with
+    | Character(forced, main, body, rest) as item -> 
+        let characterItem = Character(forced, main, parseSpans body, Range.empty)
+        let lastParsedBlock = Some(characterItem)
+        match rest with
+        | Dialogue lastParsedBlock (dialogBody, rest) -> 
+          let dialogueItem = Dialogue(mapFunc dialogBody, Range.empty)
+          parse (rest, (characterItem, dialogueItem) :: acc, Some(dialogueItem))
+        | _ -> None
+    | _ -> Some(List.rev acc, input)
+
+  // at least 2 (Character, Dialogue) blocks have to be found and at least one of them should be secondary character (marked by a caret)
+  let findSecondaryCharacter = List.tryFind (fun (character, dialogue) ->
+    match character with
+    | FountainBlockElement.Character(forced, main, spans, r) ->
+      not main
+    | _ -> false)
+    
+  match parse (input, [], lastParsedBlock) with
+  | Some([], _) -> None // no (Character, Dialogue) blocks found
+  | Some(list, rest) ->
+    let foundSecondary = findSecondaryCharacter list
+    if foundSecondary <> None && list.Length > 1 then
+       Some(list, rest)
+    else
+       None
+  | None -> None
+
+//==== /Dual Dialogue
+
 //==== Action
 
 let (|Action|_|) input =
@@ -467,19 +521,6 @@ type ParsingContext =
 /// 
 let rec parseBlocks (ctx:ParsingContext) (lastParsedBlock:FountainBlockElement option) (lines: _ list) = seq {
 
-  // we get multiple lines as a match, so for blank lines we return a hard line break, otherwise we 
-  // call parse spans
-  let mapFunc bodyLines =
-    let mapFuncInternal bodyLine : FountainSpans = 
-      if (bodyLine = "") then
-        [HardLineBreak(Range.empty)]
-      else
-        let kung = parseSpans bodyLine
-        let fu = [HardLineBreak(Range.empty)]
-        List.concat ([kung;fu])
-    let foo = List.collect mapFuncInternal bodyLines
-    foo.GetSlice(Some(0), Some(foo.Length - 2))
-
   // NOTE: Order of matching is important here. for instance, if you matched dialogue before 
   // parenthetical, you'd never get parenthetical
 
@@ -497,8 +538,12 @@ let rec parseBlocks (ctx:ParsingContext) (lastParsedBlock:FountainBlockElement o
      let item = Section(n, parseSpans body, new Range(0,0))
      yield item
      yield! parseBlocks ctx (Some(item)) rest
-  | Character(forced, body, rest) ->
-     let item = Character(forced, parseSpans body, new Range(0,0))
+  | DualDialogue lastParsedBlock (blocks, rest) ->
+     let item = DualDialogueSection(blocks, Range.empty)
+     yield item
+     yield! parseBlocks ctx (Some(item)) rest
+  | Character(forced, main, body, rest) ->
+     let item = Character(forced, main, parseSpans body, new Range(0,0))
      yield item
      yield! parseBlocks ctx (Some(item)) rest
 

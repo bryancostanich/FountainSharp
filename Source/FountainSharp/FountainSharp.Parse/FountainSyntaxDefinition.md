@@ -9,7 +9,7 @@
   * [Character](#character) - √
   * [Dialogue](#dialogue) - √
   * [Parenthetical](#parenthetical) - √
-  * [Dual Dialogue](#dual-dialogue) - TODO: not supported
+  * [Dual Dialogue](#dual-dialogue) - √
   * [Lyrics](#lyrics) - √
   * [Transition](#transition) - √
   * [Centered Text](#centered-text) - √
@@ -26,7 +26,7 @@
 ## Other Rules
   * [Punctuation](#punctuation) - √
   * [Line Breaks](#line-breaks) - √
-  * [Indenting](#indenting) - ?
+  * [Indenting](#indenting) - not supported
 
 
 # Scene Heading

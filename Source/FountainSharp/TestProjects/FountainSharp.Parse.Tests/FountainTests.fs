@@ -149,14 +149,14 @@ let ``Basic Synopses`` () =
 let ``Character - Normal`` () =
    let doc = "\r\nLINDSEY" |> Fountain.Parse
    doc.Blocks
-   |> should equal [Character (false, [Literal ("LINDSEY", new Range(0,0))], new Range(0,0))]
+   |> should equal [Character (false, true, [Literal ("LINDSEY", new Range(0,0))], new Range(0,0))]
 
 [<Test>]
 let ``Character - With parenthetical extension`` () =
    let character = "LINDSEY (on the radio)"
    let doc = "\r\n" + character |> Fountain.Parse
    doc.Blocks
-   |> should equal [Character (false, [Literal (character, Range.empty)], Range.empty)]
+   |> should equal [Character (false, true, [Literal (character, Range.empty)], Range.empty)]
 
 [<Test>]
 let ``Character - With invalid parenthetical extension`` () =
@@ -169,13 +169,13 @@ let ``Character - With invalid parenthetical extension`` () =
 let ``Character - With whitespace`` () =
    let doc = "\r\nTHIS IS ALL UPPERCASE BUT HAS WHITESPACE" |> Fountain.Parse
    doc.Blocks
-   |> should equal [Character (false, [Literal ("THIS IS ALL UPPERCASE BUT HAS WHITESPACE", new Range(0,0))], new Range(0,0))]
+   |> should equal [Character (false, true, [Literal ("THIS IS ALL UPPERCASE BUT HAS WHITESPACE", new Range(0,0))], new Range(0,0))]
     
 [<Test>]
 let ``Character - With Numbers`` () =
    let doc = "\r\nR2D2" |> Fountain.Parse
    doc.Blocks
-   |> should equal [Character (false, [Literal ("R2D2", new Range(0,0))], new Range(0,0))]
+   |> should equal [Character (false, true, [Literal ("R2D2", new Range(0,0))], new Range(0,0))]
 
 [<Test>]
 let ``Character - Number first`` () =
@@ -187,13 +187,13 @@ let ``Character - Number first`` () =
 let ``Character - Forced with at sign`` () =
    let doc = "\r\n@McAvoy" |> Fountain.Parse
    doc.Blocks
-   |> should equal [Character (true, [Literal ("McAvoy", new Range(0,0))], new Range(0,0))]
+   |> should equal [Character (true, true, [Literal ("McAvoy", new Range(0,0))], new Range(0,0))]
 
 [<Test>]
 let ``Character - with forced at and parenthetical extension`` () =
    let doc = "\r\n@McAvoy (OS)" |> Fountain.Parse
    doc.Blocks
-   |> should equal [Character (true, [Literal ("McAvoy (OS)", new Range(0,0))], new Range(0,0))]
+   |> should equal [Character (true, true, [Literal ("McAvoy (OS)", new Range(0,0))], new Range(0,0))]
 
 
 //===== Parenthetical
@@ -202,13 +202,13 @@ let ``Character - with forced at and parenthetical extension`` () =
 let ``Parenthetical `` () =
    let doc = "\r\nLINDSEY\r\n(quietly)" |> Fountain.Parse
    doc.Blocks
-   |> should equal [Character (false, [Literal ("LINDSEY", new Range(0,0))], new Range(0,0)); Parenthetical ([Literal ("quietly", new Range(0,0))], new Range(0,0))];
+   |> should equal [Character (false, true, [Literal ("LINDSEY", new Range(0,0))], new Range(0,0)); Parenthetical ([Literal ("quietly", new Range(0,0))], new Range(0,0))];
 
 [<Test>]
 let ``Parenthetical - After Dialogue`` () =
    let doc = "\r\nLINDSEY\r\n(quietly)\r\nHello, friend.\r\n(loudly)\r\nFriendo!" |> Fountain.Parse
    doc.Blocks
-   |> should equal [Character (false, [Literal ("LINDSEY", Range.empty)], Range.empty); Parenthetical ([Literal ("quietly", Range.empty)], Range.empty); Dialogue ([Literal ("Hello, friend.", Range.empty)], Range.empty); Parenthetical ([Literal ("loudly", Range.empty)], Range.empty); Dialogue ([Literal ("Friendo!", Range.empty)], Range.empty)];
+   |> should equal [Character (false, true, [Literal ("LINDSEY", Range.empty)], Range.empty); Parenthetical ([Literal ("quietly", Range.empty)], Range.empty); Dialogue ([Literal ("Hello, friend.", Range.empty)], Range.empty); Parenthetical ([Literal ("loudly", Range.empty)], Range.empty); Dialogue ([Literal ("Friendo!", Range.empty)], Range.empty)];
 
 
 //===== Dialogue
@@ -217,31 +217,31 @@ let ``Parenthetical - After Dialogue`` () =
 let ``Dialogue - Normal`` () =
    let doc = "\r\nLINDSEY\r\nHello, friend." |> Fountain.Parse
    doc.Blocks
-   |> should equal [Character (false, [Literal ("LINDSEY", new Range(0,0))], new Range(0,0)); Dialogue ([Literal ("Hello, friend.", new Range(0,0))], new Range(0,0))]
+   |> should equal [Character (false, true, [Literal ("LINDSEY", new Range(0,0))], new Range(0,0)); Dialogue ([Literal ("Hello, friend.", new Range(0,0))], new Range(0,0))]
 
 [<Test>]
 let ``Dialogue - After Parenthetical`` () =
    let doc = "\r\nLINDSEY\r\n(quietly)\r\nHello, friend." |> Fountain.Parse
    doc.Blocks
-   |> should equal [Character (false, [Literal ("LINDSEY", new Range(0,0))], new Range(0,0)); Parenthetical ([Literal ("quietly", new Range(0,0))], new Range(0,0)); Dialogue ([Literal ("Hello, friend.", new Range(0,0))], new Range(0,0))]
+   |> should equal [Character (false, true, [Literal ("LINDSEY", new Range(0,0))], new Range(0,0)); Parenthetical ([Literal ("quietly", new Range(0,0))], new Range(0,0)); Dialogue ([Literal ("Hello, friend.", new Range(0,0))], new Range(0,0))]
 
 [<Test>]
 let ``Dialogue - With line break`` () =
    let doc = "\r\nDEALER\r\nTen.\r\nFour.\r\nDealer gets a seven.\r\n\r\n  Hit or stand sir?" |> Fountain.Parse
    doc.Blocks
-   |> should equal [Character (false, [Literal ("DEALER", Range.empty)], Range.empty);  Dialogue ([Literal ("Ten.", Range.empty); HardLineBreak(Range.empty); Literal ("Four.", Range.empty); HardLineBreak(Range.empty); Literal ("Dealer gets a seven.", Range.empty); HardLineBreak(Range.empty); HardLineBreak(Range.empty); Literal ("Hit or stand sir?", Range.empty)], Range.empty)]
+   |> should equal [Character (false, true, [Literal ("DEALER", Range.empty)], Range.empty);  Dialogue ([Literal ("Ten.", Range.empty); HardLineBreak(Range.empty); Literal ("Four.", Range.empty); HardLineBreak(Range.empty); Literal ("Dealer gets a seven.", Range.empty); HardLineBreak(Range.empty); HardLineBreak(Range.empty); Literal ("Hit or stand sir?", Range.empty)], Range.empty)]
 
 [<Test>]
 let ``Dialogue - With invalid line break`` () =
    let doc = "\r\nDEALER\r\nTen.\r\nFour.\r\nDealer gets a seven.\r\n\r\nHit or stand sir?" |> Fountain.Parse
    doc.Blocks
-   |> should equal [Character (false, [Literal ("DEALER", Range.empty)], Range.empty);  Dialogue ([Literal ("Ten.", Range.empty); HardLineBreak(Range.empty); Literal ("Four.", Range.empty); HardLineBreak(Range.empty); Literal ("Dealer gets a seven.", Range.empty)], Range.empty); Action (false, [Literal ("Hit or stand sir?", Range.empty)], Range.empty)]
+   |> should equal [Character (false, true, [Literal ("DEALER", Range.empty)], Range.empty);  Dialogue ([Literal ("Ten.", Range.empty); HardLineBreak(Range.empty); Literal ("Four.", Range.empty); HardLineBreak(Range.empty); Literal ("Dealer gets a seven.", Range.empty)], Range.empty); Action (false, [Literal ("Hit or stand sir?", Range.empty)], Range.empty)]
    // this test now fails: parsing places line break be after last Action
 
 [<Test>]
 let ``Dual Dialogue`` () =
    let doc = "\r\nBRICK\r\nScrew retirement.\r\n\r\nSTEEL ^\r\nScrew retirement." |> Fountain.Parse
-   let expected = [Character (false, [Literal ("BRICK", Range.empty)], Range.empty); Dialogue ([Literal ("Screw retirement.", Range.empty)], Range.empty); Character (false, [Literal ("STEEL", Range.empty)], Range.empty); Dialogue ([Literal ("Screw retirement.", Range.empty)], Range.empty)]
+   let expected = [DualDialogueSection([(Character (false, true, [Literal ("BRICK", Range.empty)], Range.empty), Dialogue ([Literal ("Screw retirement.", Range.empty)], Range.empty)); (Character (false, false, [Literal ("STEEL", Range.empty)], Range.empty), Dialogue ([Literal ("Screw retirement.", Range.empty)], Range.empty))], Range.empty)]
    doc.Blocks
    |> should equal expected
 
@@ -249,17 +249,14 @@ let ``Dual Dialogue`` () =
 let ``Dual Dialogue - Second character`` () =
    let doc = "\r\nLINDSEY     ^\r\nHello, friend." |> Fountain.Parse
    doc.Blocks
-   |> should equal [Character (false, [Literal ("LINDSEY", Range.empty)], Range.empty); Dialogue ([Literal ("Hello, friend.", Range.empty)], Range.empty)]
+   |> should equal [Character (false, false, [Literal ("LINDSEY", Range.empty)], Range.empty); Dialogue ([Literal ("Hello, friend.", Range.empty)], Range.empty)]
 
 [<Test>]
 let ``Dual Dialogue - invalid`` () =
    // BRICK must not be recognized as character as there is no new line before
    let doc = "\r\nSTEEL\r\nBeer's ready!\r\nBRICK\r\nAre they cold?" |> Fountain.Parse
    doc.Blocks
-   |> should equal [Character (false, [Literal ("STEEL", Range.empty)], Range.empty); Dialogue ([Literal ("Beer's ready!", Range.empty); HardLineBreak(Range.empty); Literal("BRICK", Range.empty); HardLineBreak(Range.empty); Literal("Are they cold?", Range.empty)], Range.empty)]
-
-
-
+   |> should equal [Character (false, true, [Literal ("STEEL", Range.empty)], Range.empty); Dialogue ([Literal ("Beer's ready!", Range.empty); HardLineBreak(Range.empty); Literal("BRICK", Range.empty); HardLineBreak(Range.empty); Literal("Are they cold?", Range.empty)], Range.empty)]
 
 //===== Page Break
 
