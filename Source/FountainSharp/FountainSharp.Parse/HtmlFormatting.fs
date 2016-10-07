@@ -73,7 +73,11 @@ let noBreak (ctx:FormattingContext) () = ()
 //======== This is where all of our span element HTML tags are defined.
 /// Write FountainSpan value to a TextWriter
 let rec formatSpan (ctx:FormattingContext) = function
-  | Literal(str, range) -> ctx.Writer.Write(str)
+  | Literal(str, range) ->
+      // preserve white spaces - Action possibly have those
+      ctx.Writer.Write("""<span style="white-space: pre;">""")
+      ctx.Writer.Write(str)
+      ctx.Writer.Write("</span>");
   | HardLineBreak (range) -> ctx.Writer.Write("<br />")
   | Strong(body, range) -> 
       ctx.Writer.Write("<strong>")

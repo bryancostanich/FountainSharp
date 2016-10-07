@@ -26,7 +26,7 @@
 ## Other Rules
   * [Punctuation](#punctuation) - √
   * [Line Breaks](#line-breaks) - √
-  * [Indenting](#indenting) - not supported
+  * [Indenting](#indenting) - √
 
 
 # Scene Heading

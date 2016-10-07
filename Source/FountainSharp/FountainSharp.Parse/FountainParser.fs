@@ -226,17 +226,6 @@ let (|Section|_|) input = //function
   | rest ->
       None
 
-let hasNewLineAfterFirstElement (forced, list) = 
-  match list with
-  | [] ->
-    None
-  | head::rest ->
-     // look for a line break after the first element (first of the rest)
-     if rest.Length = 0 || String.IsNullOrWhiteSpace rest.[0] then
-        Some(forced, head, rest)
-     else
-        None
-
 let (|Boneyard|_|) input =
     // recongizing lines inside of the boneyard
     // TODO: now /* and */ should stand alone in a line. if it's not appropriate, Boneyard should be implemented as a span (it would be weird though :))
@@ -256,20 +245,35 @@ let (|Boneyard|_|) input =
     | _ -> None
 
 // TODO: Should we also look for a line break before? 
-let (|SceneHeading|_|) = function
-  // look for normal heading
-  | String.StartsWithAnyCaseInsensitive [ "INT"; "EXT"; "EST"; "INT./EXT."; "INT/EXT"; "I/E" ] heading:string :: rest ->
-     hasNewLineAfterFirstElement (false, heading :: rest)
-  // look for forced heading
-  | String.StartsWith "." heading:string :: rest ->
-     hasNewLineAfterFirstElement (true, heading :: rest)
-  | rest ->
-     None
+let (|SceneHeading|_|) (input:string list) =
+  let hasNewLineAfterFirstElement (forced, list) = 
+    match list with
+    | [] -> None
+    | head::rest ->
+       // look for a line break after the first element (first of the rest)
+       if rest.Length = 0 || String.IsNullOrWhiteSpace rest.[0] then
+          Some(forced, head, rest)
+       else
+          None
+  match input with
+  | head :: tail ->
+    let head = head.Trim()
+    match head with
+    // look for normal heading
+    | String.StartsWithAnyCaseInsensitive [ "INT"; "EXT"; "EST"; "INT./EXT."; "INT/EXT"; "I/E" ] matching ->
+        hasNewLineAfterFirstElement (false, matching :: tail)
+    // look for forced heading
+    | String.StartsWith "." matching ->
+        hasNewLineAfterFirstElement (true, matching :: tail)
+    | _ -> None
+  | _ -> None
 
 let (|Character|_|) (list:string list) =
   match list with
   | [] -> None
   | EmptyLine :: head :: rest ->
+    // trim white spaces as Character ignores indenting
+    let head = head.Trim()
     // Character has to be preceded by empty line
     if (head.Length = 0) then
         None
@@ -338,14 +342,16 @@ let (|Lyric|_|) = function
       None
 
 /// Recognizes centered text (> The End <)
-let (|Centered|_|) = function
-  | String.StartsWith ">" text:string :: rest ->
-     if text.EndsWith "<" then //TODO: i'm sure an F# ninja can find a way to combine this with previous line
-       Some(text.TrimEnd([|'<'|]).Trim(), rest)
-     else
-       None
-  | rest ->
-      None
+let (|Centered|_|) (input:string list) =
+  match input with
+  | head :: rest ->
+    // Centered ignores indenting
+    let head = head.Trim()
+    if head.StartsWith(">") && head.EndsWith("<") then
+        Some(head.Substring(1, head.Length - 2).Trim(), rest) // strip '>' and '<'
+    else
+        None
+  | _ -> None 
 
 let isForcedAction (input:string) =
     input.StartsWith("!")
@@ -372,6 +378,7 @@ let (|Parenthetical|_|) (lastParsedBlock:FountainBlockElement option) (input:str
 let (|Transition|_|) (input:string list) =
    match input with
    | blockContent :: rest ->
+      let blockContent = blockContent.Trim() // Transition ignores indenting
       if blockContent.StartsWith "!" then // guard against forced action
         None
       elif blockContent.EndsWith "TO:" || blockContent.StartsWith ">" then // TODO: need to check for a hard linebreak after
@@ -431,7 +438,8 @@ let (|Dialogue|_|) (lastParsedBlock:FountainBlockElement option) (input:string l
           let lines = addLines [] matching
           match lines with
           | Some([], rest) -> None // no lines found
-          | Some(body, rest) -> Some(body, rest)
+          | Some(body, rest) ->
+              Some(body |> List.map(fun line -> line.Trim()), rest)
           | _ -> None
   | _ -> None
 
@@ -528,13 +536,10 @@ let (|Action|_|) input =
         | hd::tail ->
           let sb = new StringBuilder()
           List.iter (fun x -> sb.Append(x:string) |> ignore; sb.Append('\n') |> ignore) (hd::tail)
-          if (hd.StartsWith "!") then // forced Action
+          if (hd.StartsWith "!") then // forced Action, trim off the '!'
             Some(true, sb.ToString().Substring(1).TrimEnd(), rest)
-            //Some(true, hd.Substring(1)::tail, rest) // trim off the '!' and smash the list back together
           else
             Some(false, sb.ToString().TrimEnd(), rest)
-          
-            //Some(false, matching, rest)
       //| _ -> None
 
 //==== /Action

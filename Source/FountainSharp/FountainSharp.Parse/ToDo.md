@@ -61,8 +61,6 @@ items need to be added and/or modified:
 
  * **Boneyard/Comments** - Only recognized when /\* and \*/ stand alone in their lines.
 
- * **Indenting** - Unknown support.
-
 Each one of these also need associated unit tests for parsing, as well as HTML
 transformation.
 
