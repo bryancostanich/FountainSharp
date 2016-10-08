@@ -74,7 +74,8 @@ type FountainBlockElement =
   | Centered of FountainSpans * Range
   | Boneyard of string * Range
   | DualDialogue of FountainBlocks * Range
-  
+  | TitlePage of (string * FountainSpans) list * Range
+
   member private this.GetLength(spans:FountainSpans) : int =
     spans
     |> List.map( fun span -> span.GetLength() )
@@ -82,6 +83,10 @@ type FountainBlockElement =
 
   member fb.GetLength() : int =
     match fb with
+    | TitlePage(items, r) ->
+      items
+      |> List.map( fun (key, spans) -> key.Length + fb.GetLength(spans) )
+      |> List.sum
     | DualDialogue(blocks, r) ->
       blocks
       |> List.map( fun b -> b.GetLength() )

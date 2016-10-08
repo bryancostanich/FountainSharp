@@ -27,6 +27,10 @@ module String =
         let s = input |> List.fold (fun r s -> r + s + sep) ""
         s.Substring(0, s.Length - 1)
 
+  let asStringList (input:string, sep:string) =
+    let result = input.Split([|sep|], StringSplitOptions.None)
+    result |> List.ofArray
+
   /// Matches when a string is a whitespace or null
   let (|WhiteSpace|_|) s = 
     if String.IsNullOrWhiteSpace(s) then Some() else None

@@ -138,6 +138,16 @@ let withInner ctx f =
 /// Write a FountainBlockElement value to a TextWriter
 let rec formatBlockElement (ctx:FormattingContext) block =
   match block with
+  | TitlePage(keyValuePairs, _) ->
+      for (key, spans) in keyValuePairs do
+          match key with
+          | "Contact"
+          | "Draft date" ->
+              ctx.Writer.Write("""<div style="text-align:left;"><br/>""")
+          | _ ->
+              ctx.Writer.Write("""<div style="text-align:center;"><br/>""")
+          formatSpans ctx spans
+          ctx.Writer.Write("</div>")
   | Boneyard(_, _) -> ()
   | Section(n, spans, range) -> 
       ctx.Writer.Write("<h" + string n + ">")
