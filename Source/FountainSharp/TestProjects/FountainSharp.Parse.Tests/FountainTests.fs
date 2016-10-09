@@ -117,12 +117,6 @@ let ``Scene Heading - No empty line after`` () =
    doc.Blocks
    |> should equal  [Action (false, [Literal ("EXT. BRICK'S PATIO - DAY", Range.empty); HardLineBreak(Range.empty); Literal ("Some Action", Range.empty)], Range.empty)]
 
-[<Test>]
-let ``Scene Heading - Indenting`` () =
-   let doc = "\t EXT. BRICK'S PATIO - DAY\r\n\r\nSome Action" |> Fountain.Parse
-   doc.Blocks
-   |> should equal [SceneHeading (false, [Literal ("EXT. BRICK'S PATIO - DAY", Range.empty)], Range.empty); Action(false, [HardLineBreak(Range.empty); Literal ("Some Action", Range.empty)], Range.empty)]
-
 //===== Action
 [<Test>]
 let ``Action - With line breaks`` () =
@@ -135,12 +129,6 @@ let ``Action - With line breaks and no heading`` () =
    let doc = "Natalie looks around at the group, TIM, ROGER, NATE, and VEEK.\n\nTIM, is smiling broadly." |> Fountain.Parse
    doc.Blocks
    |> should equal  [Action (false, [Literal ("Natalie looks around at the group, TIM, ROGER, NATE, and VEEK.", new Range(0,0)); HardLineBreak(new Range(0,0)); HardLineBreak(new Range(0,0)); Literal ("TIM, is smiling broadly.", new Range(0,0))], new Range(0,0))]
-
-[<Test>]
-let ``Action - Indenting`` () =
-   let doc = "\tNatalie looks around at the group, TIM, ROGER, NATE, and VEEK.\n\n\t\tTIM, is smiling broadly." |> Fountain.Parse
-   doc.Blocks
-   |> should equal  [Action (false, [Literal ("\tNatalie looks around at the group, TIM, ROGER, NATE, and VEEK.", Range.empty); HardLineBreak(Range.empty); HardLineBreak(Range.empty); Literal ("\t\tTIM, is smiling broadly.", Range.empty)], Range.empty)]
 
 //===== Synopses
 
@@ -203,13 +191,6 @@ let ``Character - with forced at and parenthetical extension`` () =
    doc.Blocks
    |> should equal [Character (true, true, [Literal ("McAvoy (OS)", new Range(0,0))], new Range(0,0))]
 
-[<Test>]
-let ``Character - Indenting`` () =
-   // white spaces have to be ignored
-   let doc = "\r\n\t   LINDSEY" |> Fountain.Parse
-   doc.Blocks
-   |> should equal [Character (false, true, [Literal ("LINDSEY", Range.empty)], Range.empty)]
-
 
 //===== Parenthetical
 
@@ -252,12 +233,6 @@ let ``Dialogue - With invalid line break`` () =
    doc.Blocks
    |> should equal [Character (false, true, [Literal ("DEALER", Range.empty)], Range.empty);  Dialogue ([Literal ("Ten.", Range.empty); HardLineBreak(Range.empty); Literal ("Four.", Range.empty); HardLineBreak(Range.empty); Literal ("Dealer gets a seven.", Range.empty)], Range.empty); Action (false, [Literal ("Hit or stand sir?", Range.empty)], Range.empty)]
    // this test now fails: parsing places line break be after last Action
-
-[<Test>]
-let ``Dialogue - Indenting`` () =
-   let doc = "\r\n\t  LINDSEY\r\n   \t Hello, friend." |> Fountain.Parse
-   doc.Blocks
-   |> should equal [Character (false, true, [Literal ("LINDSEY", Range.empty)], Range.empty); Dialogue ([Literal ("Hello, friend.", Range.empty)], Range.empty)]
 
 [<Test>]
 let ``Dual Dialogue`` () =
@@ -343,18 +318,6 @@ let ``Transition - forced`` () =
    doc.Blocks
    |> should equal [Transition (true, [Literal ("Burn to White.", new Range(0,0))], new Range(0,0))]
 
-[<Test>]
-let ``Transition - forced indenting`` () =
-   let doc = "\t > Burn to White." |> Fountain.Parse
-   doc.Blocks
-   |> should equal [Transition (true, [Literal ("Burn to White.", Range.empty)], Range.empty)]
-
-[<Test>]
-let ``Transition - indenting`` () =
-   let doc = "  \t  CUT TO:" |> Fountain.Parse
-   doc.Blocks
-   |> should equal [Transition (false, [Literal ("CUT TO:", Range.empty)], Range.empty)]
-
 //===== Centered
 
 [<Test>]
@@ -366,12 +329,6 @@ let ``Centered `` () =
 [<Test>]
 let ``Centered - with spaces`` () =
    let doc = "> The End <" |> Fountain.Parse
-   doc.Blocks
-   |> should equal [Centered ([Literal ("The End", Range.empty)], Range.empty)]
-
-[<Test>]
-let ``Centered - indenting`` () =
-   let doc = "\t   \t>The End <" |> Fountain.Parse
    doc.Blocks
    |> should equal [Centered ([Literal ("The End", Range.empty)], Range.empty)]
 
@@ -472,6 +429,57 @@ let ``Emphasis - between line breaks`` () =
    doc.Blocks
    |> should equal [Action (false, [Literal( "As he rattles off the long list, Brick and Steel *share a look.", Range.empty); HardLineBreak(Range.empty); HardLineBreak(Range.empty); Literal ("This is going to be BAD.*", Range.empty)], Range.empty)]
 
-//===== Indenting
-// TODO
 
+//===== Indenting
+
+[<Test>]
+let ``Scene Heading - Indenting`` () =
+   let doc = "\t EXT. BRICK'S PATIO - DAY\r\n\r\nSome Action" |> Fountain.Parse
+   doc.Blocks
+   |> should equal [SceneHeading (false, [Literal ("EXT. BRICK'S PATIO - DAY", Range.empty)], Range.empty); Action(false, [HardLineBreak(Range.empty); Literal ("Some Action", Range.empty)], Range.empty)]
+
+[<Test>]
+let ``Character - Indenting`` () =
+   // white spaces have to be ignored
+   let doc = "\r\n\t   LINDSEY" |> Fountain.Parse
+   doc.Blocks
+   |> should equal [Character (false, true, [Literal ("LINDSEY", Range.empty)], Range.empty)]
+
+[<Test>]
+let ``Dialogue - Indenting`` () =
+   let doc = "\r\n\t  LINDSEY\r\n   \t Hello, friend." |> Fountain.Parse
+   doc.Blocks
+   |> should equal [Character (false, true, [Literal ("LINDSEY", Range.empty)], Range.empty); Dialogue ([Literal ("Hello, friend.", Range.empty)], Range.empty)]
+
+[<Test>]
+let ``Action - indenting`` () =
+   let doc = "\tNatalie looks around at the group, TIM, ROGER, NATE, and VEEK.\n\n\t\tTIM, is smiling broadly." |> Fountain.Parse
+   doc.Blocks
+   |> should equal  [Action (false, [Literal ("\tNatalie looks around at the group, TIM, ROGER, NATE, and VEEK.", Range.empty); HardLineBreak(Range.empty); HardLineBreak(Range.empty); Literal ("\t\tTIM, is smiling broadly.", Range.empty)], Range.empty)]
+
+[<Test>]
+let ``Centered - indenting`` () =
+   let doc = "\t   \t>The End <" |> Fountain.Parse
+   doc.Blocks
+   |> should equal [Centered ([Literal ("The End", Range.empty)], Range.empty)]
+
+[<Test>]
+let ``Transition - indenting`` () =
+   let doc = "  \t  CUT TO:" |> Fountain.Parse
+   doc.Blocks
+   |> should equal [Transition (false, [Literal ("CUT TO:", Range.empty)], Range.empty)]
+
+[<Test>]
+let ``Transition - forced indenting`` () =
+   let doc = "\t > Burn to White." |> Fountain.Parse
+   doc.Blocks
+   |> should equal [Transition (true, [Literal ("Burn to White.", Range.empty)], Range.empty)]
+
+//===== Title page
+
+[<Test>]
+let ``Title page`` () =
+   // This is quite a complex title page with inline and not inline values, emphasized spans.
+   let doc = "Title:\n\t_**BRICK and STEEL**_\n\t_**FULL RETIRED**_\nCredit: Written by\n\nSome action" |> Fountain.Parse
+   doc.Blocks
+   |> should equal [TitlePage ([("Title", [Underline ([Strong ([Literal("BRICK and STEEL", Range.empty)], Range.empty)], Range.empty); HardLineBreak(Range.empty); Underline([ Strong ([Literal("FULL RETIRED", Range.empty)], Range.empty)], Range.empty)]); ("Credit", [Literal("Written by", Range.empty)])], Range.empty); PageBreak; Action(false, [Literal("Some action", Range.empty)], Range.empty)]

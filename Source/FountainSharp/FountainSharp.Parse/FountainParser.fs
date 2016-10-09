@@ -26,6 +26,9 @@ let printDebug fmt par =
 [<Literal>]
 let EmptyLine = ""
 
+[<Literal>]
+let NewLine = "\n"
+
 //====== Parser
 // Part 1: Inline Formatting
 
@@ -544,6 +547,42 @@ let (|Action|_|) input =
 
 //==== /Action
 
+//==== TitlePage
+
+let (|TitlePage|_|) (lastParsedBlock:FountainBlockElement option) (input: string list) =
+  match lastParsedBlock with
+  | None ->
+    // match "key: value" pattern at the beginning of the input as far as it is possible, and returns the matching values as well the remaining input
+    let rec matchAndRemove acc (input:string) =
+      let validCharacterClass = "[^:]"
+      let pattern = String.Format(@"^(?<key>\b{0}+):(?<value>{0}+\n)", validCharacterClass)
+      let m = Regex.Match(input, pattern, RegexOptions.Singleline)
+      if m.Success = false then
+        (List.rev acc, input) // no more match found
+      else
+       let key = m.Groups.["key"] // text before ':'
+       let value = m.Groups.["value"] // text after ':'
+       // let's parse spans - white spaces must be trimmed per line
+       let spans = value.Value.Trim().Split('\n') |> List.ofArray |> List.map( fun s -> s.Trim() ) |> String.concat "\n" |> parseSpans
+       matchAndRemove ((key.Value, spans) :: acc) (input.Remove(m.Index, m.Length))
+    
+    // TODO: spare conversion from list to string and back to list of the remaining text!
+    let inputAsSingleString = String.asSingleString(input, NewLine) // treat input as one string
+    // an empty line has to be present after the Title Page
+    let indexOfEmptyLine = inputAsSingleString.IndexOf(NewLine + NewLine)
+    if indexOfEmptyLine = -1 then
+        None
+    else
+        let titlePageText = inputAsSingleString.Substring(0, indexOfEmptyLine + 1) // text before the empty line '\n' at the end
+        match matchAndRemove [] titlePageText with
+        | ([], _) -> None
+        | (keyValuePairs, rest) ->
+            Some(keyValuePairs, String.asStringList(inputAsSingleString.Substring(indexOfEmptyLine + 2), NewLine))
+        | _ -> None
+  | _ -> None // Title page must be the first block of the document 
+
+//==== /TitlePage
+
 
 /// Defines a context for the main `parseBlocks` function
 // TODO: Question: what is the Links part supposed to represent? Answer: for some reason he was creating a 
@@ -564,6 +603,11 @@ let rec parseBlocks (ctx:ParsingContext) (lastParsedBlock:FountainBlockElement o
   // parenthetical, you'd never get parenthetical
 
   match lines with
+  | TitlePage lastParsedBlock (keyValuePairs, rest) ->
+     let item = TitlePage(keyValuePairs, Range.empty)
+     yield item
+     yield PageBreak // Page break is implicit after Title page
+     yield! parseBlocks ctx (Some(item)) rest
   | Boneyard(body, rest) ->
      let item = Boneyard(String.asSingleString(body, "\n"), Range.empty)
      yield item

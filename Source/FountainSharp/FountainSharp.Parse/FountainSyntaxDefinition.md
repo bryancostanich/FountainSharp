@@ -16,7 +16,7 @@
   * [Sections](#sections) - √
   * [Synposes](#synopses) - √
   * [Boneyard/Comments](#boneyard-comments) - Only recognized when /\* and \*/ stand alone in their lines.
-  * [Title Page](#title-page) - not supported
+  * [Title Page](#title-page) - √
 
 ## Span Elements
   * [Emphasis](#emphasis) - √
