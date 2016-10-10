@@ -69,7 +69,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Info.plist" />
-    <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Main.cs" />
@@ -85,15 +84,18 @@
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Xamarin\Mac\Xamarin.Mac.CSharp.targets" />
   <ItemGroup>
-    <ProjectReference Include="..\..\..\PortableProjects\FountainSharp.Parse.MobilePCL\FountainSharp.Parse.MobilePCL.fsproj">
-      <Project>{EF7FFC79-964B-41EC-A90F-BBDE329D2DFD}</Project>
-      <Name>FountainSharp.Parse.MobilePCL</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
     <Folder Include="Scripts\" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Scripts\SimpleTest.fountain" />
+  </ItemGroup>
+  <ItemGroup>
+    <BundleResource Include="project.json" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\PortableProjects\FountainSharp.Parse.MobilePCL\FountainSharp.Parse.MobilePCL.fsproj">
+      <Project>{EF7FFC79-964B-41EC-A90F-BBDE329D2DFD}</Project>
+      <Name>FountainSharp.Parse.MobilePCL</Name>
+    </ProjectReference>
   </ItemGroup>
 </Project>

@@ -1,0 +1,11 @@
+﻿{
+  "dependencies": {
+    "FSharp.Core": "4.0.0.1"
+  },
+  "frameworks": {
+    ".NETFramework,Version=v4.5": {}
+  },
+  "runtimes": {
+    "win": {}
+  }
+}
