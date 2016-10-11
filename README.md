@@ -1,4 +1,7 @@
 # FountainSharp
+
+[![Build Status](https://www.bitrise.io/app/45c89db89673e862.svg?token=HAU9M6A-HNZGe6rCJ4lnIw)](https://www.bitrise.io/app/45c89db89673e862)
+
 An F# based Fountain Markdown processor that's based on the [FSharp.Formatting library](https://github.com/tpetricek/FSharp.Formatting) by Tomas Petricek.
 
 
