@@ -2,7 +2,7 @@
 <package >
   <metadata>
     <id>FountainSharp</id>
-    <version>1.0.0</version>
+    <version>1.0.0-pre01</version>
     <title>FountainSharp</title>
     <authors>Bryan Costanich</authors>
     <owners>Bryan Costanich</owners>
@@ -15,14 +15,19 @@
     <copyright>Copyright - Bryan Costanich © 2015-2016</copyright>
     <tags>fountain screenwriters</tags>
     <dependencies>
+      <group targetFramework="netstandard1.6">
+        <dependency id="FSharp.Core" version="4.0.1.7-alpha" />
+        <dependency id="NetStandard.Library" version="1.6.0" />
+      </group>
       <group targetFramework="portable-net45+win+MonoTouch10+MonoAndroid10+xamarinmac20+xamarintvos10+xamarinwatchos10+xamarinios10">
         <dependency id="FSharp.Core" version="4.0.0.1 " />
       </group>
     </dependencies>
   </metadata>
   <files>
-    <!-- Portable -->
-    <file src="FountainSharp.Parse/bin/Release/FountainSharp.Parse.dll" target="lib/portable-net45+win+MonoTouch10+MonoAndroid10+xamarinmac20+xamarintvos10+xamarinwatchos10+xamarinios10" />
+    <!-- .NET Standard 1.6 -->
+    <file src="FountainSharp.Parse.NetStandard/bin/Release/netstandard1.6/FountainSharp.Parse.NetStandard.dll" target="lib/netstandard1.6" />
+    <!-- PCL -->
     <file src="PortableProjects/FountainSharp.Parse.MobilePCL/bin/Release/FountainSharp.Parse.MobilePCL.dll" target="lib/portable-net45+win+MonoTouch10+MonoAndroid10+xamarinmac20+xamarintvos10+xamarinwatchos10+xamarinios10" />
   </files>
 </package>

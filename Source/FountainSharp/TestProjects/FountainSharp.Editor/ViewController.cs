@@ -3,8 +3,6 @@
 using AppKit;
 using Foundation;
 
-using FountainSharp.Parse;
-
 namespace FountainSharp.Editor
 {
 	public partial class ViewController : NSViewController

@@ -6,7 +6,7 @@
     <ProjectGuid>{53A87A1F-1756-43C3-BF8A-BB1696439DC7}</ProjectGuid>
     <OutputType>Exe</OutputType>
     <RootNamespace>FountainSharp.Parse.Tests</RootNamespace>
-    <AssemblyName>FountainSharp.Editor</AssemblyName>
+    <AssemblyName>FountainSharp.Parse.Tests</AssemblyName>
     <TargetFrameworkVersion>v4.5.1</TargetFrameworkVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">

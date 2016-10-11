@@ -578,7 +578,6 @@ let (|TitlePage|_|) (lastParsedBlock:FountainBlockElement option) (input: string
         | ([], _) -> None
         | (keyValuePairs, rest) ->
             Some(keyValuePairs, String.asStringList(inputAsSingleString.Substring(indexOfEmptyLine + 2), NewLine))
-        | _ -> None
   | _ -> None // Title page must be the first block of the document 
 
 //==== /TitlePage
