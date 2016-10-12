@@ -32,7 +32,7 @@ type Fountain =
         while (line := reader.ReadLine(); line.Value <> null) do
           yield line.Value ]
     //let (Lines.TrimBlank lines) = lines
-    let ctx : ParsingContext = { Newline = newline }
+    let ctx = new ParsingContext(newline)
     let blocks = 
       lines 
       |> parseBlocks ctx None 
@@ -45,7 +45,7 @@ type Fountain =
 
   // Parses a single line. Used for optimization when working with a large doc from an editor.
   static member ParseLine(text:string, newline, (lastBlock:FountainBlockElement option)) =
-    let ctx : ParsingContext = { Newline = Environment.NewLine }
+    let ctx = new ParsingContext()
     let line = text::[]
     let blocks = 
       line 

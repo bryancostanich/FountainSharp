@@ -29,6 +29,22 @@ let EmptyLine = ""
 [<Literal>]
 let NewLine = "\n"
 
+/// Defines a context for the main `parseBlocks` function
+// TODO: Question: what is the Links part supposed to represent? Answer: for some reason he was creating a 
+// dictionary of known links. probably for additional processing. but fountain doesn't have links, so i got 
+// rid of it. but now we need to simplify this ParsingContext, probably.
+type ParsingContext(?newline : string, ?position : int) =
+    let newLine = defaultArg newline Environment.NewLine
+    let mutable lastParsedBlock : FountainBlockElement option = None
+    let mutable position = defaultArg position 0
+
+    member this.NewLine with get() = newLine
+
+    member ctx.LastParsedBlock with get() = lastParsedBlock and set block = lastParsedBlock <- block
+    member ctx.Position with get() = position and set pos = position <- pos
+
+    member ctx.IncPosition(length) = new ParsingContext(ctx.NewLine, ctx.Position + length)
+
 //====== Parser
 // Part 1: Inline Formatting
 
@@ -274,18 +290,19 @@ let (|SceneHeading|_|) (input:string list) =
 let (|Character|_|) (list:string list) =
   match list with
   | [] -> None
-  | EmptyLine :: head :: rest ->
+  | EmptyLine :: first :: rest ->
+    let length = first.Length + Environment.NewLine.Length // length of possible Character block
     // trim white spaces as Character ignores indenting
-    let head = head.Trim()
+    let head = first.Trim()
     // Character has to be preceded by empty line
     if (head.Length = 0) then
         None
     // matches "@McAVOY"
     else if (head.StartsWith "@") then
       if head.EndsWith(" ^") then
-        Some(true, false, head.Substring(1), rest)
+        Some(true, false, head.Substring(1), 0, rest)
       else
-        Some(true, true, head.Substring(1), rest)
+        Some(true, true, head.Substring(1), 0, rest)
     // matches "BOB" or "BOB JOHNSON" or "BOB (on the radio)" or "R2D2" but not "25D2"
     else
       let pattern = @"^\p{Lu}[\p{Lu}\d\s]*(\(.*\))?(\s+\^)?$"
@@ -300,17 +317,17 @@ let (|Character|_|) (list:string list) =
           let allLower = extension |> Seq.forall(fun c -> Char.IsLower(c)) // all lowercase
           if allUpper || allLower then
             if m.Value.EndsWith("^") then
-              Some(false, false, head, rest)
+              Some(false, false, head, length, rest)
             else
-              Some(false, true, head, rest)
+              Some(false, true, head, length, rest)
           else
             None
         else // no parenthetical extension found
           if m.Value.EndsWith("^") then
             // character for dual dialogue
-            Some(false, false, m.Value.Remove(m.Value.Length - 1).Trim(), rest)
+            Some(false, false, m.Value.Remove(m.Value.Length - 1).Trim(), length, rest)
           else
-            Some(false, true, head, rest)
+            Some(false, true, head, length, rest)
       // does not match Character rules
       else
         None
@@ -450,20 +467,20 @@ let (|Dialogue|_|) (lastParsedBlock:FountainBlockElement option) (input:string l
 
 //==== Dual Dialogue
 
-let (|DualDialogue|_|) (lastParsedBlock:FountainBlockElement option) (input:string list) =
+let (|DualDialogue|_|) (ctx: ParsingContext) (input:string list) =
   // parse input for Character or Character, Parenthetical and return the list of them  
-  let rec parseCharacter (input:string list, acc, lastParsedBlock:FountainBlockElement option) = 
+  let rec parseCharacter (input:string list, acc, lastParsedBlock:FountainBlockElement option, ctx:ParsingContext) = 
     match input with
-    | Character(forced, primary, body, rest) as item -> 
-        let characterItem = Character(forced, primary, parseSpans body, Range.empty)
+    | Character(forced, primary, body, length, rest) as item -> 
+        let characterItem = Character(forced, primary, parseSpans body, new Range(ctx.Position, length))
         let lastParsedBlock = Some(characterItem)
         match rest with
         | Parenthetical lastParsedBlock (body, rest) ->
             let parentheticalItem = Parenthetical(parseSpans body, Range.empty)
-            parseCharacter (rest, parentheticalItem :: characterItem :: acc, Some(characterItem))
+            parseCharacter (rest, parentheticalItem :: characterItem :: acc, Some(characterItem), ctx.IncPosition(length))
         | _ ->
-            parseCharacter (rest, characterItem :: acc, Some(characterItem))
-    | _ -> if acc.Length = 0 then None else Some(acc, input, lastParsedBlock)
+            parseCharacter (rest, characterItem :: acc, Some(characterItem), ctx.IncPosition(length))
+    | _ -> if acc.Length = 0 then None else Some(ctx, acc, input, lastParsedBlock)
 
   // parse input for Dialogue or Dialogue, Parenthetical and return the list of them  
   let rec parseDialogue (input:string list, acc, lastParsedBlock:FountainBlockElement option) = 
@@ -480,15 +497,15 @@ let (|DualDialogue|_|) (lastParsedBlock:FountainBlockElement option) (input:stri
     | _ -> if acc.Length = 0 then None else Some(acc, input, lastParsedBlock)
 
   // parse input for (Character, Dialogue) pairs and return the list of them  
-  let rec parse (input:string list, acc, lastParsedBlock:FountainBlockElement option) = 
+  let rec parse (ctx : ParsingContext, input:string list, acc, lastParsedBlock:FountainBlockElement option) = 
     if input.Length = 0 then
         Some(List.rev acc, input)
     else
-      match parseCharacter(input, [], lastParsedBlock) with
-      | Some(characterBlocks, rest, lastParsedBlock) -> 
+      match parseCharacter(input, [], lastParsedBlock, ctx) with
+      | Some(ctx, characterBlocks, rest, lastParsedBlock) -> 
           match parseDialogue(rest, [], lastParsedBlock) with
           | Some(dialogueBlocks, rest, lastParsedBlock) ->
-              parse (rest, List.concat [dialogueBlocks; characterBlocks; acc], lastParsedBlock)
+              parse (ctx, rest, List.concat [dialogueBlocks; characterBlocks; acc], lastParsedBlock)
           | _ -> Some(List.rev acc, input)
       | _ -> Some(List.rev acc, input)
 
@@ -506,7 +523,7 @@ let (|DualDialogue|_|) (lastParsedBlock:FountainBlockElement option) (input:stri
 
   // at least 2 (Character, Dialogue) blocks have to be found and at least one of them should be secondary character (marked by a caret)
     
-  match parse (input, [], lastParsedBlock) with
+  match parse (ctx, input, [], ctx.LastParsedBlock) with
   | Some([], _) -> None // no (Character, Dialogue) blocks found
   | Some(list, rest) ->
     if List.tryFind isPrimary list <> None &&  List.tryFind isSecondary list <> None then
@@ -577,20 +594,10 @@ let (|TitlePage|_|) (lastParsedBlock:FountainBlockElement option) (input: string
         match matchAndRemove [] titlePageText with
         | ([], _) -> None
         | (keyValuePairs, rest) ->
-            Some(keyValuePairs, String.asStringList(inputAsSingleString.Substring(indexOfEmptyLine + 2), NewLine))
+            Some(keyValuePairs, titlePageText.Length, String.asStringList(inputAsSingleString.Substring(indexOfEmptyLine + 2), NewLine))
   | _ -> None // Title page must be the first block of the document 
 
 //==== /TitlePage
-
-
-/// Defines a context for the main `parseBlocks` function
-// TODO: Question: what is the Links part supposed to represent? Answer: for some reason he was creating a 
-// dictionary of known links. probably for additional processing. but fountain doesn't have links, so i got 
-// rid of it. but now we need to simplify this ParsingContext, probably.
-type ParsingContext = 
-  { 
-    Newline : string 
-  }
 
 /// Parse a list of lines into a sequence of fountain blocks
 /// note, we pass the lastParsedBlock because some blocks are dependent on what came before. dialogue, for 
@@ -602,8 +609,9 @@ let rec parseBlocks (ctx:ParsingContext) (lastParsedBlock:FountainBlockElement o
   // parenthetical, you'd never get parenthetical
 
   match lines with
-  | TitlePage lastParsedBlock (keyValuePairs, rest) ->
-     let item = TitlePage(keyValuePairs, Range.empty)
+  | TitlePage lastParsedBlock (keyValuePairs, length, rest) ->
+     let item = TitlePage(keyValuePairs, new Range(0, length))
+     ctx.IncPosition(length)
      yield item
      yield PageBreak // Page break is implicit after Title page
      yield! parseBlocks ctx (Some(item)) rest
@@ -620,12 +628,12 @@ let rec parseBlocks (ctx:ParsingContext) (lastParsedBlock:FountainBlockElement o
      let item = Section(n, parseSpans body, new Range(0,0))
      yield item
      yield! parseBlocks ctx (Some(item)) rest
-  | DualDialogue lastParsedBlock (blocks, rest) ->
+  | DualDialogue ctx (blocks, rest) ->
      let item = DualDialogue(blocks, Range.empty)
      yield item
      yield! parseBlocks ctx (Some(item)) rest
-  | Character(forced, primary, body, rest) ->
-     let item = Character(forced, primary, parseSpans body, new Range(0,0))
+  | Character(forced, primary, body, length, rest) ->
+     let item = Character(forced, primary, parseSpans body, new Range(ctx.Position, length))
      yield item
      yield! parseBlocks ctx (Some(item)) rest
 
