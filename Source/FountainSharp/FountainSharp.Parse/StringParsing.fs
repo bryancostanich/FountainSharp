@@ -21,11 +21,12 @@ module String =
 
   // convert a list of strings to a single string with the specified separator
   let asSingleString (input:string list, sep:string) =
+    // TODO: use StringBuilder!
     if (input.Length = 0) then
         ""
     else
         let s = input |> List.fold (fun r s -> r + s + sep) ""
-        s.Substring(0, s.Length - 1)
+        s.Substring(0, s.Length - sep.Length)
 
   let asStringList (input:string, sep:string) =
     let result = input.Split([|sep|], StringSplitOptions.None)
@@ -163,6 +164,19 @@ module List =
   let inline (|StartsWith|_|) startl input = 
     if List.startsWith startl input then Some input else None
 
+  /// Matches a list if starts with string pattern. Returns the remaining part.
+  let (|StartsWithString|_|) (pattern:string) (chars : list<char>) =
+    let rec compare (pattern:string) chars index = 
+      if index = pattern.Length then
+        Some(chars)
+      elif List.isEmpty chars then
+        None
+      elif List.head chars = pattern.[index] then
+        compare pattern (List.tail chars) (index + 1)
+      else
+        None
+    compare pattern chars 0
+
   /// Matches a list if it starts with a sub-list that is delimited
   /// using the specified delimiter. Returns a wrapped list and the rest.
   let inline (|Delimited|_|) str = (|DelimitedWith|_|) str str
@@ -203,7 +217,6 @@ module Lines =
 
   /// Removes whitespace lines from the beginning of the list
   let (|TrimBlankStart|) = List.skipWhile (String.IsNullOrWhiteSpace)
-
 
 /// Parameterized pattern that assigns the specified value to the 
 /// first component of a tuple. Usage:

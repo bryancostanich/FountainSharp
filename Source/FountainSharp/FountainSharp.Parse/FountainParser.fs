@@ -18,6 +18,7 @@ open FountainSharp.Parse.Collections
 open FountainSharp.Parse.Patterns
 open FountainSharp.Parse.Patterns.List
 open FountainSharp.Parse.Patterns.String
+open FountainSharp.Parse.Helper
 
 let printDebug fmt par =
     let s = FSharp.Core.Printf.sprintf fmt par
@@ -25,9 +26,6 @@ let printDebug fmt par =
 
 [<Literal>]
 let EmptyLine = ""
-
-[<Literal>]
-let NewLine = "\n"
 
 /// Defines a context for the main `parseBlocks` function
 // TODO: Question: what is the Links part supposed to represent? Answer: for some reason he was creating a 
@@ -43,7 +41,7 @@ type ParsingContext(?newline : string, ?position : int) =
     member ctx.LastParsedBlock with get() = lastParsedBlock and set block = lastParsedBlock <- block
     member ctx.Position with get() = position and set pos = position <- pos
 
-    member ctx.IncPosition(length) = new ParsingContext(ctx.NewLine, ctx.Position + length)
+    member ctx.IncrementPosition(length) = new ParsingContext(ctx.NewLine, ctx.Position + length)
 
 //====== Parser
 // Part 1: Inline Formatting
@@ -119,10 +117,10 @@ let (|Emphasized|_|) span =
 let (|Note|_|) input =
   // replace double space with new line
   let rec transform chars = 
-      // TODO: new lines should be uniform through the whole library.
-      // Action active pattern places '\n' as new line, that's what we expect here
+      let newline = Environment.NewLine.ToCharArray() |> List.ofArray
+      let pattern = NewLine(1) + "  " + NewLine(1) // new line pattern
       match chars with
-      | '\n' :: ' ' :: ' ' :: '\n' :: tail -> '\n' :: '\n' :: (transform tail)
+      | List.StartsWithString pattern tail -> List.concat [ newline; newline ; (transform tail) ]
       | head :: tail -> head :: (transform tail)
       | [] -> []
 
@@ -265,25 +263,16 @@ let (|Boneyard|_|) input =
 
 // TODO: Should we also look for a line break before? 
 let (|SceneHeading|_|) (input:string list) =
-  let hasNewLineAfterFirstElement (forced, list) = 
-    match list with
-    | [] -> None
-    | head::rest ->
-       // look for a line break after the first element (first of the rest)
-       if rest.Length = 0 || String.IsNullOrWhiteSpace rest.[0] then
-          Some(forced, head, rest)
-       else
-          None
   match input with
-  | head :: tail ->
-    let head = head.Trim()
+  | first :: EmptyLine :: tail ->
+    let head = first.Trim()
     match head with
     // look for normal heading
     | String.StartsWithAnyCaseInsensitive [ "INT"; "EXT"; "EST"; "INT./EXT."; "INT/EXT"; "I/E" ] matching ->
-        hasNewLineAfterFirstElement (false, matching :: tail)
+        Some(false, head, tail)
     // look for forced heading
     | String.StartsWith "." matching ->
-        hasNewLineAfterFirstElement (true, matching :: tail)
+        Some(true, head.Substring(1), tail)
     | _ -> None
   | _ -> None
 
@@ -477,9 +466,9 @@ let (|DualDialogue|_|) (ctx: ParsingContext) (input:string list) =
         match rest with
         | Parenthetical lastParsedBlock (body, rest) ->
             let parentheticalItem = Parenthetical(parseSpans body, Range.empty)
-            parseCharacter (rest, parentheticalItem :: characterItem :: acc, Some(characterItem), ctx.IncPosition(length))
+            parseCharacter (rest, parentheticalItem :: characterItem :: acc, Some(characterItem), ctx.IncrementPosition(length))
         | _ ->
-            parseCharacter (rest, characterItem :: acc, Some(characterItem), ctx.IncPosition(length))
+            parseCharacter (rest, characterItem :: acc, Some(characterItem), ctx.IncrementPosition(length))
     | _ -> if acc.Length = 0 then None else Some(ctx, acc, input, lastParsedBlock)
 
   // parse input for Dialogue or Dialogue, Parenthetical and return the list of them  
@@ -555,11 +544,15 @@ let (|Action|_|) input =
         | [] -> None
         | hd::tail ->
           let sb = new StringBuilder()
-          List.iter (fun x -> sb.Append(x:string) |> ignore; sb.Append('\n') |> ignore) (hd::tail)
-          if (hd.StartsWith "!") then // forced Action, trim off the '!'
-            Some(true, sb.ToString().Substring(1).TrimEnd(), rest)
+          //let sb = String.asSingleString(hd :: tail, "\n")
+          List.iter (fun x -> sb.Append(x:string) |> ignore; sb.Append(Environment.NewLine) |> ignore) (hd::tail)
+          sb.Remove(sb.Length - Environment.NewLine.Length, Environment.NewLine.Length) |> ignore // remove last new line
+          if sb.Length = 0 then
+            None
+          elif (hd.StartsWith "!") then // forced Action, trim off the '!'
+            Some(true, sb.ToString().Substring(1).TrimEnd(), sb.Length, rest)
           else
-            Some(false, sb.ToString().TrimEnd(), rest)
+            Some(false, sb.ToString().TrimEnd(), sb.Length, rest)
       //| _ -> None
 
 //==== /Action
@@ -580,21 +573,21 @@ let (|TitlePage|_|) (lastParsedBlock:FountainBlockElement option) (input: string
        let key = m.Groups.["key"] // text before ':'
        let value = m.Groups.["value"] // text after ':'
        // let's parse spans - white spaces must be trimmed per line
-       let spans = value.Value.Trim().Split('\n') |> List.ofArray |> List.map( fun s -> s.Trim() ) |> String.concat "\n" |> parseSpans
+       let spans = value.Value.Trim().Split('\n') |> List.ofArray |> List.map( fun s -> s.Trim() ) |> String.concat Environment.NewLine |> parseSpans
        matchAndRemove ((key.Value, spans) :: acc) (input.Remove(m.Index, m.Length))
     
     // TODO: spare conversion from list to string and back to list of the remaining text!
-    let inputAsSingleString = String.asSingleString(input, NewLine) // treat input as one string
+    let inputAsSingleString = String.asSingleString(input, NewLine(1)) // treat input as one string
     // an empty line has to be present after the Title Page
-    let indexOfEmptyLine = inputAsSingleString.IndexOf(NewLine + NewLine)
+    let indexOfEmptyLine = inputAsSingleString.IndexOf(NewLine(2))
     if indexOfEmptyLine = -1 then
         None
     else
-        let titlePageText = inputAsSingleString.Substring(0, indexOfEmptyLine + 1) // text before the empty line '\n' at the end
+        let titlePageText = inputAsSingleString.Substring(0, indexOfEmptyLine + Environment.NewLine.Length) // text before the empty line (Environment.NewLine) at the end
         match matchAndRemove [] titlePageText with
         | ([], _) -> None
         | (keyValuePairs, rest) ->
-            Some(keyValuePairs, titlePageText.Length, String.asStringList(inputAsSingleString.Substring(indexOfEmptyLine + 2), NewLine))
+            Some(keyValuePairs, titlePageText.Length + Environment.NewLine.Length, String.asStringList(inputAsSingleString.Substring(indexOfEmptyLine + Environment.NewLine.Length * 2), NewLine(1)))
   | _ -> None // Title page must be the first block of the document 
 
 //==== /TitlePage
@@ -611,10 +604,9 @@ let rec parseBlocks (ctx:ParsingContext) (lastParsedBlock:FountainBlockElement o
   match lines with
   | TitlePage lastParsedBlock (keyValuePairs, length, rest) ->
      let item = TitlePage(keyValuePairs, new Range(0, length))
-     ctx.IncPosition(length)
      yield item
      yield PageBreak // Page break is implicit after Title page
-     yield! parseBlocks ctx (Some(item)) rest
+     yield! parseBlocks (ctx.IncrementPosition(length)) (Some(item)) rest
   | Boneyard(body, rest) ->
      let item = Boneyard(String.asSingleString(body, "\n"), Range.empty)
      yield item
@@ -671,12 +663,12 @@ let rec parseBlocks (ctx:ParsingContext) (lastParsedBlock:FountainBlockElement o
     yield item
     yield! parseBlocks ctx (Some(item)) rest // go on to parse the rest
 
-  | Action(forced, body, rest) ->
+  | Action(forced, body, length, rest) ->
     // body: as a single string. this can be parsed for spans much better
     let spans = parseSpans body
-    let item = Action(forced, spans, Range.empty)
+    let item = Action(forced, spans, new Range(ctx.Position, length))
     yield item
-    yield! parseBlocks ctx (Some(item)) rest // go on to parse the rest
+    yield! parseBlocks (ctx.IncrementPosition(length)) (Some(item)) rest // go on to parse the rest
 
   //| Lines.TrimBlankStart [] ->
   //   yield Action([HardLineBreak])

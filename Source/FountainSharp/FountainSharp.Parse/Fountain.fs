@@ -3,6 +3,7 @@
 open System
 open System.IO
 open System.Collections.Generic
+open System.Text
 
 open FountainSharp.Parse.Patterns
 open FountainSharp.Parse.Patterns.Lines
@@ -17,7 +18,6 @@ open FountainSharp.Fountain.Html
 type FountainDocument(blocks) =
   /// Returns a list of blocks in the document
   member x.Blocks : FountainBlocks = blocks
-
 
 /// Static class that provides methods for formatting 
 /// and transforming Markdown documents.

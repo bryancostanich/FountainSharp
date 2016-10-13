@@ -49,6 +49,9 @@
     <Compile Include="..\..\FountainSharp.Parse\FountainSyntax.fs">
       <Link>FountainSyntax.fs</Link>
     </Compile>
+    <Compile Include="..\..\FountainSharp.Parse\FountainHelper.fs">
+      <Link>FountainHelper.fs</Link>
+    </Compile>
     <Compile Include="..\..\FountainSharp.Parse\FountainParser.fs">
       <Link>FountainParser.fs</Link>
     </Compile>
@@ -59,8 +62,6 @@
       <Link>Fountain.fs</Link>
     </Compile>
     <None Include="ScratchRenamed.fsx" />
-  </ItemGroup>
-  <ItemGroup>
     <BundleResource Include="project.json" />
   </ItemGroup>
 </Project>
