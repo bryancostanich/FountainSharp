@@ -23,7 +23,7 @@ type Range(location:int,length:int) =
 
 type FountainSpanElement =
   | Literal of string * Range // some text
-  | Strong of FountainSpans * Range // **some bold text**
+  | Bold of FountainSpans * Range // **some bold text**
   | Italic of FountainSpans * Range // *some italicized text*
   | Underline of FountainSpans * Range// _some underlined text_
   | Note of FountainSpans * Range// [[this is my note]]
@@ -40,7 +40,7 @@ type FountainSpanElement =
 
   member fs.GetLength() : int =
     match fs with
-    | Strong(spans, r)
+    | Bold(spans, r)
     | Italic(spans, r)
     | Underline(spans, r)
     | Note(spans, r) ->

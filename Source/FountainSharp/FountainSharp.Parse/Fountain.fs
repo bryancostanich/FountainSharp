@@ -31,7 +31,6 @@ type Fountain =
       [ let line = ref ""
         while (line := reader.ReadLine(); line.Value <> null) do
           yield line.Value ]
-    //let (Lines.TrimBlank lines) = lines
     let ctx = new ParsingContext(newline)
     let blocks = 
       lines 

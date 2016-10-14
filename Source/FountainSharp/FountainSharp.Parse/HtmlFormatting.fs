@@ -79,7 +79,7 @@ let rec formatSpan (ctx:FormattingContext) = function
       ctx.Writer.Write(str)
       ctx.Writer.Write("</span>");
   | HardLineBreak (range) -> ctx.Writer.Write("<br />")
-  | Strong(body, range) -> 
+  | Bold(body, range) -> 
       ctx.Writer.Write("<strong>")
       formatSpans ctx body
       ctx.Writer.Write("</strong>")
