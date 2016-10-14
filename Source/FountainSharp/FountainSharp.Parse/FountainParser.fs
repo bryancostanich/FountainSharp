@@ -129,7 +129,7 @@ let (|Note|_|) input =
 
 /// Parses a body of a block and recognizes all inline tags.
 /// returns a sequence of FountainSpan
-let rec parseChars (ctx:ParsingContext) acc input = seq {
+let rec parseChars (ctx:ParsingContext) acc numOfEscapedChars input = seq {
 
   // Zero or one literals, depending whether there is some accumulated input
   // 2015.01.07 Bryan Costanich - change Lazy.Create to Lazy<char []> because of some ambiguation err when building as a PCL
@@ -137,7 +137,8 @@ let rec parseChars (ctx:ParsingContext) acc input = seq {
     if List.isEmpty acc then [] 
     else
         let text = String(List.rev acc |> Array.ofList)
-        [Literal(text, new Range(ctx.Position, text.Length))] )
+        // add the number of escaped characters to the Range!
+        [Literal(text, new Range(ctx.Position, text.Length + numOfEscapedChars))] )
 
   match input with 
   // markdown requires two spaces and then \r or \n, but fountain 
@@ -148,35 +149,34 @@ let rec parseChars (ctx:ParsingContext) acc input = seq {
     //System.Diagnostics.Debug.WriteLine("found a hardlinebreak")
     yield! accLiterals.Value
     yield HardLineBreak(new Range(ctx.Position + acc.Length, Environment.NewLine.Length))
-    yield! parseChars (ctx.IncrementPosition(acc.Length + Environment.NewLine.Length)) [] rest
+    yield! parseChars (ctx.IncrementPosition(acc.Length + Environment.NewLine.Length)) [] numOfEscapedChars rest
 
   // Encode & as an HTML entity
   | '&'::'a'::'m'::'p'::';'::rest 
   | '&'::rest ->
-      yield! parseChars ctx (';'::'p'::'m'::'a'::'&'::acc) rest      
+      yield! parseChars ctx (';'::'p'::'m'::'a'::'&'::acc) numOfEscapedChars rest      
 
   // Ignore escaped characters that might mean something else
   | EscapedChar(c, rest) ->
-      // TODO: add escaped character's count to the Range!
-      yield! parseChars ctx (c::acc) rest
+      yield! parseChars ctx (c::acc) (numOfEscapedChars + 1) rest
 
   // Handle emphasised text
   | Emphasized ctx (body, length, emphasis, emphasisLength, rest) ->
       yield! accLiterals.Value
-      let bodyParsed = parseChars (ctx.IncrementPosition(acc.Length + emphasisLength)) [] body |> List.ofSeq
+      let bodyParsed = parseChars (ctx.IncrementPosition(acc.Length + emphasisLength)) [] numOfEscapedChars body |> List.ofSeq
       yield emphasis(bodyParsed, (new Range(ctx.Position + acc.Length, length)))
-      yield! parseChars (ctx.IncrementPosition(length + acc.Length)) [] rest
+      yield! parseChars (ctx.IncrementPosition(length + acc.Length)) [] numOfEscapedChars rest
 
   // Notes
   | Note (body, rest) ->
       yield! accLiterals.Value
-      let body = parseChars ctx [] body |> List.ofSeq
+      let body = parseChars ctx [] numOfEscapedChars body |> List.ofSeq
       yield Note(body, Range.empty)
-      yield! parseChars ctx [] rest
+      yield! parseChars ctx [] numOfEscapedChars rest
 
   // This calls itself recursively on the rest of the list
   | x::xs -> 
-      yield! parseChars ctx (x::acc) xs 
+      yield! parseChars ctx (x::acc) numOfEscapedChars xs 
   | [] ->
       yield! accLiterals.Value }
 
@@ -184,7 +184,7 @@ let rec parseChars (ctx:ParsingContext) acc input = seq {
 // trimming off \r\n?
 let parseSpans (ctx:ParsingContext) (s:string) = 
   // why List.ofArray |> List.ofSeq?
-  parseChars ctx [] (s.ToCharArray() |> List.ofArray) |> List.ofSeq
+  parseChars ctx [] 0 (s.ToCharArray() |> List.ofArray) |> List.ofSeq
 
   // we get multiple lines as a match, so for blank lines we return a hard line break, otherwise we 
   // call parse spans

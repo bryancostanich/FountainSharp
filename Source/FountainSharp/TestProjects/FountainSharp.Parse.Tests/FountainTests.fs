@@ -434,7 +434,7 @@ let ``Emphasis - with escapes`` () =
    let text = "Steel enters the code on the keypad: **\*9765\***"
    let doc = text |> Fountain.Parse
    doc.Blocks
-   |> should equal [Action (false, [Literal ("Steel enters the code on the keypad: ", new Range(0, 37)); Bold ([Literal("*9765*", new Range(39, 6))], new Range(37, 12))], new Range(0, text.Length))]
+   |> should equal [Action (false, [Literal ("Steel enters the code on the keypad: ", new Range(0, 37)); Bold ([Literal("*9765*", new Range(39, 8))], new Range(37, 12))], new Range(0, text.Length))]
 
 [<Test>]
 let ``Emphasis - italics with spaces to left`` () =
