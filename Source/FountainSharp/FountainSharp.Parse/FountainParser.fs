@@ -27,6 +27,15 @@ let printDebug fmt par =
 [<Literal>]
 let EmptyLine = ""
 
+// Often used properties of a match for blocks and spans
+// Used for range calculation
+type MatchResult = 
+    {
+      Text   : string; // recognized text
+      Length : int; // the length of input recognized
+      Offset : int // offset from the beginning of the input
+    }
+
 /// Defines a context for the main `parseBlocks` function
 // TODO: Question: what is the Links part supposed to represent? Answer: for some reason he was creating a 
 // dictionary of known links. probably for additional processing. but fountain doesn't have links, so i got 
@@ -255,14 +264,15 @@ let (|SceneHeading|_|) (input:string list) =
   match input with
   | first :: EmptyLine :: tail ->
     let head = first.Trim()
-    let length = first.Length + NewLineLength * 2 // length of possible Scene Heading
     match head with
     // look for normal heading
     | String.StartsWithAnyCaseInsensitive [ "INT"; "EXT"; "EST"; "INT./EXT."; "INT/EXT"; "I/E" ] matching ->
-        Some(false, head, length, tail)
+        let result = { Text = head; Length = first.Length + NewLineLength * 2; Offset = first.IndexOf(head) }
+        Some(false, result, tail)
     // look for forced heading
     | String.StartsWith "." matching ->
-        Some(true, head.Substring(1), length, tail)
+        let recognition = { Text = head.Substring(1); Length = first.Length + NewLineLength * 2; Offset = first.IndexOf(head) + 1 }
+        Some(true, recognition, tail)
     | _ -> None
   | _ -> None
 
@@ -602,11 +612,10 @@ let rec parseBlocks (ctx:ParsingContext) (lastParsedBlock:FountainBlockElement o
      yield item
      yield! parseBlocks ctx (Some(item)) rest
   // Recognize remaining types of blocks/paragraphs
-  | SceneHeading(forced, body, length, rest) ->
-     let offset = if forced then 1 else 0 // offset of heading body
-     let item = SceneHeading(forced, parseSpans (ctx.IncrementPosition(offset)) body, new Range(ctx.Position, length))
+  | SceneHeading(forced, result, rest) ->
+     let item = SceneHeading(forced, parseSpans (ctx.IncrementPosition(result.Offset)) result.Text, new Range(ctx.Position, result.Length))
      yield item
-     yield! parseBlocks (ctx.IncrementPosition(length)) (Some(item)) rest
+     yield! parseBlocks (ctx.IncrementPosition(result.Length)) (Some(item)) rest
   | Section(n, body, rest) ->
      let item = Section(n, parseSpans ctx body, new Range(0,0))
      yield item
