@@ -201,19 +201,6 @@ let parseSpans (ctx:ParsingContext) (s:string) =
   // why List.ofArray |> List.ofSeq?
   parseChars ctx [] 0 (s.ToCharArray() |> List.ofArray) |> List.ofSeq
 
-  // we get multiple lines as a match, so for blank lines we return a hard line break, otherwise we 
-  // call parse spans
-let mapFunc ctx bodyLines =
-    let mapFuncInternal bodyLine : FountainSpans = 
-      if (bodyLine = "") then
-        [HardLineBreak(Range.empty)]
-      else
-        let kung = parseSpans ctx bodyLine
-        let fu = [HardLineBreak(Range.empty)]
-        List.concat ([kung;fu])
-    let foo = List.collect mapFuncInternal bodyLines
-    foo.GetSlice(Some(0), Some(foo.Length - 2))
-
 //======================================================================================
 // Part 2: Block Formatting
 
@@ -409,7 +396,6 @@ let (|Transition|_|) (input:string list) =
 
 //==== Dialogue
 
-// Dialogue
 let (|Dialogue|_|) (ctx:ParsingContext) (input:string list) =
   match ctx.LastParsedBlock with
   | Some (FountainSharp.Parse.Character(_)) 
@@ -456,11 +442,14 @@ let (|Dialogue|_|) (ctx:ParsingContext) (input:string list) =
           match lines with
           | Some([], rest) -> None // no lines found
           | Some(body, rest) ->
-              Some(body |> List.map(fun line -> line.Trim()), rest)
+              let body = body |> List.map(fun line -> line.Trim())
+              let result = String.asSingleString(body, Environment.NewLine)
+              Some(result, rest)
           | _ -> None
   | _ -> None
 
 //==== /Dialogue
+
 
 //==== Dual Dialogue
 
@@ -483,7 +472,7 @@ let (|DualDialogue|_|) (ctx: ParsingContext) (input:string list) =
   let rec parseDialogue (ctx:ParsingContext, input:string list, acc) = 
     match input with
     | Dialogue ctx (dialogBody, rest) -> 
-        let dialogueItem = Dialogue(mapFunc ctx dialogBody, Range.empty)
+        let dialogueItem = Dialogue(parseSpans ctx dialogBody, Range.empty)
         let ctx = ctx.Modify(ctx.Position, Some(dialogueItem))
         match rest with
         | Parenthetical ctx (body, rest) ->
@@ -668,7 +657,7 @@ let rec parseBlocks (ctx:ParsingContext) (lines: _ list) = seq {
      yield! parseBlocks (ctx.ChangeLastParsedBlock(Some(item))) rest
 
   | Dialogue ctx (body, rest) ->
-    let spans = mapFunc ctx body
+    let spans = parseSpans ctx body
     let item = Dialogue(spans, Range.empty)
     yield item
     yield! parseBlocks (ctx.ChangeLastParsedBlock(Some(item))) rest // go on to parse the rest

@@ -240,14 +240,14 @@ let ``Dialogue - After Parenthetical`` () =
 let ``Dialogue - With line break`` () =
    let doc = "\r\nDEALER\r\nTen.\r\nFour.\r\nDealer gets a seven.\r\n\r\n  Hit or stand sir?" |> Fountain.Parse
    doc.Blocks
-   |> should equal [Character (false, true, [Literal ("DEALER", new Range(0, 6))], new Range(0, 6 + NewLineLength));  Dialogue ([Literal ("Ten.", new Range(6 + NewLineLength, 4)); HardLineBreak(new Range(0, 0)); Literal ("Four.", new Range(6 + NewLineLength, 5)); HardLineBreak(new Range(0, 0)); Literal ("Dealer gets a seven.", new Range(6 + NewLineLength, 20)); HardLineBreak(new Range(0, 0)); HardLineBreak(new Range(0, 0)); Literal ("Hit or stand sir?", new Range(6 + NewLineLength, 17))], new Range(0, 0))]
+   |> should equal [Character (false, true, [Literal ("DEALER", new Range(0, 6))], new Range(0, 6 + NewLineLength));  Dialogue ([Literal ("Ten.", new Range(6 + NewLineLength, 4)); HardLineBreak(new Range(10 + NewLineLength, NewLineLength)); Literal ("Four.", new Range(10 + NewLineLength * 2, 5)); HardLineBreak(new Range(15 + NewLineLength * 2, NewLineLength)); Literal ("Dealer gets a seven.", new Range(15 + NewLineLength * 3, 20)); HardLineBreak(new Range(35 + NewLineLength * 3, NewLineLength)); HardLineBreak(new Range(35 + NewLineLength * 4, NewLineLength)); Literal ("Hit or stand sir?", new Range(35 + NewLineLength * 5, 17))], new Range(0, 0))]
 
 [<Test>]
 let ``Dialogue - With invalid line break`` () =
    let action = "Hit or stand sir?"
    let doc = "\r\nDEALER\r\nTen.\r\nFour.\r\nDealer gets a seven.\r\n\r\n" + action |> Fountain.Parse
    doc.Blocks
-   |> should equal [Character (false, true, [Literal ("DEALER", new Range(0, 6))], new Range(0, 6 + NewLineLength));  Dialogue ([Literal ("Ten.", new Range(6 + NewLineLength, 4)); HardLineBreak(new Range(0, 0)); Literal ("Four.", new Range(6 + NewLineLength, 5)); HardLineBreak(new Range(0, 0)); Literal ("Dealer gets a seven.", new Range(6 + NewLineLength, 20))], new Range(0, 0)); Action (false, [Literal ("Hit or stand sir?", new Range(6 + NewLineLength, 17))], new Range(6 + NewLineLength, action.Length))]
+   |> should equal [Character (false, true, [Literal ("DEALER", new Range(0, 6))], new Range(0, 6 + NewLineLength));  Dialogue ([Literal ("Ten.", new Range(6 + NewLineLength, 4)); HardLineBreak(new Range(10 + NewLineLength, NewLineLength)); Literal ("Four.", new Range(10 + NewLineLength * 2, 5)); HardLineBreak(new Range(15 + NewLineLength * 2, NewLineLength)); Literal ("Dealer gets a seven.", new Range(15 + NewLineLength * 3, 20))], new Range(0, 0)); Action (false, [Literal ("Hit or stand sir?", new Range(6 + NewLineLength, 17))], new Range(6 + NewLineLength, action.Length))]
    // this test now fails: parsing places line break be after last Action
 
 [<Test>]
@@ -269,7 +269,7 @@ let ``Dual Dialogue - invalid`` () =
    // BRICK must not be recognized as character as there is no new line before
    let doc = "\r\nSTEEL\r\nBeer's ready!\r\nBRICK\r\nAre they cold?" |> Fountain.Parse
    doc.Blocks
-   |> should equal [Character (false, true, [Literal ("STEEL", new Range(0, 5))], new Range(0, NewLineLength + 5)); Dialogue ([Literal ("Beer's ready!", new Range(5 + NewLineLength, 13)); HardLineBreak(new Range(0, 0)); Literal("BRICK", new Range(5 + NewLineLength, 5)); HardLineBreak(new Range(0, 0)); Literal("Are they cold?", new Range(5 + NewLineLength, 14))], new Range(0, 0))]
+   |> should equal [Character (false, true, [Literal ("STEEL", new Range(0, 5))], new Range(0, NewLineLength + 5)); Dialogue ([Literal ("Beer's ready!", new Range(5 + NewLineLength, 13)); HardLineBreak(new Range(18 + NewLineLength, NewLineLength)); Literal("BRICK", new Range(18 + NewLineLength * 2, 5)); HardLineBreak(new Range(23 + NewLineLength * 2, NewLineLength)); Literal("Are they cold?", new Range(23 + NewLineLength * 3, 14))], new Range(0, 0))]
 
 [<Test>]
 let ``Dual Dialogue - Parenthetical`` () =
