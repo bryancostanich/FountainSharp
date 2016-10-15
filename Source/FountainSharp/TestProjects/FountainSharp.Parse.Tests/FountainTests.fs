@@ -274,7 +274,7 @@ let ``Dual Dialogue - invalid`` () =
 [<Test>]
 let ``Dual Dialogue - Parenthetical`` () =
    let doc = "\r\nSTEEL\r\n(beer raised)\r\nTo retirement.\r\n\r\nBRICK ^\r\nTo retirement." |> Fountain.Parse
-   let expected = [DualDialogue([Character (false, true, [Literal ("STEEL", new Range(0, 5))], new Range(0, 5 + NewLineLength)); Parenthetical([Literal("beer raised", new Range(0, 11))], new Range(0, 0)); Dialogue ([Literal ("To retirement.", new Range(5 + NewLineLength, 14))], new Range(0, 0)); Character (false, false, [Literal ("BRICK", new Range(5 + NewLineLength, 5))], new Range(5 + NewLineLength, 7 + NewLineLength)); Dialogue ([Literal ("To retirement.", new Range(12 + 2 * NewLineLength, 14))], new Range(0, 0))], new Range(0, 0))]
+   let expected = [DualDialogue([Character (false, true, [Literal ("STEEL", new Range(0, 5))], new Range(0, 5 + NewLineLength)); Parenthetical([Literal("beer raised", new Range(5 + NewLineLength, 11))], new Range(0, 0)); Dialogue ([Literal ("To retirement.", new Range(5 + NewLineLength, 14))], new Range(0, 0)); Character (false, false, [Literal ("BRICK", new Range(5 + NewLineLength, 5))], new Range(5 + NewLineLength, 7 + NewLineLength)); Dialogue ([Literal ("To retirement.", new Range(12 + 2 * NewLineLength, 14))], new Range(0, 0))], new Range(0, 0))]
    doc.Blocks
    |> should equal expected
 

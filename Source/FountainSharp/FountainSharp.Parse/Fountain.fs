@@ -34,7 +34,7 @@ type Fountain =
     let ctx = new ParsingContext(newline)
     let blocks = 
       lines 
-      |> parseBlocks ctx None 
+      |> parseBlocks ctx 
       |> List.ofSeq
     FountainDocument(blocks)
 
@@ -43,12 +43,12 @@ type Fountain =
     Fountain.Parse(text, Environment.NewLine)
 
   // Parses a single line. Used for optimization when working with a large doc from an editor.
-  static member ParseLine(text:string, newline, (lastBlock:FountainBlockElement option)) =
+  static member ParseLine(text:string, newline) =
     let ctx = new ParsingContext()
     let line = text::[]
     let blocks = 
       line 
-      |> parseBlocks ctx lastBlock 
+      |> parseBlocks ctx 
       |> List.ofSeq
     FountainDocument(blocks)
 

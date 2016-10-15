@@ -40,9 +40,9 @@ type MatchResult =
 // TODO: Question: what is the Links part supposed to represent? Answer: for some reason he was creating a 
 // dictionary of known links. probably for additional processing. but fountain doesn't have links, so i got 
 // rid of it. but now we need to simplify this ParsingContext, probably.
-type ParsingContext(?newline : string, ?position : int) =
+type ParsingContext(?newline : string, ?position : int, ?lastParsedBlock : FountainBlockElement option) =
     let newLine = defaultArg newline Environment.NewLine
-    let mutable lastParsedBlock : FountainBlockElement option = None
+    let mutable lastParsedBlock : FountainBlockElement option = defaultArg lastParsedBlock None
     let mutable position = defaultArg position 0
 
     member this.NewLine with get() = newLine
@@ -50,7 +50,13 @@ type ParsingContext(?newline : string, ?position : int) =
     member ctx.LastParsedBlock with get() = lastParsedBlock and set block = lastParsedBlock <- block
     member ctx.Position with get() = position and set pos = position <- pos
 
-    member ctx.IncrementPosition(length) = new ParsingContext(ctx.NewLine, ctx.Position + length)
+    member ctx.IncrementPosition(length) = new ParsingContext(ctx.NewLine, ctx.Position + length, ctx.LastParsedBlock)
+
+    member ctx.ChangeLastParsedBlock(block : FountainBlockElement option) =
+        new ParsingContext(ctx.NewLine, ctx.Position, block)
+
+    member ctx.Modify(position : int, block : FountainBlockElement option) =
+        new ParsingContext(ctx.NewLine, position, block)
 
 //====== Parser
 // Part 1: Inline Formatting
@@ -368,8 +374,8 @@ let isForcedAction (input:string) =
     input.StartsWith("!")
 
 // Parenthetical
-let (|Parenthetical|_|) (lastParsedBlock:FountainBlockElement option) (input:string list) =
-  match lastParsedBlock with
+let (|Parenthetical|_|) (ctx:ParsingContext) (input:string list) =
+  match ctx.LastParsedBlock with
   // parenthetical can come after character OR dialogue
   | Some (FountainSharp.Parse.Character(_)) 
   | Some (FountainSharp.Parse.Parenthetical(_)) // parenthetical can occur in a dialog which preceded by a character-parenthetical duo (in this case parenthetical is the last parsed block)
@@ -404,8 +410,8 @@ let (|Transition|_|) (input:string list) =
 //==== Dialogue
 
 // Dialogue
-let (|Dialogue|_|) (lastParsedBlock:FountainBlockElement option) (input:string list) =
-  match lastParsedBlock with
+let (|Dialogue|_|) (ctx:ParsingContext) (input:string list) =
+  match ctx.LastParsedBlock with
   | Some (FountainSharp.Parse.Character(_)) 
   | Some (FountainSharp.Parse.Parenthetical(_)) ->
      // Dialogue starts after Character or Character (parenthetical)
@@ -419,7 +425,7 @@ let (|Dialogue|_|) (lastParsedBlock:FountainBlockElement option) (input:string l
      | Section _ -> false
      | Synopses _ -> false
      | PageBreak _ -> false
-     | Parenthetical lastParsedBlock _ -> false
+     | Parenthetical ctx _ -> false
      | _ -> true) input with // if we found a match, and it's not empty, return the Action and the rest
         | [], _ -> None
         | matching, rest ->
@@ -460,43 +466,43 @@ let (|Dialogue|_|) (lastParsedBlock:FountainBlockElement option) (input:string l
 
 let (|DualDialogue|_|) (ctx: ParsingContext) (input:string list) =
   // parse input for Character or Character, Parenthetical and return the list of them  
-  let rec parseCharacter (input:string list, acc, lastParsedBlock:FountainBlockElement option, ctx:ParsingContext) = 
+  let rec parseCharacter (ctx:ParsingContext, input:string list, acc) = 
     match input with
     | Character(forced, primary, body, length, rest) as item -> 
         let characterItem = Character(forced, primary, parseSpans ctx body, new Range(ctx.Position, length))
-        let lastParsedBlock = Some(characterItem)
+        let ctx = ctx.Modify(ctx.Position + length, Some(characterItem))
         match rest with
-        | Parenthetical lastParsedBlock (body, rest) ->
+        | Parenthetical ctx (body, rest) ->
             let parentheticalItem = Parenthetical(parseSpans ctx body, Range.empty)
-            parseCharacter (rest, parentheticalItem :: characterItem :: acc, Some(characterItem), ctx.IncrementPosition(length))
+            parseCharacter (ctx, rest, parentheticalItem :: characterItem :: acc)
         | _ ->
-            parseCharacter (rest, characterItem :: acc, Some(characterItem), ctx.IncrementPosition(length))
-    | _ -> if acc.Length = 0 then None else Some(ctx, acc, input, lastParsedBlock)
+            parseCharacter (ctx, rest, characterItem :: acc)
+    | _ -> if acc.Length = 0 then None else Some(ctx, acc, input)
 
   // parse input for Dialogue or Dialogue, Parenthetical and return the list of them  
-  let rec parseDialogue (ctx:ParsingContext, input:string list, acc, lastParsedBlock:FountainBlockElement option) = 
+  let rec parseDialogue (ctx:ParsingContext, input:string list, acc) = 
     match input with
-    | Dialogue lastParsedBlock (dialogBody, rest) -> 
+    | Dialogue ctx (dialogBody, rest) -> 
         let dialogueItem = Dialogue(mapFunc ctx dialogBody, Range.empty)
-        let lastParsedBlock = Some(dialogueItem)
+        let ctx = ctx.Modify(ctx.Position, Some(dialogueItem))
         match rest with
-        | Parenthetical lastParsedBlock (body, rest) ->
+        | Parenthetical ctx (body, rest) ->
             let parentheticalItem = Parenthetical(parseSpans ctx body, Range.empty)
-            parseDialogue (ctx, rest, parentheticalItem :: dialogueItem :: acc, Some(dialogueItem))
+            parseDialogue (ctx, rest, parentheticalItem :: dialogueItem :: acc)
         | _ ->
-            parseDialogue (ctx, rest, dialogueItem :: acc, Some(dialogueItem))
-    | _ -> if acc.Length = 0 then None else Some(acc, input, lastParsedBlock)
+            parseDialogue (ctx, rest, dialogueItem :: acc)
+    | _ -> if acc.Length = 0 then None else Some(ctx, acc, input)
 
   // parse input for (Character, Dialogue) pairs and return the list of them  
-  let rec parse (ctx : ParsingContext, input:string list, acc, lastParsedBlock:FountainBlockElement option) = 
+  let rec parse (ctx : ParsingContext, input:string list, acc) = 
     if input.Length = 0 then
         Some(List.rev acc, input)
     else
-      match parseCharacter(input, [], lastParsedBlock, ctx) with
-      | Some(ctx, characterBlocks, rest, lastParsedBlock) -> 
-          match parseDialogue(ctx, rest, [], lastParsedBlock) with
-          | Some(dialogueBlocks, rest, lastParsedBlock) ->
-              parse (ctx, rest, List.concat [dialogueBlocks; characterBlocks; acc], lastParsedBlock)
+      match parseCharacter(ctx, input, []) with
+      | Some(ctx, characterBlocks, rest) -> 
+          match parseDialogue(ctx, rest, []) with
+          | Some(ctx, dialogueBlocks, rest) ->
+              parse (ctx, rest, List.concat [dialogueBlocks; characterBlocks; acc])
           | _ -> Some(List.rev acc, input)
       | _ -> Some(List.rev acc, input)
 
@@ -514,7 +520,7 @@ let (|DualDialogue|_|) (ctx: ParsingContext) (input:string list) =
 
   // at least 2 (Character, Dialogue) blocks have to be found and at least one of them should be secondary character (marked by a caret)
     
-  match parse (ctx, input, [], ctx.LastParsedBlock) with
+  match parse (ctx, input, []) with
   | Some([], _) -> None // no (Character, Dialogue) blocks found
   | Some(list, rest) ->
     if List.tryFind isPrimary list <> None &&  List.tryFind isSecondary list <> None then
@@ -561,8 +567,8 @@ let (|Action|_|) input =
 
 //==== TitlePage
 
-let (|TitlePage|_|) (ctx:ParsingContext) (lastParsedBlock:FountainBlockElement option) (input: string list) =
-  match lastParsedBlock with
+let (|TitlePage|_|) (ctx:ParsingContext) (input: string list) =
+  match ctx.LastParsedBlock with
   | None ->
     // match "key: value" pattern at the beginning of the input as far as it is possible, and returns the matching values as well the remaining input
     let rec matchAndRemove acc (input:string) =
@@ -598,84 +604,84 @@ let (|TitlePage|_|) (ctx:ParsingContext) (lastParsedBlock:FountainBlockElement o
 /// note, we pass the lastParsedBlock because some blocks are dependent on what came before. dialogue, for 
 /// instance, comes after Character
 /// 
-let rec parseBlocks (ctx:ParsingContext) (lastParsedBlock:FountainBlockElement option) (lines: _ list) = seq {
+let rec parseBlocks (ctx:ParsingContext) (lines: _ list) = seq {
 
   // NOTE: Order of matching is important here. for instance, if you matched dialogue before 
   // parenthetical, you'd never get parenthetical
 
   match lines with
-  | TitlePage ctx lastParsedBlock (keyValuePairs, length, rest) ->
+  | TitlePage ctx (keyValuePairs, length, rest) ->
      let item = TitlePage(keyValuePairs, new Range(0, length))
      yield item
      yield PageBreak // Page break is implicit after Title page
-     yield! parseBlocks (ctx.IncrementPosition(length)) (Some(item)) rest
+     yield! parseBlocks (ctx.Modify(ctx.Position + length, Some(item))) rest
   | Boneyard(body, rest) ->
      let item = Boneyard(String.asSingleString(body, "\n"), Range.empty)
      yield item
-     yield! parseBlocks ctx (Some(item)) rest
+     yield! parseBlocks (ctx.ChangeLastParsedBlock(Some(item))) rest
   // Recognize remaining types of blocks/paragraphs
   | SceneHeading(forced, result, rest) ->
      let item = SceneHeading(forced, parseSpans (ctx.IncrementPosition(result.Offset)) result.Text, new Range(ctx.Position, result.Length))
      yield item
-     yield! parseBlocks (ctx.IncrementPosition(result.Length)) (Some(item)) rest
+     yield! parseBlocks (ctx.Modify(ctx.Position + result.Length, Some(item))) rest
   | Section(n, body, rest) ->
      let item = Section(n, parseSpans ctx body, new Range(0,0))
      yield item
-     yield! parseBlocks ctx (Some(item)) rest
+     yield! parseBlocks (ctx.ChangeLastParsedBlock(Some(item))) rest
   | DualDialogue ctx (blocks, rest) ->
      let item = DualDialogue(blocks, Range.empty)
      yield item
-     yield! parseBlocks ctx (Some(item)) rest
+     yield! parseBlocks (ctx.ChangeLastParsedBlock(Some(item))) rest
   | Character(forced, primary, body, length, rest) ->
      let item = Character(forced, primary, parseSpans ctx body, new Range(ctx.Position, length))
      yield item
-     yield! parseBlocks (ctx.IncrementPosition(length)) (Some(item)) rest
+     yield! parseBlocks (ctx.Modify(ctx.Position + length, Some(item))) rest
 
   | PageBreak(body, rest) ->
      let item = PageBreak
      yield item
-     yield! parseBlocks ctx (Some(item)) rest
+     yield! parseBlocks (ctx.ChangeLastParsedBlock(Some(item))) rest
   | Synopses(body, rest) ->
      let item = Synopses(parseSpans ctx body, new Range(0,0))
      yield item
-     yield! parseBlocks ctx (Some(item)) rest
+     yield! parseBlocks (ctx.ChangeLastParsedBlock(Some(item))) rest
   | Lyrics(result, rest) ->
      let body = parseSpans (ctx.IncrementPosition(result.Offset)) result.Text
      let item = Lyrics(body, new Range(ctx.Position, result.Length))
      yield item
-     yield! parseBlocks (ctx.IncrementPosition(result.Length)) (Some(item)) rest
+     yield! parseBlocks (ctx.Modify(ctx.Position + result.Length, Some(item))) rest
 
   | Centered(result, rest) ->
      let body = parseSpans (ctx.IncrementPosition(result.Offset)) result.Text
      let item = Centered(body, new Range(ctx.Position, result.Length))
      yield item
-     yield! parseBlocks (ctx.IncrementPosition(result.Length)) (Some(item)) rest
+     yield! parseBlocks (ctx.Modify(ctx.Position + result.Length, Some(item))) rest
 
   | Transition(forced, body, rest) ->
      let item = Transition(forced, parseSpans ctx body, new Range(0,0))
      yield item
-     yield! parseBlocks ctx (Some(item)) rest
+     yield! parseBlocks (ctx.ChangeLastParsedBlock(Some(item))) rest
   
-  | Parenthetical lastParsedBlock (body, rest) ->
+  | Parenthetical ctx (body, rest) ->
      let item = Parenthetical(parseSpans ctx body, new Range(0,0))
      yield item
-     yield! parseBlocks ctx (Some(item)) rest
+     yield! parseBlocks (ctx.ChangeLastParsedBlock(Some(item))) rest
 
-  | Dialogue lastParsedBlock (body, rest) ->
+  | Dialogue ctx (body, rest) ->
     let spans = mapFunc ctx body
     let item = Dialogue(spans, Range.empty)
     yield item
-    yield! parseBlocks ctx (Some(item)) rest // go on to parse the rest
+    yield! parseBlocks (ctx.ChangeLastParsedBlock(Some(item))) rest // go on to parse the rest
 
   | Action(forced, body, length, rest) ->
     // body: as a single string. this can be parsed for spans much better
     let spans = parseSpans ctx body
     let item = Action(forced, spans, new Range(ctx.Position, length))
     yield item
-    yield! parseBlocks (ctx.IncrementPosition(length)) (Some(item)) rest // go on to parse the rest
+    yield! parseBlocks (ctx.Modify(ctx.Position + length, Some(item))) rest // go on to parse the rest
 
   | first :: rest -> 
-    yield! parseBlocks ctx lastParsedBlock rest // let's try to skip this line and recognize the rest
+    yield! parseBlocks ctx rest // let's try to skip this line and recognize the rest
   | _ -> () // reached the end
   }
 
