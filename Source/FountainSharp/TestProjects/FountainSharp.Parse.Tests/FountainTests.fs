@@ -316,10 +316,10 @@ let ``PageBreak - ======= blah (fail with other chars)`` () =
 //===== Lyrics
 
 [<Test>]
-let ``Lyric - normal`` () =
+let ``Lyrics - normal`` () =
    let doc = "~Birdy hop, he do. He hop a long." |> Fountain.Parse
    doc.Blocks
-   |> should equal [Lyric ([Literal ("Birdy hop, he do. He hop a long.", new Range(0, 32))], new Range(0,0))]
+   |> should equal [Lyrics ([Literal ("Birdy hop, he do. He hop a long.", new Range(1, 32))], new Range(0, 33))]
 
 
 //===== Transition
@@ -342,13 +342,13 @@ let ``Transition - forced`` () =
 let ``Centered `` () =
    let doc = ">The End<" |> Fountain.Parse
    doc.Blocks
-   |> should equal [Centered ([Literal ("The End", new Range(0, 7))], new Range(0, 0))]
+   |> should equal [Centered ([Literal ("The End", new Range(1, 7))], new Range(0, 9))]
 
 [<Test>]
 let ``Centered - with spaces`` () =
    let doc = "> The End <" |> Fountain.Parse
    doc.Blocks
-   |> should equal [Centered ([Literal ("The End", new Range(0, 7))], new Range(0, 0))]
+   |> should equal [Centered ([Literal ("The End", new Range(2, 7))], new Range(0, 11))]
 
 //===== Line Breaks
 
@@ -493,7 +493,7 @@ let ``Action - indenting`` () =
 let ``Centered - indenting`` () =
    let doc = "\t   \t>The End <" |> Fountain.Parse
    doc.Blocks
-   |> should equal [Centered ([Literal ("The End", new Range(0, 7))], new Range(0, 0))]
+   |> should equal [Centered ([Literal ("The End", new Range(6, 7))], new Range(0, 15))]
 
 [<Test>]
 let ``Transition - indenting`` () =

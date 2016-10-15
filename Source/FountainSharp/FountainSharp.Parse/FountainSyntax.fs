@@ -61,13 +61,12 @@ and FountainSpans = list<FountainSpanElement>
 /// Blocks are headings, action blocks, dialogue blocks, etc. 
 type FountainBlockElement = 
   | Action of bool * FountainSpans * Range
-  | Character of bool * bool * FountainSpans * Range //TODO: maybe just FountainSpanElement? or just string?
+  | Character of bool * bool * FountainSpans * Range
   | Dialogue of FountainSpans * Range
   | Parenthetical of FountainSpans * Range
   | Section of int * FountainSpans * Range
   | Synopses of FountainSpans * Range
-  | Span of FountainSpans * Range //TODO: do we even use this?
-  | Lyric of FountainSpans * Range
+  | Lyrics of FountainSpans * Range
   | SceneHeading of bool * FountainSpans * Range //TODO: Should this really just be a single span? i mean, you shouldn't be able to style/inline a scene heading, right?
   | PageBreak
   | Transition of bool * FountainSpans * Range
@@ -100,9 +99,8 @@ type FountainBlockElement =
         fb.GetLength(spans)
     | Dialogue(spans, r)
     | Parenthetical(spans, r)
-    | Span(spans, r)
     | Synopses (spans, r)
-    | Lyric(spans, r)
+    | Lyrics(spans, r)
     | Centered(spans, r) ->
         fb.GetLength(spans)
     | Section(int, spans, r) ->

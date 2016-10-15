@@ -172,7 +172,7 @@ let rec formatBlockElement (ctx:FormattingContext) block =
       for span in spans do 
         formatSpan ctx span
       ctx.Writer.Write("</div>")
-  | Lyric (spans, range) ->
+  | Lyrics (spans, range) ->
       ctx.Writer.Write("""<div style="color:#333"><em>""")
       for span in spans do 
         formatSpan ctx span
@@ -237,8 +237,6 @@ let rec formatBlockElement (ctx:FormattingContext) block =
         formatSpan ctx span
       ctx.Writer.Write(")</div>")
   | Action (forced, spans, range) ->
-      formatSpans ctx spans
-  | Span(spans, range) -> 
       formatSpans ctx spans
   ctx.LineBreak()
 

@@ -344,9 +344,9 @@ let (|Synopses|_|) = function
      None
 
 /// Recognizes a Lyric (prefixed with ~)
-let (|Lyric|_|) = function
+let (|Lyrics|_|) = function
   | String.StartsWith "~" lyric:string :: rest ->
-      Some(lyric, rest)
+      Some({ Text = lyric; Length = lyric.Length + 1; Offset = 1 }, rest)
   | rest ->
       None
 
@@ -355,9 +355,11 @@ let (|Centered|_|) (input:string list) =
   match input with
   | head :: rest ->
     // Centered ignores indenting
-    let head = head.Trim()
-    if head.StartsWith(">") && head.EndsWith("<") then
-        Some(head.Substring(1, head.Length - 2).Trim(), rest) // strip '>' and '<'
+    let text = head.Trim()
+    if text.StartsWith(">") && text.EndsWith("<") then
+        let textResult = text.Substring(1, text.Length - 2).Trim()
+        let result = { Text = textResult; Length = head.Length; Offset = head.IndexOf(textResult) }
+        Some(result, rest) // strip '>' and '<'
     else
         None
   | _ -> None 
@@ -411,7 +413,7 @@ let (|Dialogue|_|) (lastParsedBlock:FountainBlockElement option) (input:string l
      match List.partitionWhileLookahead (function
      | SceneHeading _ -> false //note: it's decomposing the match and the rest and discarding the rest: `SceneHeading _` 
      | Character _ -> false
-     | Lyric _ -> false
+     | Lyrics _ -> false
      | Transition _ -> false // ugh. need to pass the last parsed block.
      | Centered _ -> false
      | Section _ -> false
@@ -530,7 +532,7 @@ let (|Action|_|) input =
   match List.partitionWhileLookahead (function
     | SceneHeading _ -> false //note: it's decomposing the match and the rest and discarding the rest: `SceneHeading _` 
     | Character _ -> false
-    | Lyric _ -> false
+    | Lyrics _ -> false
     | Transition _ -> false // ugh. need to pass the last parsed block.
     | Centered _ -> false
     | Section _ -> false
@@ -637,15 +639,17 @@ let rec parseBlocks (ctx:ParsingContext) (lastParsedBlock:FountainBlockElement o
      let item = Synopses(parseSpans ctx body, new Range(0,0))
      yield item
      yield! parseBlocks ctx (Some(item)) rest
-  | Lyric(body, rest) ->
-     let item = Lyric(parseSpans ctx body, new Range(0,0))
+  | Lyrics(result, rest) ->
+     let body = parseSpans (ctx.IncrementPosition(result.Offset)) result.Text
+     let item = Lyrics(body, new Range(ctx.Position, result.Length))
      yield item
-     yield! parseBlocks ctx (Some(item)) rest
+     yield! parseBlocks (ctx.IncrementPosition(result.Length)) (Some(item)) rest
 
-  | Centered(body, rest) ->
-     let item = Centered(parseSpans ctx body, new Range(0,0))
+  | Centered(result, rest) ->
+     let body = parseSpans (ctx.IncrementPosition(result.Offset)) result.Text
+     let item = Centered(body, new Range(ctx.Position, result.Length))
      yield item
-     yield! parseBlocks ctx (Some(item)) rest
+     yield! parseBlocks (ctx.IncrementPosition(result.Length)) (Some(item)) rest
 
   | Transition(forced, body, rest) ->
      let item = Transition(forced, parseSpans ctx body, new Range(0,0))
