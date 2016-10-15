@@ -255,13 +255,14 @@ let (|SceneHeading|_|) (input:string list) =
   match input with
   | first :: EmptyLine :: tail ->
     let head = first.Trim()
+    let length = first.Length + NewLineLength * 2 // length of possible Scene Heading
     match head with
     // look for normal heading
     | String.StartsWithAnyCaseInsensitive [ "INT"; "EXT"; "EST"; "INT./EXT."; "INT/EXT"; "I/E" ] matching ->
-        Some(false, head, tail)
+        Some(false, head, length, tail)
     // look for forced heading
     | String.StartsWith "." matching ->
-        Some(true, head.Substring(1), tail)
+        Some(true, head.Substring(1), length, tail)
     | _ -> None
   | _ -> None
 
@@ -269,7 +270,7 @@ let (|Character|_|) (list:string list) =
   match list with
   | [] -> None
   | EmptyLine :: first :: rest ->
-    let length = first.Length + Environment.NewLine.Length // length of possible Character block
+    let length = first.Length + NewLineLength // length of possible Character block
     // trim white spaces as Character ignores indenting
     let head = first.Trim()
     // Character has to be preceded by empty line
@@ -601,10 +602,11 @@ let rec parseBlocks (ctx:ParsingContext) (lastParsedBlock:FountainBlockElement o
      yield item
      yield! parseBlocks ctx (Some(item)) rest
   // Recognize remaining types of blocks/paragraphs
-  | SceneHeading(forced, body, rest) ->
-     let item = SceneHeading(forced, parseSpans ctx body, new Range(0,0))
+  | SceneHeading(forced, body, length, rest) ->
+     let offset = if forced then 1 else 0 // offset of heading body
+     let item = SceneHeading(forced, parseSpans (ctx.IncrementPosition(offset)) body, new Range(ctx.Position, length))
      yield item
-     yield! parseBlocks ctx (Some(item)) rest
+     yield! parseBlocks (ctx.IncrementPosition(length)) (Some(item)) rest
   | Section(n, body, rest) ->
      let item = Section(n, parseSpans ctx body, new Range(0,0))
      yield item
@@ -616,7 +618,7 @@ let rec parseBlocks (ctx:ParsingContext) (lastParsedBlock:FountainBlockElement o
   | Character(forced, primary, body, length, rest) ->
      let item = Character(forced, primary, parseSpans ctx body, new Range(ctx.Position, length))
      yield item
-     yield! parseBlocks ctx (Some(item)) rest
+     yield! parseBlocks (ctx.IncrementPosition(length)) (Some(item)) rest
 
   | PageBreak(body, rest) ->
      let item = PageBreak
