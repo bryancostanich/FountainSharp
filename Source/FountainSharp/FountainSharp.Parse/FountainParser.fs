@@ -335,7 +335,9 @@ let (|PageBreak|_|) input = //function
 /// Recognizes a synposes (prefixed with `=` sign)
 let (|Synopses|_|) = function
   | String.StartsWith "=" text :: rest ->
-     Some(text, rest)
+     let textTrimmed = text.Trim()
+     let newLineCount = if rest.IsEmpty then 0 else 1
+     Some({ Text = textTrimmed; Length = text.Length + 1 + NewLineLength * newLineCount; Offset = 1 + text.IndexOf(textTrimmed) }, rest)
   | rest ->
      None
 
@@ -640,10 +642,10 @@ let rec parseBlocks (ctx:ParsingContext) (lines: _ list) = seq {
      let item = PageBreak
      yield item
      yield! parseBlocks (ctx.ChangeLastParsedBlock(Some(item))) rest
-  | Synopses(body, rest) ->
-     let item = Synopses(parseSpans ctx body, new Range(0,0))
+  | Synopses(result, rest) ->
+     let item = Synopses(parseSpans (ctx.IncrementPosition(result.Offset)) result.Text, new Range(ctx.Position, result.Length))
      yield item
-     yield! parseBlocks (ctx.ChangeLastParsedBlock(Some(item))) rest
+     yield! parseBlocks (ctx.Modify(ctx.Position + result.Length, Some(item))) rest
   | Lyrics(result, rest) ->
      let body = parseSpans (ctx.IncrementPosition(result.Offset)) result.Text
      let item = Lyrics(body, new Range(ctx.Position, result.Length))

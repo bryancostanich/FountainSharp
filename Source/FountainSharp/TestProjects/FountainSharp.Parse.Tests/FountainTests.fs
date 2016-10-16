@@ -144,7 +144,7 @@ let ``Action - With line breaks and no heading`` () =
 let ``Basic Synopses`` () =
    let doc = "= Here is a synopses of this fascinating scene." |> Fountain.Parse
    doc.Blocks
-   |> should equal [Synopses ([Literal (" Here is a synopses of this fascinating scene.", new Range(0, 46))], new Range(0,0))]
+   |> should equal [Synopses ([Literal ("Here is a synopses of this fascinating scene.", new Range(2, 45))], new Range(0, 47))]
 
 
 //===== Character
@@ -290,7 +290,7 @@ let ``PageBreak - ===`` () =
 let ``PageBreak - == (not enough =)`` () =
    let doc = "==" |> Fountain.Parse
    doc.Blocks
-   |> should equal [Synopses ([Literal ("=", new Range(0,1))], new Range(0,0))]
+   |> should equal [Synopses ([Literal ("=", new Range(1, 1))], new Range(0, 2))]
 
 [<Test>]
 let ``PageBreak - ==========`` () =
@@ -309,7 +309,7 @@ let ``PageBreak - ======= (with space at end)`` () =
 let ``PageBreak - ======= blah (fail with other chars)`` () =
    let doc = "======= blah" |> Fountain.Parse
    doc.Blocks
-   |> should equal [Synopses ([Literal ("====== blah", new Range(0, 11))], new Range(0,0))]
+   |> should equal [Synopses ([Literal ("====== blah", new Range(1, 11))], new Range(0, 12))]
 
 
 //===== Lyrics
