@@ -211,14 +211,14 @@ let ``Character - With forced at and parenthetical extension`` () =
 let ``Parenthetical `` () =
    let doc = NewLine(1) + "LINDSEY" + NewLine(1) + "(quietly)" |> Fountain.Parse
    doc.Blocks
-   |> should equal [Character (false, true, [Literal ("LINDSEY", new Range(NewLineLength, 7))], new Range(0, 7 + NewLineLength * 2)); Parenthetical ([Literal ("quietly", new Range(7 + NewLineLength * 2, 7))], new Range(0,0))];
+   |> should equal [Character (false, true, [Literal ("LINDSEY", new Range(NewLineLength, 7))], new Range(0, 7 + NewLineLength * 2)); Parenthetical ([Literal ("quietly", new Range(8 + NewLineLength * 2, 7))], new Range(7 + NewLineLength * 2, 9))];
 
 [<Test>]
 let ``Parenthetical - After Dialogue`` () =
    let text = "\r\nLINDSEY\r\n(quietly)\r\nHello, friend.\r\n(loudly)\r\nFriendo!"
    let doc = properNewLines text |> Fountain.Parse
    doc.Blocks
-   |> should equal [Character (false, true, [Literal ("LINDSEY", new Range(NewLineLength, 7))], new Range(0, 7 + NewLineLength * 2)); Parenthetical ([Literal ("quietly", new Range(7 + NewLineLength * 2, 7))], new Range(0, 0)); Dialogue ([Literal ("Hello, friend.", new Range(7 + NewLineLength * 2, 14))], new Range(7 + NewLineLength * 2, 14)); Parenthetical ([Literal ("loudly", new Range(21 + NewLineLength * 2, 6))], new Range(0, 0)); Dialogue ([Literal ("Friendo!", new Range(21 + NewLineLength * 2, 8))], new Range(21 + NewLineLength * 2, 8))];
+   |> should equal [Character (false, true, [Literal ("LINDSEY", new Range(NewLineLength, 7))], new Range(0, 7 + NewLineLength * 2)); Parenthetical ([Literal ("quietly", new Range(8 + NewLineLength * 2, 7))], new Range(7 + NewLineLength * 2, 9 + NewLineLength)); Dialogue ([Literal ("Hello, friend.", new Range(16 + NewLineLength * 3, 14))], new Range(16 + NewLineLength * 3, 14)); Parenthetical ([Literal ("loudly", new Range(31 + NewLineLength * 3, 6))], new Range(30 + NewLineLength * 3, 8 + NewLineLength)); Dialogue ([Literal ("Friendo!", new Range(38 + NewLineLength * 4, 8))], new Range(38 + NewLineLength * 4, 8))];
 
 
 //===== Dialogue
@@ -233,7 +233,7 @@ let ``Dialogue - Normal`` () =
 let ``Dialogue - After Parenthetical`` () =
    let doc = "\r\nLINDSEY\r\n(quietly)\r\nHello, friend." |> Fountain.Parse
    doc.Blocks
-   |> should equal [Character (false, true, [Literal ("LINDSEY", new Range(NewLineLength, 7))], new Range(0, 7 + NewLineLength * 2)); Parenthetical ([Literal ("quietly", new Range(7 + NewLineLength * 2, 7))], new Range(0,0)); Dialogue ([Literal ("Hello, friend.", new Range(7 + NewLineLength * 2, 14))], new Range(7 + NewLineLength * 2, 14))]
+   |> should equal [Character (false, true, [Literal ("LINDSEY", new Range(NewLineLength, 7))], new Range(0, 7 + NewLineLength * 2)); Parenthetical ([Literal ("quietly", new Range(8 + NewLineLength * 2, 7))], new Range(7 + NewLineLength * 2, 9 + NewLineLength)); Dialogue ([Literal ("Hello, friend.", new Range(16 + NewLineLength * 3, 14))], new Range(16 + NewLineLength * 3, 14))]
 
 [<Test>]
 let ``Dialogue - With line break`` () =
@@ -273,7 +273,7 @@ let ``Dual Dialogue - invalid`` () =
 [<Test>]
 let ``Dual Dialogue - Parenthetical`` () =
    let doc = "\r\nSTEEL\r\n(beer raised)\r\nTo retirement.\r\n\r\nBRICK ^\r\nTo retirement." |> Fountain.Parse
-   let expected = [DualDialogue([Character (false, true, [Literal ("STEEL", new Range(NewLineLength, 5))], new Range(0, 5 + NewLineLength * 2)); Parenthetical([Literal("beer raised", new Range(5 + NewLineLength * 2, 11))], new Range(0, 0)); Dialogue ([Literal ("To retirement.", new Range(5 + NewLineLength * 2, 14))], new Range(5 + NewLineLength * 2, 14)); Character (false, false, [Literal ("BRICK", new Range(19 + NewLineLength * 3, 5))], new Range(19 + NewLineLength * 2, 7 + NewLineLength * 2)); Dialogue ([Literal ("To retirement.", new Range(26 + NewLineLength * 4, 14))], new Range(26 + NewLineLength * 4, 14))], new Range(0, 0))]
+   let expected = [DualDialogue([Character (false, true, [Literal ("STEEL", new Range(NewLineLength, 5))], new Range(0, 5 + NewLineLength * 2)); Parenthetical([Literal("beer raised", new Range(6 + NewLineLength * 2, 11))], new Range(5 + NewLineLength * 2, 13 + NewLineLength)); Dialogue ([Literal ("To retirement.", new Range(18 + NewLineLength * 3, 14))], new Range(18 + NewLineLength * 3, 14)); Character (false, false, [Literal ("BRICK", new Range(32 + NewLineLength * 4, 5))], new Range(32 + NewLineLength * 3, 7 + NewLineLength * 2)); Dialogue ([Literal ("To retirement.", new Range(39 + NewLineLength * 5, 14))], new Range(39 + NewLineLength * 5, 14))], new Range(0, 0))]
    doc.Blocks
    |> should equal expected
 

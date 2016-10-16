@@ -377,10 +377,13 @@ let (|Parenthetical|_|) (ctx:ParsingContext) (input:string list) =
   | Some (FountainSharp.Parse.Dialogue(_)) ->
      match input with
      | blockContent :: rest ->
-        if (blockContent.Trim().StartsWith "(" && blockContent.EndsWith ")") then
-          Some(blockContent.Trim().TrimStart([|'('|]).TrimEnd([|')'|]), rest)
+        let trimmed = blockContent.Trim()
+        if (trimmed.StartsWith "(" && trimmed.EndsWith ")") then
+            let body = trimmed.TrimStart('(').TrimEnd(')')
+            let newLineCount = if rest.IsEmpty then 0 else 1
+            Some({ Text = body; Length = blockContent.Length + NewLineLength * newLineCount; Offset = blockContent.IndexOf(body) }, rest)
         else
-          None
+            None
      | [] -> None
   | _ -> None
 
@@ -476,9 +479,9 @@ let (|DualDialogue|_|) (ctx: ParsingContext) (input:string list) =
         let characterItem = Character(forced, primary, parseSpans (ctx.IncrementPosition(result.Offset)) result.Text, new Range(ctx.Position, result.Length))
         let ctx = ctx.Modify(ctx.Position + result.Length, Some(characterItem))
         match rest with
-        | Parenthetical ctx (body, rest) ->
-            let parentheticalItem = Parenthetical(parseSpans ctx body, Range.empty)
-            parseCharacter (ctx, rest, parentheticalItem :: characterItem :: acc)
+        | Parenthetical ctx (result, rest) ->
+            let parentheticalItem = Parenthetical(parseSpans (ctx.IncrementPosition(result.Offset)) result.Text, new Range(ctx.Position, result.Length))
+            parseCharacter (ctx.Modify(ctx.Position + result.Length, Some(parentheticalItem)), rest, parentheticalItem :: characterItem :: acc)
         | _ ->
             parseCharacter (ctx, rest, characterItem :: acc)
     | _ -> if acc.Length = 0 then None else Some(ctx, acc, input)
@@ -490,9 +493,9 @@ let (|DualDialogue|_|) (ctx: ParsingContext) (input:string list) =
         let dialogueItem = Dialogue(parseSpans ctx dialogResult.Text, new Range(ctx.Position, dialogResult.Length))
         let ctx = ctx.Modify(ctx.Position + dialogResult.Length, Some(dialogueItem))
         match rest with
-        | Parenthetical ctx (body, rest) ->
-            let parentheticalItem = Parenthetical(parseSpans ctx body, Range.empty)
-            parseDialogue (ctx, rest, parentheticalItem :: dialogueItem :: acc)
+        | Parenthetical ctx (result, rest) ->
+            let parentheticalItem = Parenthetical(parseSpans (ctx.IncrementPosition(result.Offset)) result.Text, new Range(ctx.Position, result.Length))
+            parseDialogue (ctx.Modify(ctx.Position + result.Length, Some(parentheticalItem)), rest, parentheticalItem :: dialogueItem :: acc)
         | _ ->
             parseDialogue (ctx, rest, dialogueItem :: acc)
     | _ -> if acc.Length = 0 then None else Some(ctx, acc, input)
@@ -673,10 +676,10 @@ let rec parseBlocks (ctx:ParsingContext) (lines: _ list) = seq {
      yield item
      yield! parseBlocks (ctx.Modify(ctx.Position + result.Length, Some(item))) rest
   
-  | Parenthetical ctx (body, rest) ->
-     let item = Parenthetical(parseSpans ctx body, new Range(0,0))
+  | Parenthetical ctx (result, rest) ->
+     let item = Parenthetical(parseSpans (ctx.IncrementPosition(result.Offset)) result.Text, new Range(ctx.Position, result.Length))
      yield item
-     yield! parseBlocks (ctx.ChangeLastParsedBlock(Some(item))) rest
+     yield! parseBlocks (ctx.Modify(ctx.Position + result.Length, Some(item))) rest
 
   | Dialogue ctx (result, rest) ->
     let spans = parseSpans ctx result.Text
