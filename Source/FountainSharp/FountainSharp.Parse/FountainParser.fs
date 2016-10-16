@@ -254,19 +254,23 @@ let (|Section|_|) input = //function
 let (|Boneyard|_|) input =
     // recongizing lines inside of the boneyard
     // TODO: now /* and */ should stand alone in a line. if it's not appropriate, Boneyard should be implemented as a span (it would be weird though :))
-    let rec addLines (acc : string list) = 
+    let rec addLines (acc : string list) accLength = 
         function 
         | [] -> None // no beginning or ending of comment found
         | String.StartsWith "/*" head:string :: tail ->
-            addLines acc tail // beginning of comment
+            addLines acc (accLength + 2 + NewLineLength) tail // beginning of comment
         | String.StartsWith "*/" head:string :: tail -> 
-            Some(List.rev acc, tail) // end of comment
+            // end of comment
+            let newLinesLength = if tail.IsEmpty then 0 else NewLineLength
+            Some(List.rev acc, accLength + 2 + newLinesLength, tail)
+        | [head] ->
+            addLines (head :: acc) (accLength + head.Length) []
         | head :: tail ->
-            addLines (head :: acc) tail // inside or outside of comment
+            addLines (head :: acc) (accLength + head.Length + NewLineLength) tail // inside or outside of comment
 
-    match addLines [] input with
-    | Some([], rest) -> None // no comment found
-    | Some(body, rest) -> Some(body, rest)
+    match addLines [] 0 input with
+    | Some([], _, rest) -> None // no comment found
+    | Some(body, length, rest) -> Some({ Text = body; Length = length; Offset = 0 }, rest)
     | _ -> None
 
 // TODO: Should we also look for a line break before? 
@@ -641,10 +645,10 @@ let rec parseBlocks (ctx:ParsingContext) (lines: _ list) = seq {
      yield PageBreak(new Range(length, 0)) // Page break is implicit after Title page
      yield! parseBlocks (ctx.Modify(ctx.Position + length, Some(item))) rest
   
-  | Boneyard(body, rest) ->
-     let item = Boneyard(String.asSingleString(body, "\n"), Range.empty)
+  | Boneyard(result, rest) ->
+     let item = Boneyard(String.asSingleString(result.Text, Environment.NewLine), new Range(ctx.Position, result.Length))
      yield item
-     yield! parseBlocks (ctx.ChangeLastParsedBlock(Some(item))) rest
+     yield! parseBlocks (ctx.ChangeLastParsedBlock(Some(item)).IncrementPosition(result.Length)) rest
   // Recognize remaining types of blocks/paragraphs
   
   | SceneHeading(forced, result, rest) ->

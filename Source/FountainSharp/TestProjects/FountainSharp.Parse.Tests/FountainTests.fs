@@ -21,9 +21,10 @@ let properNewLines (text: string) = text.Replace("\r\n", System.Environment.NewL
 // TODO: should we support boneyards in a single line? Also in the middle of the line?
 [<Test>]
 let ``Boneyard`` () =
-   let doc = "/*\r\nThis is a simple comment\r\n*/" |> Fountain.Parse
+   let text = properNewLines "/*\r\nThis is a simple comment\r\n*/"
+   let doc = text |> Fountain.Parse
    doc.Blocks
-   |> should equal [Boneyard ("This is a simple comment", new Range(0, 0))]
+   |> should equal [Boneyard ("This is a simple comment", new Range(0, text.Length))]
 
 //===== Scene Headings
 [<Test>]
