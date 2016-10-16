@@ -273,7 +273,8 @@ let (|Character|_|) (list:string list) =
   match list with
   | [] -> None
   | EmptyLine :: first :: rest ->
-    let length = first.Length + NewLineLength // length of possible Character block
+    // length of possible Character block: \r\n<first>\r\n
+    let length = if rest.IsEmpty then first.Length + NewLineLength else first.Length + NewLineLength * 2
     // trim white spaces as Character ignores indenting
     let head = first.Trim()
     // Character has to be preceded by empty line
@@ -281,10 +282,11 @@ let (|Character|_|) (list:string list) =
         None
     // matches "@McAVOY"
     else if (head.StartsWith "@") then
+      let result = { Text = head.Substring(1); Length = length; Offset = 1 + NewLineLength}
       if head.EndsWith(" ^") then
-        Some(true, false, head.Substring(1), length, rest)
+        Some(true, false, result, rest)
       else
-        Some(true, true, head.Substring(1), length, rest)
+        Some(true, true, result, rest)
     // matches "BOB" or "BOB JOHNSON" or "BOB (on the radio)" or "R2D2" but not "25D2"
     else
       let pattern = @"^\p{Lu}[\p{Lu}\d\s]*(\(.*\))?(\s+\^)?$"
@@ -298,18 +300,19 @@ let (|Character|_|) (list:string list) =
           let allUpper = extension |> Seq.forall(fun c -> Char.IsUpper(c)) // all uppercase
           let allLower = extension |> Seq.forall(fun c -> Char.IsLower(c)) // all lowercase
           if allUpper || allLower then
+            let result = { Text = head; Length = length; Offset = NewLineLength}
             if m.Value.EndsWith("^") then
-              Some(false, false, head, length, rest)
+              Some(false, false, { Text = m.Value.Remove(m.Value.Length - 1).Trim(); Length = length; Offset = NewLineLength + first.IndexOf(head) }, rest)
             else
-              Some(false, true, head, length, rest)
+              Some(false, true, { Text = head; Length = length; Offset = NewLineLength + first.IndexOf(head) }, rest)
           else
             None
         else // no parenthetical extension found
           if m.Value.EndsWith("^") then
             // character for dual dialogue
-            Some(false, false, m.Value.Remove(m.Value.Length - 1).Trim(), length, rest)
+            Some(false, false, { Text = m.Value.Remove(m.Value.Length - 1).Trim(); Length = length; Offset = NewLineLength + first.IndexOf(head) }, rest)
           else
-            Some(false, true, head, length, rest)
+            Some(false, true, { Text = head; Length = length; Offset = NewLineLength + first.IndexOf(head) }, rest)
       // does not match Character rules
       else
         None
@@ -416,35 +419,36 @@ let (|Dialogue|_|) (ctx:ParsingContext) (input:string list) =
         | [], _ -> None
         | matching, rest ->
           // parsing dialogue's lines
-          let rec addLines (acc: string list) = function
+          let rec addLines (acc: string list) (accLength : int) = function
             // TODO: the following matches could be simpler, I think
             | first :: second :: tail as input ->
+                let newLinesInLength = if tail.IsEmpty then 1 else 2
                 if first = EmptyLine then
                     if second.StartsWith("  ") then // dialogue continues
-                        addLines (second.Substring(2) :: first :: acc) tail
+                        addLines (second.Substring(2) :: first :: acc) (accLength + first.Length + second.Length + NewLineLength * newLinesInLength) tail
                     else
-                        Some(List.rev acc, List.append(second :: tail) rest)
+                        Some(List.rev acc, accLength, List.append(second :: tail) rest)
                 elif isForcedAction(first) then // stop at forced Action
-                    Some(List.rev acc, List.append input rest)
+                    Some(List.rev acc, accLength, List.append input rest)
                 else if second = EmptyLine then
-                    addLines (first :: acc) (second :: tail)
+                    addLines (first :: acc) (accLength + first.Length + NewLineLength) (second :: tail)
                 else
-                    addLines (second :: first :: acc) tail
+                    addLines (second :: first :: acc) (accLength + first.Length + second.Length + NewLineLength * newLinesInLength) tail
             | [head] ->
                 if isForcedAction(head) then // stop at forced Action
-                    Some(List.rev acc, rest)
+                    Some(List.rev acc, accLength, rest)
                 else
-                    addLines (head :: acc) []
+                    addLines (head :: acc) (accLength + head.Length) []
             | [] ->
-                Some(List.rev acc, rest) // traversed all the lines
+                Some(List.rev acc, accLength, rest) // traversed all the lines
 
-          let lines = addLines [] matching
+          let lines = addLines [] 0 matching
           match lines with
-          | Some([], rest) -> None // no lines found
-          | Some(body, rest) ->
+          | Some([], _, _) -> None // no lines found
+          | Some(body, length, rest) ->
               let body = body |> List.map(fun line -> line.Trim())
               let result = String.asSingleString(body, Environment.NewLine)
-              Some(result, rest)
+              Some({ Text =result; Length = length; Offset = 0 }, rest)
           | _ -> None
   | _ -> None
 
@@ -457,9 +461,9 @@ let (|DualDialogue|_|) (ctx: ParsingContext) (input:string list) =
   // parse input for Character or Character, Parenthetical and return the list of them  
   let rec parseCharacter (ctx:ParsingContext, input:string list, acc) = 
     match input with
-    | Character(forced, primary, body, length, rest) as item -> 
-        let characterItem = Character(forced, primary, parseSpans ctx body, new Range(ctx.Position, length))
-        let ctx = ctx.Modify(ctx.Position + length, Some(characterItem))
+    | Character(forced, primary, result, rest) as item -> 
+        let characterItem = Character(forced, primary, parseSpans (ctx.IncrementPosition(result.Offset)) result.Text, new Range(ctx.Position, result.Length))
+        let ctx = ctx.Modify(ctx.Position + result.Length, Some(characterItem))
         match rest with
         | Parenthetical ctx (body, rest) ->
             let parentheticalItem = Parenthetical(parseSpans ctx body, Range.empty)
@@ -471,9 +475,9 @@ let (|DualDialogue|_|) (ctx: ParsingContext) (input:string list) =
   // parse input for Dialogue or Dialogue, Parenthetical and return the list of them  
   let rec parseDialogue (ctx:ParsingContext, input:string list, acc) = 
     match input with
-    | Dialogue ctx (dialogBody, rest) -> 
-        let dialogueItem = Dialogue(parseSpans ctx dialogBody, Range.empty)
-        let ctx = ctx.Modify(ctx.Position, Some(dialogueItem))
+    | Dialogue ctx (dialogResult, rest) -> 
+        let dialogueItem = Dialogue(parseSpans ctx dialogResult.Text, new Range(ctx.Position, dialogResult.Length))
+        let ctx = ctx.Modify(ctx.Position + dialogResult.Length, Some(dialogueItem))
         match rest with
         | Parenthetical ctx (body, rest) ->
             let parentheticalItem = Parenthetical(parseSpans ctx body, Range.empty)
@@ -621,10 +625,10 @@ let rec parseBlocks (ctx:ParsingContext) (lines: _ list) = seq {
      let item = DualDialogue(blocks, Range.empty)
      yield item
      yield! parseBlocks (ctx.ChangeLastParsedBlock(Some(item))) rest
-  | Character(forced, primary, body, length, rest) ->
-     let item = Character(forced, primary, parseSpans ctx body, new Range(ctx.Position, length))
+  | Character(forced, primary, result, rest) ->
+     let item = Character(forced, primary, parseSpans (ctx.IncrementPosition(result.Offset)) result.Text, new Range(ctx.Position, result.Length))
      yield item
-     yield! parseBlocks (ctx.Modify(ctx.Position + length, Some(item))) rest
+     yield! parseBlocks (ctx.Modify(ctx.Position + result.Length, Some(item))) rest
 
   | PageBreak(body, rest) ->
      let item = PageBreak
@@ -656,11 +660,11 @@ let rec parseBlocks (ctx:ParsingContext) (lines: _ list) = seq {
      yield item
      yield! parseBlocks (ctx.ChangeLastParsedBlock(Some(item))) rest
 
-  | Dialogue ctx (body, rest) ->
-    let spans = parseSpans ctx body
-    let item = Dialogue(spans, Range.empty)
+  | Dialogue ctx (result, rest) ->
+    let spans = parseSpans ctx result.Text
+    let item = Dialogue(spans, new Range(ctx.Position, result.Length))
     yield item
-    yield! parseBlocks (ctx.ChangeLastParsedBlock(Some(item))) rest // go on to parse the rest
+    yield! parseBlocks (ctx.Modify(ctx.Position + result.Length, Some(item))) rest // go on to parse the rest
 
   | Action(forced, body, length, rest) ->
     // body: as a single string. this can be parsed for spans much better
