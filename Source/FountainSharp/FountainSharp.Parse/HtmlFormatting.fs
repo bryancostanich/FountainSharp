@@ -165,7 +165,7 @@ let rec formatBlockElement (ctx:FormattingContext) block =
       for span in spans do 
         formatSpan ctx span
       ctx.Writer.Write("</strong></div>")
-  | PageBreak ->
+  | PageBreak (range) ->
       ctx.Writer.Write("<hr>")
   | Synopses (spans, range) ->
       ctx.Writer.Write("""<div style="color:#6cf;">""")

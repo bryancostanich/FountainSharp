@@ -321,11 +321,14 @@ let (|Character|_|) (list:string list) =
 /// Recognizes a PageBreak (3 or more consecutive equals and nothign more)
 let (|PageBreak|_|) input = //function
   match input with
-  | String.StartsWithRepeated "=" text :: rest ->
-    if (fst text) >= 3 then
-      match (snd text).Trim() with
+  | String.StartsWithRepeated "=" result :: rest ->
+    // result: (number of repetitions, remaining string)
+    if (fst result) >= 3 then
+      let text = snd result
+      let newLineCount = if rest.IsEmpty then 0 else 1
+      match text.Trim() with
       | "" -> //after the trim, there should be nothing left.
-         Some(PageBreak, rest)
+         Some({ Text = null; Length = fst result + text.Length + NewLineLength * newLineCount; Offset = 0 }, rest)
       | _ -> 
          None
     else None
@@ -614,38 +617,45 @@ let rec parseBlocks (ctx:ParsingContext) (lines: _ list) = seq {
   | TitlePage ctx (keyValuePairs, length, rest) ->
      let item = TitlePage(keyValuePairs, new Range(0, length))
      yield item
-     yield PageBreak // Page break is implicit after Title page
+     yield PageBreak(new Range(length, 0)) // Page break is implicit after Title page
      yield! parseBlocks (ctx.Modify(ctx.Position + length, Some(item))) rest
+  
   | Boneyard(body, rest) ->
      let item = Boneyard(String.asSingleString(body, "\n"), Range.empty)
      yield item
      yield! parseBlocks (ctx.ChangeLastParsedBlock(Some(item))) rest
   // Recognize remaining types of blocks/paragraphs
+  
   | SceneHeading(forced, result, rest) ->
      let item = SceneHeading(forced, parseSpans (ctx.IncrementPosition(result.Offset)) result.Text, new Range(ctx.Position, result.Length))
      yield item
      yield! parseBlocks (ctx.Modify(ctx.Position + result.Length, Some(item))) rest
+  
   | Section(n, body, rest) ->
      let item = Section(n, parseSpans ctx body, new Range(0,0))
      yield item
      yield! parseBlocks (ctx.ChangeLastParsedBlock(Some(item))) rest
+  
   | DualDialogue ctx (blocks, rest) ->
      let item = DualDialogue(blocks, Range.empty)
      yield item
      yield! parseBlocks (ctx.ChangeLastParsedBlock(Some(item))) rest
+  
   | Character(forced, primary, result, rest) ->
      let item = Character(forced, primary, parseSpans (ctx.IncrementPosition(result.Offset)) result.Text, new Range(ctx.Position, result.Length))
      yield item
      yield! parseBlocks (ctx.Modify(ctx.Position + result.Length, Some(item))) rest
-
-  | PageBreak(body, rest) ->
-     let item = PageBreak
+  
+  | PageBreak(result, rest) ->
+     let item = PageBreak(new Range(ctx.Position, result.Length))
      yield item
-     yield! parseBlocks (ctx.ChangeLastParsedBlock(Some(item))) rest
+     yield! parseBlocks (ctx.Modify(ctx.Position + result.Length, Some(item))) rest
+  
   | Synopses(result, rest) ->
      let item = Synopses(parseSpans (ctx.IncrementPosition(result.Offset)) result.Text, new Range(ctx.Position, result.Length))
      yield item
      yield! parseBlocks (ctx.Modify(ctx.Position + result.Length, Some(item))) rest
+  
   | Lyrics(result, rest) ->
      let body = parseSpans (ctx.IncrementPosition(result.Offset)) result.Text
      let item = Lyrics(body, new Range(ctx.Position, result.Length))
@@ -687,30 +697,3 @@ let rec parseBlocks (ctx:ParsingContext) (lines: _ list) = seq {
   }
 
   //| _ -> failwithf "Unexpectedly stopped!\n%A" lines }
-
-
-//let CountBlocks (blocks:FountainBlockElement list) :FountainBlockElement list =
-
-//  let i = 0
-//  let (countedBlocks:FountainBlockElement list) = [] 
-
-//  for block in blocks do
-//    match block with
-//    | Action (forced, spans, range)
-//    | Character (forced, spans, range)
-//    | SceneHeading (forced, spans, range)
-//    | Transition (forced, spans, range) -> ()
-
-//    | Dialogue (spans, range)
-//    | Parenthetical (spans, range)
-//    | Section(spans, range)
-//    | Synopses(spans, range)
-//    | Span(spans, range)
-//    | Lyric(spans, range)
-//    | Centered(spans, range) ->
-//      ()
-//    | PageBreak ->
-//      ()
-
-
-//  blocks

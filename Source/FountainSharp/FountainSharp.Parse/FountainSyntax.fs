@@ -68,7 +68,7 @@ type FountainBlockElement =
   | Synopses of FountainSpans * Range
   | Lyrics of FountainSpans * Range
   | SceneHeading of bool * FountainSpans * Range //TODO: Should this really just be a single span? i mean, you shouldn't be able to style/inline a scene heading, right?
-  | PageBreak
+  | PageBreak of Range
   | Transition of bool * FountainSpans * Range
   | Centered of FountainSpans * Range
   | Boneyard of string * Range
@@ -105,7 +105,7 @@ type FountainBlockElement =
         fb.GetLength(spans)
     | Section(int, spans, r) ->
         fb.GetLength(spans)
-    | PageBreak -> 3 //TODO: should we actually parse and keep the actual literal that folks use to define a pagebreak?
+    | PageBreak(r) -> r.Length
   
   member fs.GetRange(start:int):Range =
     new Range(start, fs.GetLength() + start)
