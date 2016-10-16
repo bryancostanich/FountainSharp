@@ -384,18 +384,24 @@ let (|Parenthetical|_|) (ctx:ParsingContext) (input:string list) =
 // Transition
 let (|Transition|_|) (input:string list) =
    match input with
-   | blockContent :: rest ->
-      let blockContent = blockContent.Trim() // Transition ignores indenting
+   // Has to be preceded by and followed by an empty line
+   | EmptyLine :: head :: EmptyLine :: rest ->
+      let blockContent = head.Trim() // Transition ignores indenting
       if blockContent.StartsWith "!" then // guard against forced action
         None
-      elif blockContent.EndsWith "TO:" || blockContent.StartsWith ">" then // TODO: need to check for a hard linebreak after
-        if blockContent.StartsWith ">" then
-          Some(true, blockContent.Substring(1).Trim(), rest) // true for forced
+      elif blockContent.StartsWith ">" then // forced transition
+        let text = blockContent.Substring(1).Trim()
+        Some(true, { Text = text; Length = head.Length + NewLineLength * 3; Offset = head.IndexOf(text) + NewLineLength }, rest)
+      elif blockContent.EndsWith "TO:" then // non-forced transition
+        // check for all uppercase
+        if blockContent.ToCharArray() |> Seq.exists (fun c -> Char.IsLower(c)) then
+            None
         else
-          Some(false, blockContent.Trim(), rest)
+            let text = blockContent.Trim()
+            Some(false, { Text = text; Length = head.Length + NewLineLength * 3; Offset = head.IndexOf(text) + NewLineLength }, rest)
       else
-       None
-   | [] -> None
+        None
+   | _ -> None
 
 //==== Dialogue
 
@@ -650,10 +656,10 @@ let rec parseBlocks (ctx:ParsingContext) (lines: _ list) = seq {
      yield item
      yield! parseBlocks (ctx.Modify(ctx.Position + result.Length, Some(item))) rest
 
-  | Transition(forced, body, rest) ->
-     let item = Transition(forced, parseSpans ctx body, new Range(0,0))
+  | Transition(forced, result, rest) ->
+     let item = Transition(forced, parseSpans (ctx.IncrementPosition(result.Offset)) result.Text, new Range(ctx.Position, result.Length))
      yield item
-     yield! parseBlocks (ctx.ChangeLastParsedBlock(Some(item))) rest
+     yield! parseBlocks (ctx.Modify(ctx.Position + result.Length, Some(item))) rest
   
   | Parenthetical ctx (body, rest) ->
      let item = Parenthetical(parseSpans ctx body, new Range(0,0))

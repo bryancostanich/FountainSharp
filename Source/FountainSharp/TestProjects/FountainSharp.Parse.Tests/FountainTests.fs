@@ -325,15 +325,22 @@ let ``Lyrics - normal`` () =
 
 [<Test>]
 let ``Transition - normal`` () =
-   let doc = "CUT TO:" |> Fountain.Parse
+   let doc = "\r\nCUT TO:\r\n\r\nSome action" |> Fountain.Parse
    doc.Blocks
-   |> should equal [Transition (false, [Literal ("CUT TO:", new Range(0,7))], new Range(0,0))]
+   |> should equal [Transition (false, [Literal ("CUT TO:", new Range(NewLineLength, 7))], new Range(0, 7 + NewLineLength * 3)); Action(false, [Literal("Some action", new Range(7 + NewLineLength * 3, 11))], new Range(7 + NewLineLength * 3, 11))]
+
+[<Test>]
+let ``Transition - Non uppercase`` () =
+   // This is not a transition as 'Cut' is not all uppercase
+   let doc = "\r\nCut TO:\r\n\r\nSome action" |> Fountain.Parse
+   doc.Blocks
+   |> should equal [Action (false, [HardLineBreak(new Range(0, NewLineLength)); Literal("Cut TO:", new Range(NewLineLength, 7)); HardLineBreak(new Range(7 + NewLineLength, NewLineLength)); HardLineBreak(new Range(7 + NewLineLength * 2, NewLineLength)); Literal("Some action", new Range(7 + NewLineLength * 3, 11))], new Range(0, 18 + NewLineLength * 3))]
 
 [<Test>]
 let ``Transition - forced`` () =
-   let doc = "> Burn to White." |> Fountain.Parse
+   let doc = "\r\n> Burn to White.\r\n\r\nSome action" |> Fountain.Parse
    doc.Blocks
-   |> should equal [Transition (true, [Literal ("Burn to White.", new Range(0,14))], new Range(0,0))]
+   |> should equal [Transition (true, [Literal ("Burn to White.", new Range(2 + NewLineLength, 14))], new Range(0, 16 + NewLineLength * 3)); Action(false, [Literal("Some action", new Range(16 + NewLineLength * 3, 11))], new Range(16 + NewLineLength * 3, 11))]
 
 //===== Centered
 
@@ -496,15 +503,15 @@ let ``Centered - indenting`` () =
 
 [<Test>]
 let ``Transition - indenting`` () =
-   let doc = "  \t  CUT TO:" |> Fountain.Parse
+   let doc = "\r\n  \t  CUT TO:\r\n\r\nSome action" |> Fountain.Parse
    doc.Blocks
-   |> should equal [Transition (false, [Literal ("CUT TO:", new Range(0, 7))], new Range(0, 0))]
+   |> should equal [Transition (false, [Literal ("CUT TO:", new Range(NewLineLength + 5, 7))], new Range(0, 12 + NewLineLength * 3)); Action(false, [Literal("Some action", new Range(12 + NewLineLength * 3, 11))], new Range(12 + NewLineLength * 3, 11))]
 
 [<Test>]
 let ``Transition - forced indenting`` () =
-   let doc = "\t > Burn to White." |> Fountain.Parse
+   let doc = "\r\n\t > Burn to White.\r\n\r\nSome action" |> Fountain.Parse
    doc.Blocks
-   |> should equal [Transition (true, [Literal ("Burn to White.", new Range(0, 14))], new Range(0, 0))]
+   |> should equal [Transition (true, [Literal ("Burn to White.", new Range(NewLineLength + 4, 14))], new Range(0, 18 + NewLineLength * 3)); Action(false, [Literal("Some action", new Range(18 + NewLineLength * 3, 11))], new Range(18 + NewLineLength * 3, 11))]
 
 //===== Title page
 
