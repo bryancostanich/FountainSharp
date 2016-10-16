@@ -28,7 +28,7 @@ let printDebug fmt par =
 let EmptyLine = ""
 
 // Often used properties of a match for blocks and spans
-// Used for range calculation
+// Used for range calculation. Generic as the result can be String, char list, etc.
 type MatchResult<'T> = 
     {
       Text   : 'T; // recognized text
@@ -40,23 +40,30 @@ type MatchResult<'T> =
 // TODO: Question: what is the Links part supposed to represent? Answer: for some reason he was creating a 
 // dictionary of known links. probably for additional processing. but fountain doesn't have links, so i got 
 // rid of it. but now we need to simplify this ParsingContext, probably.
-type ParsingContext(?newline : string, ?position : int, ?lastParsedBlock : FountainBlockElement option) =
+type ParsingContext(?newline : string, ?position : int, ?lastParsedBlock : FountainBlockElement option, ?treatDoubleSpaceAsNewLine : bool) =
     let newLine = defaultArg newline Environment.NewLine
-    let mutable lastParsedBlock : FountainBlockElement option = defaultArg lastParsedBlock None
-    let mutable position = defaultArg position 0
+    let lastParsedBlock : FountainBlockElement option = defaultArg lastParsedBlock None
+    let position = defaultArg position 0
+    let doubleSpaceAsNewLine : bool = defaultArg treatDoubleSpaceAsNewLine false
 
     member this.NewLine with get() = newLine
 
-    member ctx.LastParsedBlock with get() = lastParsedBlock and set block = lastParsedBlock <- block
-    member ctx.Position with get() = position and set pos = position <- pos
+    member ctx.LastParsedBlock with get() = lastParsedBlock
+    member ctx.Position with get() = position
 
-    member ctx.IncrementPosition(length) = new ParsingContext(ctx.NewLine, ctx.Position + length, ctx.LastParsedBlock)
+    member ctx.TreatDoubleSpaceAsNewLine with get() = doubleSpaceAsNewLine
+
+    member ctx.IncrementPosition(length) =
+        new ParsingContext(ctx.NewLine, ctx.Position + length, ctx.LastParsedBlock, ctx.TreatDoubleSpaceAsNewLine)
 
     member ctx.ChangeLastParsedBlock(block : FountainBlockElement option) =
-        new ParsingContext(ctx.NewLine, ctx.Position, block)
+        new ParsingContext(ctx.NewLine, ctx.Position, block, ctx.TreatDoubleSpaceAsNewLine)
 
     member ctx.Modify(position : int, block : FountainBlockElement option) =
-        new ParsingContext(ctx.NewLine, position, block)
+        new ParsingContext(ctx.NewLine, position, block, ctx.TreatDoubleSpaceAsNewLine)
+
+    member ctx.WithDoubleSpaceAsNewLine() =
+        new ParsingContext(ctx.NewLine, ctx.Position, ctx.LastParsedBlock, true)
 
 //====== Parser
 // Part 1: Inline Formatting
@@ -139,7 +146,8 @@ let (|Note|_|) input =
 
   match input with
   | DelimitedWith ['['; '['] [']';']'] (body, rest) ->
-      Some ({ Text = transform body; Length = body.Length + 4; Offset = 2}, rest)
+      let x = String(body |> Array.ofList)
+      Some ({ Text = body; Length = body.Length + 4; Offset = 2}, rest)
   | _ -> None
 
 /// Parses a body of a block and recognizes all inline tags.
@@ -155,7 +163,16 @@ let rec parseChars (ctx:ParsingContext) acc numOfEscapedChars input = seq {
         // add the number of escaped characters to the Range!
         [Literal(text, new Range(ctx.Position, text.Length + numOfEscapedChars))] )
 
+  
+  let patternForcedLineBreak = "  " + NewLine(1) // new line pattern
+
+
   match input with 
+  | List.StartsWithString patternForcedLineBreak rest when ctx.TreatDoubleSpaceAsNewLine ->
+  // ' ' :: ' ' :: '\r' :: '\n' :: rest when ctx.TreatDoubleSpaceAsNewLine ->
+    yield HardLineBreak(new Range(ctx.Position, patternForcedLineBreak.Length))
+    yield! parseChars (ctx.IncrementPosition(patternForcedLineBreak.Length)) [] numOfEscapedChars rest
+
   // markdown requires two spaces and then \r or \n, but fountain 
   // recognizes without
   // Recognizes explicit line-break at the end of line
@@ -169,7 +186,7 @@ let rec parseChars (ctx:ParsingContext) acc numOfEscapedChars input = seq {
   // Encode & as an HTML entity
   | '&'::'a'::'m'::'p'::';'::rest 
   | '&'::rest ->
-      yield! parseChars ctx (';'::'p'::'m'::'a'::'&'::acc) numOfEscapedChars rest      
+      yield! parseChars ctx (';'::'p'::'m'::'a'::'&'::acc) numOfEscapedChars rest
 
   // Ignore escaped characters that might mean something else
   | EscapedChar(c, rest) ->
@@ -185,7 +202,7 @@ let rec parseChars (ctx:ParsingContext) acc numOfEscapedChars input = seq {
   // Notes
   | Note (result, rest) ->
       yield! accLiterals.Value
-      let body = parseChars (ctx.IncrementPosition(acc.Length + result.Offset)) [] numOfEscapedChars result.Text |> List.ofSeq
+      let body = parseChars (ctx.IncrementPosition(acc.Length + result.Offset).WithDoubleSpaceAsNewLine()) [] numOfEscapedChars result.Text |> List.ofSeq
       yield Note(body, new Range(ctx.Position + acc.Length, result.Length))
       yield! parseChars (ctx.IncrementPosition(acc.Length + result.Length)) [] numOfEscapedChars rest
 
@@ -439,7 +456,7 @@ let (|Dialogue|_|) (ctx:ParsingContext) (input:string list) =
                 let newLinesInLength = if tail.IsEmpty then 1 else 2
                 if first = EmptyLine then
                     if second.StartsWith("  ") then // dialogue continues
-                        addLines (second.Substring(2) :: first :: acc) (accLength + first.Length + second.Length + NewLineLength * newLinesInLength) tail
+                        addLines (second :: first :: acc) (accLength + first.Length + second.Length + NewLineLength * newLinesInLength) tail
                     else
                         Some(List.rev acc, accLength, List.append(second :: tail) rest)
                 elif isForcedAction(first) then // stop at forced Action
@@ -460,7 +477,7 @@ let (|Dialogue|_|) (ctx:ParsingContext) (input:string list) =
           match lines with
           | Some([], _, _) -> None // no lines found
           | Some(body, length, rest) ->
-              let body = body |> List.map(fun line -> line.Trim())
+              //let body = body |> List.map(fun line -> line.Trim())
               let result = String.asSingleString(body, Environment.NewLine)
               Some({ Text =result; Length = length; Offset = 0 }, rest)
           | _ -> None
@@ -683,7 +700,7 @@ let rec parseBlocks (ctx:ParsingContext) (lines: _ list) = seq {
      yield! parseBlocks (ctx.Modify(ctx.Position + result.Length, Some(item))) rest
 
   | Dialogue ctx (result, rest) ->
-    let spans = parseSpans ctx result.Text
+    let spans = parseSpans (ctx.WithDoubleSpaceAsNewLine()) result.Text
     let item = Dialogue(spans, new Range(ctx.Position, result.Length))
     yield item
     yield! parseBlocks (ctx.Modify(ctx.Position + result.Length, Some(item))) rest // go on to parse the rest
