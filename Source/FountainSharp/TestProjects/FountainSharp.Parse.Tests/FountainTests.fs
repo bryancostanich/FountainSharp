@@ -371,28 +371,27 @@ let ``Notes - Inline`` () =
    let text = "Some text and then a [[bit of a note]]. And some more text."
    let doc = text |> Fountain.Parse
    doc.Blocks
-   |> should equal [Action (false, [Literal ("Some text and then a ", new Range(0, 21)); Note ([Literal( "bit of a note", new Range(0, 13))], new Range(0, 0)); Literal( ". And some more text.", new Range(0, 21))], new Range(0, text.Length))]
+   |> should equal [Action (false, [Literal ("Some text and then a ", new Range(0, 21)); Note ([Literal( "bit of a note", new Range(23, 13))], new Range(21, 17)); Literal( ". And some more text.", new Range(38, 21))], new Range(0, 59))]
 
 [<Test>]
 let ``Notes - Block`` () =
-   let text = "[[It was supposed to be Vietnamese, right?]]"
-   let doc = text |> Fountain.Parse
+   let doc = "[[It was supposed to be Vietnamese, right?]]" |> Fountain.Parse
    doc.Blocks
-   |> should equal [Action(false, [Note ([Literal ("It was supposed to be Vietnamese, right?", new Range(0, 40))], new Range(0, 0))], new Range(0, text.Length))]
+   |> should equal [Action(false, [Note ([Literal ("It was supposed to be Vietnamese, right?", new Range(2, 40))], new Range(0, 44))], new Range(0, 44))]
 
 [<Test>]
 let ``Notes - Line breaks`` () =
    let text = properNewLines "His hand is an inch from the receiver when the phone RINGS. Scott pauses for a moment, suspicious for some reason.[[This section needs work.\r\nEither that, or I need coffee.\r\nDefinitely coffee.]] He looks around. Phone ringing."
    let doc = text |> Fountain.Parse
    doc.Blocks
-   |> should equal [Action(false, [Literal ("His hand is an inch from the receiver when the phone RINGS. Scott pauses for a moment, suspicious for some reason.", new Range(0, 114)); Note([Literal("This section needs work.", new Range(0, 24)); HardLineBreak(new Range(24, NewLineLength)); Literal("Either that, or I need coffee.", new Range(24 + NewLineLength, 30)); HardLineBreak(new Range(54 + NewLineLength, NewLineLength)); Literal("Definitely coffee.", new Range(54 + 2 * NewLineLength, 18))], new Range(0, 0)); Literal(" He looks around. Phone ringing.", new Range(0, 32))], new Range(0, text.Length))]
+   |> should equal [Action(false, [Literal ("His hand is an inch from the receiver when the phone RINGS. Scott pauses for a moment, suspicious for some reason.", new Range(0, 114)); Note([Literal("This section needs work.", new Range(116, 24)); HardLineBreak(new Range(140, NewLineLength)); Literal("Either that, or I need coffee.", new Range(140 + NewLineLength, 30)); HardLineBreak(new Range(170 + NewLineLength, NewLineLength)); Literal("Definitely coffee.", new Range(170 + 2 * NewLineLength, 18))], new Range(114, 76 + NewLineLength * 2)); Literal(" He looks around. Phone ringing.", new Range(190 + NewLineLength * 2, 32))], new Range(0, text.Length))]
 
 [<Test>]
 let ``Notes - Line breaks with empty line`` () =
-   let text = "His hand is an inch from the receiver when the phone RINGS. Scott pauses for a moment, suspicious for some reason.[[This section needs work." + NewLine(1) + "Either that, or I need coffee." + NewLine(1) + "  " + NewLine(1) + "Definitely coffee.]] He looks around. Phone ringing."
+   let text = "His hand is an inch from the receiver when the phone RINGS. Scott pauses for a moment, suspicious for some reason.[[This section needs work.\r\nEither that, or I need coffee.\r\n  \r\nDefinitely coffee.]] He looks around. Phone ringing."
    let doc = text |> Fountain.Parse
    doc.Blocks
-   |> should equal [Action(false, [Literal ("His hand is an inch from the receiver when the phone RINGS. Scott pauses for a moment, suspicious for some reason.", new Range(0, 114)); Note([Literal("This section needs work.", new Range(0, 24)); HardLineBreak(new Range(24, NewLineLength)); Literal("Either that, or I need coffee.", new Range(24 + NewLineLength, 30)); HardLineBreak(new Range(54 + NewLineLength, NewLineLength)); HardLineBreak(new Range(54 + 2 * NewLineLength, NewLineLength)); Literal("Definitely coffee.", new Range(54 + 3 * NewLineLength, 18))], new Range(0, 0)); Literal(" He looks around. Phone ringing.", new Range(0, 32))], new Range(0, text.Length))]
+   |> should equal [Action(false, [Literal ("His hand is an inch from the receiver when the phone RINGS. Scott pauses for a moment, suspicious for some reason.", new Range(0, 114)); Note([Literal("This section needs work.", new Range(116, 24)); HardLineBreak(new Range(140, NewLineLength)); Literal("Either that, or I need coffee.", new Range(140 + NewLineLength, 30)); HardLineBreak(new Range(170 + NewLineLength, NewLineLength)); HardLineBreak(new Range(170 + 2 * NewLineLength, NewLineLength + 2)); Literal("Definitely coffee.", new Range(172 + NewLineLength * 3, 18))], new Range(114, 74 + NewLineLength * 3)); Literal(" He looks around. Phone ringing.", new Range(188 + NewLineLength * 3, 32))], new Range(0, text.Length))]
 
 //===== Boneyard (Comments)
 //TODO: not implemented yet.

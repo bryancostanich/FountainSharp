@@ -29,9 +29,9 @@ let EmptyLine = ""
 
 // Often used properties of a match for blocks and spans
 // Used for range calculation
-type MatchResult = 
+type MatchResult<'T> = 
     {
-      Text   : string; // recognized text
+      Text   : 'T; // recognized text
       Length : int; // the length of input recognized
       Offset : int // offset from the beginning of the input
     }
@@ -138,8 +138,8 @@ let (|Note|_|) input =
       | [] -> []
 
   match input with
-  | DelimitedWith ['['; '['] [']';']'] (body, rest) -> 
-      Some (transform body, rest)
+  | DelimitedWith ['['; '['] [']';']'] (body, rest) ->
+      Some ({ Text = transform body; Length = body.Length + 4; Offset = 2}, rest)
   | _ -> None
 
 /// Parses a body of a block and recognizes all inline tags.
@@ -183,11 +183,11 @@ let rec parseChars (ctx:ParsingContext) acc numOfEscapedChars input = seq {
       yield! parseChars (ctx.IncrementPosition(length + acc.Length)) [] numOfEscapedChars rest
 
   // Notes
-  | Note (body, rest) ->
+  | Note (result, rest) ->
       yield! accLiterals.Value
-      let body = parseChars ctx [] numOfEscapedChars body |> List.ofSeq
-      yield Note(body, Range.empty)
-      yield! parseChars ctx [] numOfEscapedChars rest
+      let body = parseChars (ctx.IncrementPosition(acc.Length + result.Offset)) [] numOfEscapedChars result.Text |> List.ofSeq
+      yield Note(body, new Range(ctx.Position + acc.Length, result.Length))
+      yield! parseChars (ctx.IncrementPosition(acc.Length + result.Length)) [] numOfEscapedChars rest
 
   // This calls itself recursively on the rest of the list
   | x::xs -> 
