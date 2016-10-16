@@ -79,7 +79,7 @@ let rec formatSpan (ctx:FormattingContext) = function
       ctx.Writer.Write(str)
       ctx.Writer.Write("</span>");
   | HardLineBreak (range) -> ctx.Writer.Write("<br />")
-  | Strong(body, range) -> 
+  | Bold(body, range) -> 
       ctx.Writer.Write("<strong>")
       formatSpans ctx body
       ctx.Writer.Write("</strong>")
@@ -165,14 +165,14 @@ let rec formatBlockElement (ctx:FormattingContext) block =
       for span in spans do 
         formatSpan ctx span
       ctx.Writer.Write("</strong></div>")
-  | PageBreak ->
+  | PageBreak (range) ->
       ctx.Writer.Write("<hr>")
   | Synopses (spans, range) ->
       ctx.Writer.Write("""<div style="color:#6cf;">""")
       for span in spans do 
         formatSpan ctx span
       ctx.Writer.Write("</div>")
-  | Lyric (spans, range) ->
+  | Lyrics (spans, range) ->
       ctx.Writer.Write("""<div style="color:#333"><em>""")
       for span in spans do 
         formatSpan ctx span
@@ -237,8 +237,6 @@ let rec formatBlockElement (ctx:FormattingContext) block =
         formatSpan ctx span
       ctx.Writer.Write(")</div>")
   | Action (forced, spans, range) ->
-      formatSpans ctx spans
-  | Span(spans, range) -> 
       formatSpans ctx spans
   ctx.LineBreak()
 

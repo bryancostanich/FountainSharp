@@ -3,6 +3,7 @@
 open System
 open System.IO
 open System.Collections.Generic
+open System.Text
 
 open FountainSharp.Parse.Patterns
 open FountainSharp.Parse.Patterns.Lines
@@ -18,7 +19,6 @@ type FountainDocument(blocks) =
   /// Returns a list of blocks in the document
   member x.Blocks : FountainBlocks = blocks
 
-
 /// Static class that provides methods for formatting 
 /// and transforming Markdown documents.
 type Fountain =
@@ -31,11 +31,10 @@ type Fountain =
       [ let line = ref ""
         while (line := reader.ReadLine(); line.Value <> null) do
           yield line.Value ]
-    //let (Lines.TrimBlank lines) = lines
-    let ctx : ParsingContext = { Newline = newline }
+    let ctx = new ParsingContext(newline)
     let blocks = 
       lines 
-      |> parseBlocks ctx None 
+      |> parseBlocks ctx 
       |> List.ofSeq
     FountainDocument(blocks)
 
@@ -44,12 +43,12 @@ type Fountain =
     Fountain.Parse(text, Environment.NewLine)
 
   // Parses a single line. Used for optimization when working with a large doc from an editor.
-  static member ParseLine(text:string, newline, (lastBlock:FountainBlockElement option)) =
-    let ctx : ParsingContext = { Newline = Environment.NewLine }
+  static member ParseLine(text:string, newline) =
+    let ctx = new ParsingContext()
     let line = text::[]
     let blocks = 
       line 
-      |> parseBlocks ctx lastBlock 
+      |> parseBlocks ctx 
       |> List.ofSeq
     FountainDocument(blocks)
 

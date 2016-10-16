@@ -18,6 +18,7 @@ open FountainSharp.Parse.Collections
 open FountainSharp.Parse.Patterns
 open FountainSharp.Parse.Patterns.List
 open FountainSharp.Parse.Patterns.String
+open FountainSharp.Parse.Helper
 
 let printDebug fmt par =
     let s = FSharp.Core.Printf.sprintf fmt par
@@ -26,8 +27,43 @@ let printDebug fmt par =
 [<Literal>]
 let EmptyLine = ""
 
-[<Literal>]
-let NewLine = "\n"
+// Often used properties of a match for blocks and spans
+// Used for range calculation. Generic as the result can be String, char list, etc.
+type MatchResult<'T> = 
+    {
+      Text   : 'T; // recognized text
+      Length : int; // the length of input recognized
+      Offset : int // offset from the beginning of the input
+    }
+
+/// Defines a context for the main `parseBlocks` function
+// TODO: Question: what is the Links part supposed to represent? Answer: for some reason he was creating a 
+// dictionary of known links. probably for additional processing. but fountain doesn't have links, so i got 
+// rid of it. but now we need to simplify this ParsingContext, probably.
+type ParsingContext(?newline : string, ?position : int, ?lastParsedBlock : FountainBlockElement option, ?treatDoubleSpaceAsNewLine : bool) =
+    let newLine = defaultArg newline Environment.NewLine
+    let lastParsedBlock : FountainBlockElement option = defaultArg lastParsedBlock None
+    let position = defaultArg position 0
+    let doubleSpaceAsNewLine : bool = defaultArg treatDoubleSpaceAsNewLine false
+
+    member this.NewLine with get() = newLine
+
+    member ctx.LastParsedBlock with get() = lastParsedBlock
+    member ctx.Position with get() = position
+
+    member ctx.TreatDoubleSpaceAsNewLine with get() = doubleSpaceAsNewLine
+
+    member ctx.IncrementPosition(length) =
+        new ParsingContext(ctx.NewLine, ctx.Position + length, ctx.LastParsedBlock, ctx.TreatDoubleSpaceAsNewLine)
+
+    member ctx.ChangeLastParsedBlock(block : FountainBlockElement option) =
+        new ParsingContext(ctx.NewLine, ctx.Position, block, ctx.TreatDoubleSpaceAsNewLine)
+
+    member ctx.Modify(position : int, block : FountainBlockElement option) =
+        new ParsingContext(ctx.NewLine, position, block, ctx.TreatDoubleSpaceAsNewLine)
+
+    member ctx.WithDoubleSpaceAsNewLine() =
+        new ParsingContext(ctx.NewLine, ctx.Position, ctx.LastParsedBlock, true)
 
 //====== Parser
 // Part 1: Inline Formatting
@@ -69,33 +105,31 @@ let (|DelimitedText|_|) delimiterBracket input =
 
 /// recognizes emphasized text of Italic, Bold, etc.
 /// take something like "*some text* some more text" and return a sequence of TextSpans: italic<"some text">::rest
-let (|Emphasized|_|) span =
+let (|Emphasized|_|) (ctx:ParsingContext) span =
   
   // Emphasis is not valid across multiple lines. this function checks for it
-  let check (body: char list, empType, rest) =
+  let check (body: char list, length, empType, empLength, rest) =
     if String.containsNewLine body then
         None
     else
-        Some(body, empType, rest)
-  
+        Some(body, length, empType, empLength, rest)
+
+  /// ***Text*** will be Strong( Italic... as first matching for Strong  
   match span with
-  // if it starts with either `_` or `*`
-  //   1) the code `(('_' | '*')` :: tail)` decomposes the input into a sequence of either `'_'::tail` or `'*'::tail`
-  //   2) `as input` binds that sequence to a variable
   | ('_' :: tail) as input -> // Underline
     match input with
     | DelimitedText ['_'] (body, rest) ->
-      check(body, Underline, rest)
+      check(body, body.Length + 2, Underline, 1, rest)
     | _ -> None
   | ('*' :: '*' :: tail) as input -> // Bold
     match input with
     | DelimitedText ['*'; '*'] (body, rest) -> 
-      check(body, Strong, rest)
+      check(body, body.Length + 4, Bold, 2, rest)
     | _ -> None
   | ('*' :: tail) as input -> // Italic
     match input with
     | DelimitedText ['*'] (body, rest) -> 
-      check(body, Italic, rest)
+      check(body, body.Length + 2, Italic, 1, rest)
     | _ -> None
   | _ -> None
 
@@ -103,37 +137,41 @@ let (|Emphasized|_|) span =
 let (|Note|_|) input =
   // replace double space with new line
   let rec transform chars = 
-      // TODO: new lines should be uniform through the whole library.
-      // Action active pattern places '\n' as new line, that's what we expect here
+      let newline = Environment.NewLine.ToCharArray() |> List.ofArray
+      let pattern = NewLine(1) + "  " + NewLine(1) // new line pattern
       match chars with
-      | '\n' :: ' ' :: ' ' :: '\n' :: tail -> '\n' :: '\n' :: (transform tail)
+      | List.StartsWithString pattern tail -> List.concat [ newline; newline ; (transform tail) ]
       | head :: tail -> head :: (transform tail)
       | [] -> []
 
   match input with
-  | DelimitedWith ['['; '['] [']';']'] (body, rest) -> 
-      Some (transform body, rest)
+  | DelimitedWith ['['; '['] [']';']'] (body, rest) ->
+      let x = String(body |> Array.ofList)
+      Some ({ Text = body; Length = body.Length + 4; Offset = 2}, rest)
   | _ -> None
 
 /// Parses a body of a block and recognizes all inline tags.
 /// returns a sequence of FountainSpan
-let rec parseChars acc input = seq {
+let rec parseChars (ctx:ParsingContext) acc numOfEscapedChars input = seq {
 
   // Zero or one literals, depending whether there is some accumulated input
   // 2015.01.07 Bryan Costanich - change Lazy.Create to Lazy<char []> because of some ambiguation err when building as a PCL
   let accLiterals = Lazy<char []>.Create(fun () ->
     if List.isEmpty acc then [] 
-    else [Literal(String(List.rev acc |> Array.ofList),(new Range(0,0)))] )
+    else
+        let text = String(List.rev acc |> Array.ofList)
+        // add the number of escaped characters to the Range!
+        [Literal(text, new Range(ctx.Position, text.Length + numOfEscapedChars))] )
+
+  
+  let patternForcedLineBreak = "  " + NewLine(1) // new line pattern
+
 
   match input with 
-
-  // TODO: will need this for dialogue hard line breaks
-  //// Recognizes explicit line-break at the end of line
-  //| ' '::' '::('\n' | '\r')::rest
-  //| ' '::' '::'\r'::'\n'::rest ->
-  //    yield! accLiterals.Value
-  //    yield HardLineBreak
-  //    yield! parseChars [] rest
+  | List.StartsWithString patternForcedLineBreak rest when ctx.TreatDoubleSpaceAsNewLine ->
+  // ' ' :: ' ' :: '\r' :: '\n' :: rest when ctx.TreatDoubleSpaceAsNewLine ->
+    yield HardLineBreak(new Range(ctx.Position, patternForcedLineBreak.Length))
+    yield! parseChars (ctx.IncrementPosition(patternForcedLineBreak.Length)) [] numOfEscapedChars rest
 
   // markdown requires two spaces and then \r or \n, but fountain 
   // recognizes without
@@ -142,59 +180,43 @@ let rec parseChars acc input = seq {
   | ('\n' | '\r')::rest ->
     //System.Diagnostics.Debug.WriteLine("found a hardlinebreak")
     yield! accLiterals.Value
-    yield HardLineBreak(Range.empty)
-    yield! parseChars [] rest
+    yield HardLineBreak(new Range(ctx.Position + acc.Length, Environment.NewLine.Length))
+    yield! parseChars (ctx.IncrementPosition(acc.Length + Environment.NewLine.Length)) [] numOfEscapedChars rest
 
   // Encode & as an HTML entity
   | '&'::'a'::'m'::'p'::';'::rest 
   | '&'::rest ->
-      yield! parseChars (';'::'p'::'m'::'a'::'&'::acc) rest      
+      yield! parseChars ctx (';'::'p'::'m'::'a'::'&'::acc) numOfEscapedChars rest
 
   // Ignore escaped characters that might mean something else
   | EscapedChar(c, rest) ->
-      yield! parseChars (c::acc) rest
+      yield! parseChars ctx (c::acc) (numOfEscapedChars + 1) rest
 
   // Handle emphasised text
-  | Emphasized (body, f, rest) ->
+  | Emphasized ctx (body, length, emphasis, emphasisLength, rest) ->
       yield! accLiterals.Value
-      let body = parseChars [] body |> List.ofSeq
-      yield f(body, (new Range(0,0)))
-      yield! parseChars [] rest
+      let bodyParsed = parseChars (ctx.IncrementPosition(acc.Length + emphasisLength)) [] numOfEscapedChars body |> List.ofSeq
+      yield emphasis(bodyParsed, (new Range(ctx.Position + acc.Length, length)))
+      yield! parseChars (ctx.IncrementPosition(length + acc.Length)) [] numOfEscapedChars rest
 
   // Notes
-  | Note (body, rest) ->
+  | Note (result, rest) ->
       yield! accLiterals.Value
-      let body = parseChars [] body |> List.ofSeq
-      yield Note(body, Range.empty)
-      yield! parseChars [] rest
+      let body = parseChars (ctx.IncrementPosition(acc.Length + result.Offset).WithDoubleSpaceAsNewLine()) [] numOfEscapedChars result.Text |> List.ofSeq
+      yield Note(body, new Range(ctx.Position + acc.Length, result.Length))
+      yield! parseChars (ctx.IncrementPosition(acc.Length + result.Length)) [] numOfEscapedChars rest
 
   // This calls itself recursively on the rest of the list
   | x::xs -> 
-      yield! parseChars (x::acc) xs 
+      yield! parseChars ctx (x::acc) numOfEscapedChars xs 
   | [] ->
       yield! accLiterals.Value }
 
 /// Parse body of a block into a list of Markdown inline spans
 // trimming off \r\n?
-//let parseSpans (s) = 
-let parseSpans ((*String.TrimBoth*) s:string) = 
-  //System.Diagnostics.Debug.WriteLine(s);
+let parseSpans (ctx:ParsingContext) (s:string) = 
   // why List.ofArray |> List.ofSeq?
-  // printDebug "parseSpans %s" s
-  parseChars [] (s.ToCharArray() |> List.ofArray) |> List.ofSeq
-
-  // we get multiple lines as a match, so for blank lines we return a hard line break, otherwise we 
-  // call parse spans
-let mapFunc bodyLines =
-    let mapFuncInternal bodyLine : FountainSpans = 
-      if (bodyLine = "") then
-        [HardLineBreak(Range.empty)]
-      else
-        let kung = parseSpans bodyLine
-        let fu = [HardLineBreak(Range.empty)]
-        List.concat ([kung;fu])
-    let foo = List.collect mapFuncInternal bodyLines
-    foo.GetSlice(Some(0), Some(foo.Length - 2))
+  parseChars ctx [] 0 (s.ToCharArray() |> List.ofArray) |> List.ofSeq
 
 //======================================================================================
 // Part 2: Block Formatting
@@ -232,60 +254,60 @@ let (|Section|_|) input = //function
 let (|Boneyard|_|) input =
     // recongizing lines inside of the boneyard
     // TODO: now /* and */ should stand alone in a line. if it's not appropriate, Boneyard should be implemented as a span (it would be weird though :))
-    let rec addLines (acc : string list) = 
+    let rec addLines (acc : string list) accLength = 
         function 
         | [] -> None // no beginning or ending of comment found
         | String.StartsWith "/*" head:string :: tail ->
-            addLines acc tail // beginning of comment
+            addLines acc (accLength + 2 + NewLineLength) tail // beginning of comment
         | String.StartsWith "*/" head:string :: tail -> 
-            Some(List.rev acc, tail) // end of comment
+            // end of comment
+            let newLinesLength = if tail.IsEmpty then 0 else NewLineLength
+            Some(List.rev acc, accLength + 2 + newLinesLength, tail)
+        | [head] ->
+            addLines (head :: acc) (accLength + head.Length) []
         | head :: tail ->
-            addLines (head :: acc) tail // inside or outside of comment
+            addLines (head :: acc) (accLength + head.Length + NewLineLength) tail // inside or outside of comment
 
-    match addLines [] input with
-    | Some([], rest) -> None // no comment found
-    | Some(body, rest) -> Some(body, rest)
+    match addLines [] 0 input with
+    | Some([], _, rest) -> None // no comment found
+    | Some(body, length, rest) -> Some({ Text = body; Length = length; Offset = 0 }, rest)
     | _ -> None
 
 // TODO: Should we also look for a line break before? 
 let (|SceneHeading|_|) (input:string list) =
-  let hasNewLineAfterFirstElement (forced, list) = 
-    match list with
-    | [] -> None
-    | head::rest ->
-       // look for a line break after the first element (first of the rest)
-       if rest.Length = 0 || String.IsNullOrWhiteSpace rest.[0] then
-          Some(forced, head, rest)
-       else
-          None
   match input with
-  | head :: tail ->
-    let head = head.Trim()
+  | first :: EmptyLine :: tail ->
+    let head = first.Trim()
     match head with
     // look for normal heading
     | String.StartsWithAnyCaseInsensitive [ "INT"; "EXT"; "EST"; "INT./EXT."; "INT/EXT"; "I/E" ] matching ->
-        hasNewLineAfterFirstElement (false, matching :: tail)
+        let result = { Text = head; Length = first.Length + NewLineLength * 2; Offset = first.IndexOf(head) }
+        Some(false, result, tail)
     // look for forced heading
     | String.StartsWith "." matching ->
-        hasNewLineAfterFirstElement (true, matching :: tail)
+        let recognition = { Text = head.Substring(1); Length = first.Length + NewLineLength * 2; Offset = first.IndexOf(head) + 1 }
+        Some(true, recognition, tail)
     | _ -> None
   | _ -> None
 
 let (|Character|_|) (list:string list) =
   match list with
   | [] -> None
-  | EmptyLine :: head :: rest ->
+  | EmptyLine :: first :: rest ->
+    // length of possible Character block: \r\n<first>\r\n
+    let length = if rest.IsEmpty then first.Length + NewLineLength else first.Length + NewLineLength * 2
     // trim white spaces as Character ignores indenting
-    let head = head.Trim()
+    let head = first.Trim()
     // Character has to be preceded by empty line
     if (head.Length = 0) then
         None
     // matches "@McAVOY"
     else if (head.StartsWith "@") then
+      let result = { Text = head.Substring(1); Length = length; Offset = 1 + NewLineLength}
       if head.EndsWith(" ^") then
-        Some(true, false, head.Substring(1), rest)
+        Some(true, false, result, rest)
       else
-        Some(true, true, head.Substring(1), rest)
+        Some(true, true, result, rest)
     // matches "BOB" or "BOB JOHNSON" or "BOB (on the radio)" or "R2D2" but not "25D2"
     else
       let pattern = @"^\p{Lu}[\p{Lu}\d\s]*(\(.*\))?(\s+\^)?$"
@@ -299,18 +321,19 @@ let (|Character|_|) (list:string list) =
           let allUpper = extension |> Seq.forall(fun c -> Char.IsUpper(c)) // all uppercase
           let allLower = extension |> Seq.forall(fun c -> Char.IsLower(c)) // all lowercase
           if allUpper || allLower then
+            let result = { Text = head; Length = length; Offset = NewLineLength}
             if m.Value.EndsWith("^") then
-              Some(false, false, head, rest)
+              Some(false, false, { Text = m.Value.Remove(m.Value.Length - 1).Trim(); Length = length; Offset = NewLineLength + first.IndexOf(head) }, rest)
             else
-              Some(false, true, head, rest)
+              Some(false, true, { Text = head; Length = length; Offset = NewLineLength + first.IndexOf(head) }, rest)
           else
             None
         else // no parenthetical extension found
           if m.Value.EndsWith("^") then
             // character for dual dialogue
-            Some(false, false, m.Value.Remove(m.Value.Length - 1).Trim(), rest)
+            Some(false, false, { Text = m.Value.Remove(m.Value.Length - 1).Trim(); Length = length; Offset = NewLineLength + first.IndexOf(head) }, rest)
           else
-            Some(false, true, head, rest)
+            Some(false, true, { Text = head; Length = length; Offset = NewLineLength + first.IndexOf(head) }, rest)
       // does not match Character rules
       else
         None
@@ -319,11 +342,14 @@ let (|Character|_|) (list:string list) =
 /// Recognizes a PageBreak (3 or more consecutive equals and nothign more)
 let (|PageBreak|_|) input = //function
   match input with
-  | String.StartsWithRepeated "=" text :: rest ->
-    if (fst text) >= 3 then
-      match (snd text).Trim() with
+  | String.StartsWithRepeated "=" result :: rest ->
+    // result: (number of repetitions, remaining string)
+    if (fst result) >= 3 then
+      let text = snd result
+      let newLineCount = if rest.IsEmpty then 0 else 1
+      match text.Trim() with
       | "" -> //after the trim, there should be nothing left.
-         Some(PageBreak, rest)
+         Some({ Text = null; Length = fst result + text.Length + NewLineLength * newLineCount; Offset = 0 }, rest)
       | _ -> 
          None
     else None
@@ -333,14 +359,16 @@ let (|PageBreak|_|) input = //function
 /// Recognizes a synposes (prefixed with `=` sign)
 let (|Synopses|_|) = function
   | String.StartsWith "=" text :: rest ->
-     Some(text, rest)
+     let textTrimmed = text.Trim()
+     let newLineCount = if rest.IsEmpty then 0 else 1
+     Some({ Text = textTrimmed; Length = text.Length + 1 + NewLineLength * newLineCount; Offset = 1 + text.IndexOf(textTrimmed) }, rest)
   | rest ->
      None
 
 /// Recognizes a Lyric (prefixed with ~)
-let (|Lyric|_|) = function
+let (|Lyrics|_|) = function
   | String.StartsWith "~" lyric:string :: rest ->
-      Some(lyric, rest)
+      Some({ Text = lyric; Length = lyric.Length + 1; Offset = 1 }, rest)
   | rest ->
       None
 
@@ -349,9 +377,11 @@ let (|Centered|_|) (input:string list) =
   match input with
   | head :: rest ->
     // Centered ignores indenting
-    let head = head.Trim()
-    if head.StartsWith(">") && head.EndsWith("<") then
-        Some(head.Substring(1, head.Length - 2).Trim(), rest) // strip '>' and '<'
+    let text = head.Trim()
+    if text.StartsWith(">") && text.EndsWith("<") then
+        let textResult = text.Substring(1, text.Length - 2).Trim()
+        let result = { Text = textResult; Length = head.Length; Offset = head.IndexOf(textResult) }
+        Some(result, rest) // strip '>' and '<'
     else
         None
   | _ -> None 
@@ -360,18 +390,21 @@ let isForcedAction (input:string) =
     input.StartsWith("!")
 
 // Parenthetical
-let (|Parenthetical|_|) (lastParsedBlock:FountainBlockElement option) (input:string list) =
-  match lastParsedBlock with
+let (|Parenthetical|_|) (ctx:ParsingContext) (input:string list) =
+  match ctx.LastParsedBlock with
   // parenthetical can come after character OR dialogue
   | Some (FountainSharp.Parse.Character(_)) 
   | Some (FountainSharp.Parse.Parenthetical(_)) // parenthetical can occur in a dialog which preceded by a character-parenthetical duo (in this case parenthetical is the last parsed block)
   | Some (FountainSharp.Parse.Dialogue(_)) ->
      match input with
      | blockContent :: rest ->
-        if (blockContent.Trim().StartsWith "(" && blockContent.EndsWith ")") then
-          Some(blockContent.Trim().TrimStart([|'('|]).TrimEnd([|')'|]), rest)
+        let trimmed = blockContent.Trim()
+        if (trimmed.StartsWith "(" && trimmed.EndsWith ")") then
+            let body = trimmed.TrimStart('(').TrimEnd(')')
+            let newLineCount = if rest.IsEmpty then 0 else 1
+            Some({ Text = body; Length = blockContent.Length + NewLineLength * newLineCount; Offset = blockContent.IndexOf(body) }, rest)
         else
-          None
+            None
      | [] -> None
   | _ -> None
 
@@ -380,24 +413,29 @@ let (|Parenthetical|_|) (lastParsedBlock:FountainBlockElement option) (input:str
 // Transition
 let (|Transition|_|) (input:string list) =
    match input with
-   | blockContent :: rest ->
-      let blockContent = blockContent.Trim() // Transition ignores indenting
+   // Has to be preceded by and followed by an empty line
+   | EmptyLine :: head :: EmptyLine :: rest ->
+      let blockContent = head.Trim() // Transition ignores indenting
       if blockContent.StartsWith "!" then // guard against forced action
         None
-      elif blockContent.EndsWith "TO:" || blockContent.StartsWith ">" then // TODO: need to check for a hard linebreak after
-        if blockContent.StartsWith ">" then
-          Some(true, blockContent.Substring(1).Trim(), rest) // true for forced
+      elif blockContent.StartsWith ">" then // forced transition
+        let text = blockContent.Substring(1).Trim()
+        Some(true, { Text = text; Length = head.Length + NewLineLength * 3; Offset = head.IndexOf(text) + NewLineLength }, rest)
+      elif blockContent.EndsWith "TO:" then // non-forced transition
+        // check for all uppercase
+        if blockContent.ToCharArray() |> Seq.exists (fun c -> Char.IsLower(c)) then
+            None
         else
-          Some(false, blockContent.Trim(), rest)
+            let text = blockContent.Trim()
+            Some(false, { Text = text; Length = head.Length + NewLineLength * 3; Offset = head.IndexOf(text) + NewLineLength }, rest)
       else
-       None
-   | [] -> None
+        None
+   | _ -> None
 
 //==== Dialogue
 
-// Dialogue
-let (|Dialogue|_|) (lastParsedBlock:FountainBlockElement option) (input:string list) =
-  match lastParsedBlock with
+let (|Dialogue|_|) (ctx:ParsingContext) (input:string list) =
+  match ctx.LastParsedBlock with
   | Some (FountainSharp.Parse.Character(_)) 
   | Some (FountainSharp.Parse.Parenthetical(_)) ->
      // Dialogue starts after Character or Character (parenthetical)
@@ -405,90 +443,94 @@ let (|Dialogue|_|) (lastParsedBlock:FountainBlockElement option) (input:string l
      match List.partitionWhileLookahead (function
      | SceneHeading _ -> false //note: it's decomposing the match and the rest and discarding the rest: `SceneHeading _` 
      | Character _ -> false
-     | Lyric _ -> false
+     | Lyrics _ -> false
      | Transition _ -> false // ugh. need to pass the last parsed block.
      | Centered _ -> false
      | Section _ -> false
      | Synopses _ -> false
      | PageBreak _ -> false
-     | Parenthetical lastParsedBlock _ -> false
+     | Parenthetical ctx _ -> false
      | _ -> true) input with // if we found a match, and it's not empty, return the Action and the rest
         | [], _ -> None
         | matching, rest ->
           // parsing dialogue's lines
-          let rec addLines (acc: string list) = function
+          let rec addLines (acc: string list) (accLength : int) = function
             // TODO: the following matches could be simpler, I think
             | first :: second :: tail as input ->
+                let newLinesInLength = if tail.IsEmpty then 1 else 2
                 if first = EmptyLine then
                     if second.StartsWith("  ") then // dialogue continues
-                        addLines (second.Substring(2) :: first :: acc) tail
+                        addLines (second :: first :: acc) (accLength + first.Length + second.Length + NewLineLength * newLinesInLength) tail
                     else
-                        Some(List.rev acc, List.append(second :: tail) rest)
+                        Some(List.rev acc, accLength, List.append(second :: tail) rest)
                 elif isForcedAction(first) then // stop at forced Action
-                    Some(List.rev acc, List.append input rest)
+                    Some(List.rev acc, accLength, List.append input rest)
                 else if second = EmptyLine then
-                    addLines (first :: acc) (second :: tail)
+                    addLines (first :: acc) (accLength + first.Length + NewLineLength) (second :: tail)
                 else
-                    addLines (second :: first :: acc) tail
+                    addLines (second :: first :: acc) (accLength + first.Length + second.Length + NewLineLength * newLinesInLength) tail
             | [head] ->
                 if isForcedAction(head) then // stop at forced Action
-                    Some(List.rev acc, rest)
+                    Some(List.rev acc, accLength, rest)
                 else
-                    addLines (head :: acc) []
+                    addLines (head :: acc) (accLength + head.Length) []
             | [] ->
-                Some(List.rev acc, rest) // traversed all the lines
+                Some(List.rev acc, accLength, rest) // traversed all the lines
 
-          let lines = addLines [] matching
+          let lines = addLines [] 0 matching
           match lines with
-          | Some([], rest) -> None // no lines found
-          | Some(body, rest) ->
-              Some(body |> List.map(fun line -> line.Trim()), rest)
+          | Some([], _, _) -> None // no lines found
+          | Some(body, length, rest) ->
+              //let body = body |> List.map(fun line -> line.Trim())
+              let result = String.asSingleString(body, Environment.NewLine)
+              Some({ Text =result; Length = length; Offset = 0 }, rest)
           | _ -> None
   | _ -> None
 
 //==== /Dialogue
 
+
 //==== Dual Dialogue
 
-let (|DualDialogue|_|) (lastParsedBlock:FountainBlockElement option) (input:string list) =
+let (|DualDialogue|_|) (ctx: ParsingContext) (input:string list) =
   // parse input for Character or Character, Parenthetical and return the list of them  
-  let rec parseCharacter (input:string list, acc, lastParsedBlock:FountainBlockElement option) = 
+  let rec parseCharacter (ctx:ParsingContext, input:string list, acc) = 
     match input with
-    | Character(forced, primary, body, rest) as item -> 
-        let characterItem = Character(forced, primary, parseSpans body, Range.empty)
-        let lastParsedBlock = Some(characterItem)
+    | Character(forced, primary, result, rest) as item -> 
+        let characterItem = Character(forced, primary, parseSpans (ctx.IncrementPosition(result.Offset)) result.Text, new Range(ctx.Position, result.Length))
+        let ctx = ctx.Modify(ctx.Position + result.Length, Some(characterItem))
         match rest with
-        | Parenthetical lastParsedBlock (body, rest) ->
-            let parentheticalItem = Parenthetical(parseSpans body, Range.empty)
-            parseCharacter (rest, parentheticalItem :: characterItem :: acc, Some(characterItem))
+        | Parenthetical ctx (result, rest) ->
+            let parentheticalItem = Parenthetical(parseSpans (ctx.IncrementPosition(result.Offset)) result.Text, new Range(ctx.Position, result.Length))
+            parseCharacter (ctx.Modify(ctx.Position + result.Length, Some(parentheticalItem)), rest, parentheticalItem :: characterItem :: acc)
         | _ ->
-            parseCharacter (rest, characterItem :: acc, Some(characterItem))
-    | _ -> if acc.Length = 0 then None else Some(acc, input, lastParsedBlock)
+            parseCharacter (ctx, rest, characterItem :: acc)
+    | _ -> if acc.Length = 0 then None else Some(ctx, acc, input)
 
   // parse input for Dialogue or Dialogue, Parenthetical and return the list of them  
-  let rec parseDialogue (input:string list, acc, lastParsedBlock:FountainBlockElement option) = 
+  let rec parseDialogue (ctx:ParsingContext, input:string list, acc) = 
     match input with
-    | Dialogue lastParsedBlock (dialogBody, rest) -> 
-        let dialogueItem = Dialogue(mapFunc dialogBody, Range.empty)
-        let lastParsedBlock = Some(dialogueItem)
+    | Dialogue ctx (dialogResult, rest) -> 
+        let dialogueItem = Dialogue(parseSpans ctx dialogResult.Text, new Range(ctx.Position, dialogResult.Length))
+        let ctx = ctx.Modify(ctx.Position + dialogResult.Length, Some(dialogueItem))
         match rest with
-        | Parenthetical lastParsedBlock (body, rest) ->
-            let parentheticalItem = Parenthetical(parseSpans body, Range.empty)
-            parseDialogue (rest, parentheticalItem :: dialogueItem :: acc, Some(dialogueItem))
+        | Parenthetical ctx (result, rest) ->
+            let parentheticalItem = Parenthetical(parseSpans (ctx.IncrementPosition(result.Offset)) result.Text, new Range(ctx.Position, result.Length))
+            parseDialogue (ctx.Modify(ctx.Position + result.Length, Some(parentheticalItem)), rest, parentheticalItem :: dialogueItem :: acc)
         | _ ->
-            parseDialogue (rest, dialogueItem :: acc, Some(dialogueItem))
-    | _ -> if acc.Length = 0 then None else Some(acc, input, lastParsedBlock)
+            parseDialogue (ctx, rest, dialogueItem :: acc)
+    | _ -> if acc.Length = 0 then None else Some(ctx, acc, input)
 
   // parse input for (Character, Dialogue) pairs and return the list of them  
-  let rec parse (input:string list, acc, lastParsedBlock:FountainBlockElement option) = 
+  let rec parse (ctx : ParsingContext, input:string list, acc) = 
     if input.Length = 0 then
         Some(List.rev acc, input)
     else
-      match parseCharacter(input, [], lastParsedBlock) with
-      | Some(characterBlocks, rest, lastParsedBlock) -> 
-          match parseDialogue(rest, [], lastParsedBlock) with
-          | Some(dialogueBlocks, rest, lastParsedBlock) ->
-              parse (rest, List.concat [dialogueBlocks; characterBlocks; acc], lastParsedBlock)
+      match parseCharacter(ctx, input, []) with
+      | Some(ctx, characterBlocks, rest) -> 
+          match parseDialogue(ctx, rest, []) with
+          | Some(ctx, dialogueBlocks, rest) ->
+              parse (ctx, rest, List.concat [dialogueBlocks; characterBlocks; acc])
           | _ -> Some(List.rev acc, input)
       | _ -> Some(List.rev acc, input)
 
@@ -506,11 +548,12 @@ let (|DualDialogue|_|) (lastParsedBlock:FountainBlockElement option) (input:stri
 
   // at least 2 (Character, Dialogue) blocks have to be found and at least one of them should be secondary character (marked by a caret)
     
-  match parse (input, [], lastParsedBlock) with
+  match parse (ctx, input, []) with
   | Some([], _) -> None // no (Character, Dialogue) blocks found
   | Some(list, rest) ->
+    let length = list |> List.map(fun block -> block.GetLength()) |> List.sum
     if List.tryFind isPrimary list <> None &&  List.tryFind isSecondary list <> None then
-       Some(list, rest)
+       Some(list, length, rest)
     else
        None
   | None -> None
@@ -524,7 +567,7 @@ let (|Action|_|) input =
   match List.partitionWhileLookahead (function
     | SceneHeading _ -> false //note: it's decomposing the match and the rest and discarding the rest: `SceneHeading _` 
     | Character _ -> false
-    | Lyric _ -> false
+    | Lyrics _ -> false
     | Transition _ -> false // ugh. need to pass the last parsed block.
     | Centered _ -> false
     | Section _ -> false
@@ -538,19 +581,23 @@ let (|Action|_|) input =
         | [] -> None
         | hd::tail ->
           let sb = new StringBuilder()
-          List.iter (fun x -> sb.Append(x:string) |> ignore; sb.Append('\n') |> ignore) (hd::tail)
-          if (hd.StartsWith "!") then // forced Action, trim off the '!'
-            Some(true, sb.ToString().Substring(1).TrimEnd(), rest)
+          //let sb = String.asSingleString(hd :: tail, "\n")
+          List.iter (fun x -> sb.Append(x:string) |> ignore; sb.Append(Environment.NewLine) |> ignore) (hd::tail)
+          sb.Remove(sb.Length - Environment.NewLine.Length, Environment.NewLine.Length) |> ignore // remove last new line
+          if sb.Length = 0 then
+            None
+          elif (hd.StartsWith "!") then // forced Action, trim off the '!'
+            Some(true, sb.ToString().Substring(1).TrimEnd(), sb.Length, rest)
           else
-            Some(false, sb.ToString().TrimEnd(), rest)
+            Some(false, sb.ToString().TrimEnd(), sb.Length, rest)
       //| _ -> None
 
 //==== /Action
 
 //==== TitlePage
 
-let (|TitlePage|_|) (lastParsedBlock:FountainBlockElement option) (input: string list) =
-  match lastParsedBlock with
+let (|TitlePage|_|) (ctx:ParsingContext) (input: string list) =
+  match ctx.LastParsedBlock with
   | None ->
     // match "key: value" pattern at the beginning of the input as far as it is possible, and returns the matching values as well the remaining input
     let rec matchAndRemove acc (input:string) =
@@ -563,147 +610,115 @@ let (|TitlePage|_|) (lastParsedBlock:FountainBlockElement option) (input: string
        let key = m.Groups.["key"] // text before ':'
        let value = m.Groups.["value"] // text after ':'
        // let's parse spans - white spaces must be trimmed per line
-       let spans = value.Value.Trim().Split('\n') |> List.ofArray |> List.map( fun s -> s.Trim() ) |> String.concat "\n" |> parseSpans
+       let spans = value.Value.Trim().Split('\n') |> List.ofArray |> List.map( fun s -> s.Trim() ) |> String.concat Environment.NewLine |> parseSpans ctx
        matchAndRemove ((key.Value, spans) :: acc) (input.Remove(m.Index, m.Length))
     
     // TODO: spare conversion from list to string and back to list of the remaining text!
-    let inputAsSingleString = String.asSingleString(input, NewLine) // treat input as one string
+    let inputAsSingleString = String.asSingleString(input, NewLine(1)) // treat input as one string
     // an empty line has to be present after the Title Page
-    let indexOfEmptyLine = inputAsSingleString.IndexOf(NewLine + NewLine)
+    let indexOfEmptyLine = inputAsSingleString.IndexOf(NewLine(2))
     if indexOfEmptyLine = -1 then
         None
     else
-        let titlePageText = inputAsSingleString.Substring(0, indexOfEmptyLine + 1) // text before the empty line '\n' at the end
+        let titlePageText = inputAsSingleString.Substring(0, indexOfEmptyLine + Environment.NewLine.Length) // text before the empty line (Environment.NewLine) at the end
         match matchAndRemove [] titlePageText with
         | ([], _) -> None
         | (keyValuePairs, rest) ->
-            Some(keyValuePairs, String.asStringList(inputAsSingleString.Substring(indexOfEmptyLine + 2), NewLine))
+            Some(keyValuePairs, titlePageText.Length + Environment.NewLine.Length, String.asStringList(inputAsSingleString.Substring(indexOfEmptyLine + Environment.NewLine.Length * 2), NewLine(1)))
   | _ -> None // Title page must be the first block of the document 
 
 //==== /TitlePage
-
-
-/// Defines a context for the main `parseBlocks` function
-// TODO: Question: what is the Links part supposed to represent? Answer: for some reason he was creating a 
-// dictionary of known links. probably for additional processing. but fountain doesn't have links, so i got 
-// rid of it. but now we need to simplify this ParsingContext, probably.
-type ParsingContext = 
-  { 
-    Newline : string 
-  }
 
 /// Parse a list of lines into a sequence of fountain blocks
 /// note, we pass the lastParsedBlock because some blocks are dependent on what came before. dialogue, for 
 /// instance, comes after Character
 /// 
-let rec parseBlocks (ctx:ParsingContext) (lastParsedBlock:FountainBlockElement option) (lines: _ list) = seq {
+let rec parseBlocks (ctx:ParsingContext) (lines: _ list) = seq {
 
   // NOTE: Order of matching is important here. for instance, if you matched dialogue before 
   // parenthetical, you'd never get parenthetical
 
   match lines with
-  | TitlePage lastParsedBlock (keyValuePairs, rest) ->
-     let item = TitlePage(keyValuePairs, Range.empty)
+  | TitlePage ctx (keyValuePairs, length, rest) ->
+     let item = TitlePage(keyValuePairs, new Range(0, length))
      yield item
-     yield PageBreak // Page break is implicit after Title page
-     yield! parseBlocks ctx (Some(item)) rest
-  | Boneyard(body, rest) ->
-     let item = Boneyard(String.asSingleString(body, "\n"), Range.empty)
-     yield item
-     yield! parseBlocks ctx (Some(item)) rest
-  // Recognize remaining types of blocks/paragraphs
-  | SceneHeading(forced, body, rest) ->
-     let item = SceneHeading(forced, parseSpans body, new Range(0,0))
-     yield item
-     yield! parseBlocks ctx (Some(item)) rest
-  | Section(n, body, rest) ->
-     let item = Section(n, parseSpans body, new Range(0,0))
-     yield item
-     yield! parseBlocks ctx (Some(item)) rest
-  | DualDialogue lastParsedBlock (blocks, rest) ->
-     let item = DualDialogue(blocks, Range.empty)
-     yield item
-     yield! parseBlocks ctx (Some(item)) rest
-  | Character(forced, primary, body, rest) ->
-     let item = Character(forced, primary, parseSpans body, new Range(0,0))
-     yield item
-     yield! parseBlocks ctx (Some(item)) rest
-
-  | PageBreak(body, rest) ->
-     let item = PageBreak
-     yield item
-     yield! parseBlocks ctx (Some(item)) rest
-  | Synopses(body, rest) ->
-     let item = Synopses(parseSpans body, new Range(0,0))
-     yield item
-     yield! parseBlocks ctx (Some(item)) rest
-  | Lyric(body, rest) ->
-     let item = Lyric(parseSpans body, new Range(0,0))
-     yield item
-     yield! parseBlocks ctx (Some(item)) rest
-
-  | Centered(body, rest) ->
-     let item = Centered(parseSpans body, new Range(0,0))
-     yield item
-     yield! parseBlocks ctx (Some(item)) rest
-
-  | Transition(forced, body, rest) ->
-     let item = Transition(forced, parseSpans body, new Range(0,0))
-     yield item
-     yield! parseBlocks ctx (Some(item)) rest
+     yield PageBreak(new Range(length, 0)) // Page break is implicit after Title page
+     yield! parseBlocks (ctx.Modify(ctx.Position + length, Some(item))) rest
   
-  | Parenthetical lastParsedBlock (body, rest) ->
-     let item = Parenthetical(parseSpans body, new Range(0,0))
+  | Boneyard(result, rest) ->
+     let item = Boneyard(String.asSingleString(result.Text, Environment.NewLine), new Range(ctx.Position, result.Length))
      yield item
-     yield! parseBlocks ctx (Some(item)) rest
+     yield! parseBlocks (ctx.ChangeLastParsedBlock(Some(item)).IncrementPosition(result.Length)) rest
+  // Recognize remaining types of blocks/paragraphs
+  
+  | SceneHeading(forced, result, rest) ->
+     let item = SceneHeading(forced, parseSpans (ctx.IncrementPosition(result.Offset)) result.Text, new Range(ctx.Position, result.Length))
+     yield item
+     yield! parseBlocks (ctx.Modify(ctx.Position + result.Length, Some(item))) rest
+  
+  | Section(n, body, rest) ->
+     let item = Section(n, parseSpans ctx body, new Range(0,0))
+     yield item
+     yield! parseBlocks (ctx.ChangeLastParsedBlock(Some(item))) rest
+  
+  | DualDialogue ctx (blocks, length, rest) ->
+     let item = DualDialogue(blocks, new Range(ctx.Position, length))
+     yield item
+     yield! parseBlocks (ctx.Modify(ctx.Position + length, Some(item))) rest
+  
+  | Character(forced, primary, result, rest) ->
+     let item = Character(forced, primary, parseSpans (ctx.IncrementPosition(result.Offset)) result.Text, new Range(ctx.Position, result.Length))
+     yield item
+     yield! parseBlocks (ctx.Modify(ctx.Position + result.Length, Some(item))) rest
+  
+  | PageBreak(result, rest) ->
+     let item = PageBreak(new Range(ctx.Position, result.Length))
+     yield item
+     yield! parseBlocks (ctx.Modify(ctx.Position + result.Length, Some(item))) rest
+  
+  | Synopses(result, rest) ->
+     let item = Synopses(parseSpans (ctx.IncrementPosition(result.Offset)) result.Text, new Range(ctx.Position, result.Length))
+     yield item
+     yield! parseBlocks (ctx.Modify(ctx.Position + result.Length, Some(item))) rest
+  
+  | Lyrics(result, rest) ->
+     let body = parseSpans (ctx.IncrementPosition(result.Offset)) result.Text
+     let item = Lyrics(body, new Range(ctx.Position, result.Length))
+     yield item
+     yield! parseBlocks (ctx.Modify(ctx.Position + result.Length, Some(item))) rest
 
-  | Dialogue lastParsedBlock (body, rest) ->
-    let spans = mapFunc body
-    let item = Dialogue(spans, Range.empty)
+  | Centered(result, rest) ->
+     let body = parseSpans (ctx.IncrementPosition(result.Offset)) result.Text
+     let item = Centered(body, new Range(ctx.Position, result.Length))
+     yield item
+     yield! parseBlocks (ctx.Modify(ctx.Position + result.Length, Some(item))) rest
+
+  | Transition(forced, result, rest) ->
+     let item = Transition(forced, parseSpans (ctx.IncrementPosition(result.Offset)) result.Text, new Range(ctx.Position, result.Length))
+     yield item
+     yield! parseBlocks (ctx.Modify(ctx.Position + result.Length, Some(item))) rest
+  
+  | Parenthetical ctx (result, rest) ->
+     let item = Parenthetical(parseSpans (ctx.IncrementPosition(result.Offset)) result.Text, new Range(ctx.Position, result.Length))
+     yield item
+     yield! parseBlocks (ctx.Modify(ctx.Position + result.Length, Some(item))) rest
+
+  | Dialogue ctx (result, rest) ->
+    let spans = parseSpans (ctx.WithDoubleSpaceAsNewLine()) result.Text
+    let item = Dialogue(spans, new Range(ctx.Position, result.Length))
     yield item
-    yield! parseBlocks ctx (Some(item)) rest // go on to parse the rest
+    yield! parseBlocks (ctx.Modify(ctx.Position + result.Length, Some(item))) rest // go on to parse the rest
 
-  | Action(forced, body, rest) ->
+  | Action(forced, body, length, rest) ->
     // body: as a single string. this can be parsed for spans much better
-    let spans = parseSpans body
-    let item = Action(forced, spans, Range.empty)
+    let spans = parseSpans ctx body
+    let item = Action(forced, spans, new Range(ctx.Position, length))
     yield item
-    yield! parseBlocks ctx (Some(item)) rest // go on to parse the rest
+    yield! parseBlocks (ctx.Modify(ctx.Position + length, Some(item))) rest // go on to parse the rest
 
-  //| Lines.TrimBlankStart [] ->
-  //   yield Action([HardLineBreak])
-  ////   System.Diagnostics.Debug.WriteLine("Trimming blank line. ")
-  //   () 
-  | _ as line -> 
-    //System.Diagnostics.Debug.WriteLine("Not really sure what's here.")
-    ()
+  | first :: rest -> 
+    yield! parseBlocks ctx rest // let's try to skip this line and recognize the rest
+  | _ -> () // reached the end
   }
 
   //| _ -> failwithf "Unexpectedly stopped!\n%A" lines }
-
-
-//let CountBlocks (blocks:FountainBlockElement list) :FountainBlockElement list =
-
-//  let i = 0
-//  let (countedBlocks:FountainBlockElement list) = [] 
-
-//  for block in blocks do
-//    match block with
-//    | Action (forced, spans, range)
-//    | Character (forced, spans, range)
-//    | SceneHeading (forced, spans, range)
-//    | Transition (forced, spans, range) -> ()
-
-//    | Dialogue (spans, range)
-//    | Parenthetical (spans, range)
-//    | Section(spans, range)
-//    | Synopses(spans, range)
-//    | Span(spans, range)
-//    | Lyric(spans, range)
-//    | Centered(spans, range) ->
-//      ()
-//    | PageBreak ->
-//      ()
-
-
-//  blocks

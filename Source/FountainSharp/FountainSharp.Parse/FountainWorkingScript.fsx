@@ -1,6 +1,7 @@
 ﻿#load "Collections.fs"
 #load "StringParsing.fs"
 #load "FountainSyntax.fs"
+#load "FountainHelper.fs"
 #load "FountainParser.fs"
 #load "HtmlFormatting.fs"
 #load "Fountain.fs"

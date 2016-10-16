@@ -9,6 +9,8 @@ module FountainSharp.Tests.Parsing
 open FsUnit
 open NUnit.Framework
 open FountainSharp.Parse
+open FountainSharp.Parse.Helper
+open System
 
 let properNewLines (text: string) = text.Replace("\r\n", System.Environment.NewLine)
 
@@ -19,116 +21,123 @@ let properNewLines (text: string) = text.Replace("\r\n", System.Environment.NewL
 // TODO: should we support boneyards in a single line? Also in the middle of the line?
 [<Test>]
 let ``Boneyard`` () =
-   let doc = "/*\r\nThis is a simple comment\r\n*/" |> Fountain.Parse
+   let text = properNewLines "/*\r\nThis is a simple comment\r\n*/"
+   let doc = text |> Fountain.Parse
    doc.Blocks
-   |> should equal [Boneyard ("This is a simple comment", Range.empty)]
+   |> should equal [Boneyard ("This is a simple comment", new Range(0, text.Length))]
 
 //===== Scene Headings
 [<Test>]
 let ``Basic Scene Heading`` () =
-   let doc = "EXT. BRICK'S PATIO - DAY" |> Fountain.Parse
-   doc.Blocks
-   |> should equal [SceneHeading (false, [Literal ("EXT. BRICK'S PATIO - DAY", new Range(0,0))], new Range(0,0))]
+   let doc = "EXT. BRICK'S PATIO - DAY" + NewLine(2) |> Fountain.Parse
+   doc.Blocks 
+   |> should equal [ SceneHeading(false, [ Literal("EXT. BRICK'S PATIO - DAY", new Range(0, 24)) ], new Range(0, 24 + NewLineLength * 2)) ]
 
 [<Test>]
 let ``Forced (".") Scene Heading`` () =
-   let doc = ".BINOCULARS A FORCED SCENE HEADING - LATER" |> Fountain.Parse
+   let doc = ".BINOCULARS A FORCED SCENE HEADING - LATER" + NewLine(2) |> Fountain.Parse
    doc.Blocks
-   |> should equal [SceneHeading (true, [Literal ("BINOCULARS A FORCED SCENE HEADING - LATER", new Range(0,0))], new Range(0,0))]
+   |> should equal [SceneHeading (true, [Literal ("BINOCULARS A FORCED SCENE HEADING - LATER", new Range(1, 41))], new Range(0, 42 + NewLineLength * 2))]
 
 [<Test>]
 let ``Forced (".") Scene Heading with line breaks and action`` () =
-   let heading = "BRICK'S PATIO - DAY";
-   let doc = "." + heading + "\r\n\r\nSome Action" |> Fountain.Parse
+   let text = ".BRICK'S PATIO - DAY" + NewLine(2) + "Some Action"
+   let doc = text |> Fountain.Parse
    doc.Blocks
-   |> should equal  [SceneHeading (true, [Literal (heading, new Range(0,0))], new Range(0,0)); Action (false, [HardLineBreak(new Range(0,0)); Literal ("Some Action", new Range(0,0))], new Range(0,0))]
+   |> should equal  [SceneHeading (true, [Literal ("BRICK'S PATIO - DAY", new Range(1, 19))], new Range(0, 20 + NewLineLength * 2)); Action (false, [Literal ("Some Action", new Range(20 + NewLineLength * 2, 11))], new Range(20 + NewLineLength * 2, 11))]
 
 [<Test>]
 let ``Forced (".") Scene Heading with more line breaks and action`` () =
-   let heading = "BRICK'S PATIO - DAY";
-   let doc = "." + heading + "\r\n\r\n\r\nSome Action" |> Fountain.Parse
+   let text = ".BRICK'S PATIO - DAY" + NewLine(3) + "Some Action";
+   let doc = text |> Fountain.Parse
    doc.Blocks
-   |> should equal  [SceneHeading (true, [Literal (heading, new Range(0,0))], new Range(0,0)); Action(false, [HardLineBreak(new Range(0,0)); HardLineBreak(new Range(0,0)); Literal("Some Action", new Range(0,0))], new Range(0,0))]
+   |> should equal  [SceneHeading (true, [Literal ("BRICK'S PATIO - DAY", new Range(1, 19))], new Range(0, 20 + 2 * NewLineLength)); Action(false, [HardLineBreak(new Range(20 + NewLineLength * 2, NewLineLength)); Literal("Some Action", new Range(20 + NewLineLength * 3, 11))], new Range(20 + NewLineLength * 2, 11 + NewLineLength))]
 
 [<Test>]
 let ``Forced (".") Scene Heading - No empty line after`` () =
-   let doc = ".BINOCULARS A FORCED SCENE HEADING - LATER\r\nSome Action" |> Fountain.Parse
+   let text = properNewLines ".BINOCULARS A FORCED SCENE HEADING - LATER\r\nSome Action"
+   let doc = text |> Fountain.Parse
    doc.Blocks
-   |> should equal  [Action (false, [Literal (".BINOCULARS A FORCED SCENE HEADING - LATER", Range.empty); HardLineBreak(Range.empty); Literal ("Some Action", Range.empty)], Range.empty)]
+   |> should equal  [Action (false, [Literal (".BINOCULARS A FORCED SCENE HEADING - LATER", new Range(0, 42)); HardLineBreak(new Range(42, NewLineLength)); Literal ("Some Action", new Range(42 + NewLineLength, 11))], new Range(0, text.Length))]
 
 [<Test>]
 let ``Lowercase known scene heading`` () =
-   let doc = "ext. brick's pool - day" |> Fountain.Parse
+   let doc = "ext. brick's pool - day" + NewLine(2) |> Fountain.Parse
    doc.Blocks
-   |> should equal [SceneHeading (false, [Literal ("ext. brick's pool - day", new Range(0,0))], new Range(0,0))]
+   |> should equal [SceneHeading (false, [Literal ("ext. brick's pool - day", new Range(0, 23))], new Range(0, 23 + NewLineLength * 2))]
 
 [<Test>]
 let ``Known INT Scene Head`` () =
-   let doc = "INT DOGHOUSE - DAY" |> Fountain.Parse
+   let doc = "INT DOGHOUSE - DAY" + NewLine(2) |> Fountain.Parse
    doc.Blocks
-   |> should equal [SceneHeading (false, [Literal ("INT DOGHOUSE - DAY", new Range(0,0))], new Range(0,0))]
+   |> should equal [SceneHeading (false, [Literal ("INT DOGHOUSE - DAY", new Range(0, 18))], new Range(0, 18 + NewLineLength * 2))]
 
 [<Test>]
 let ``Known EXT Scene Head`` () =
-   let doc = "EXT DOGHOUSE - DAY" |> Fountain.Parse
+   let doc = "EXT DOGHOUSE - DAY" + NewLine(2) |> Fountain.Parse
    doc.Blocks
-   |> should equal [SceneHeading (false, [Literal ("EXT DOGHOUSE - DAY", new Range(0,0))], new Range(0,0))]
+   |> should equal [SceneHeading (false, [Literal ("EXT DOGHOUSE - DAY", new Range(0, 18))], new Range(0, 18 + NewLineLength * 2))]
 
 [<Test>]
 let ``Known EST Scene Head`` () =
-   let doc = "EST DOGHOUSE - DAY" |> Fountain.Parse
+   let doc = "EST DOGHOUSE - DAY"  + NewLine(2) |> Fountain.Parse
    doc.Blocks
-   |> should equal [SceneHeading (false, [Literal ("EST DOGHOUSE - DAY", new Range(0,0))], new Range(0,0))]
+   |> should equal [SceneHeading (false, [Literal ("EST DOGHOUSE - DAY", new Range(0, 18))], new Range(0, 18 + NewLineLength * 2))]
 
 [<Test>]
 let ``Known INT./EXT Scene Head`` () =
-   let doc = "INT./EXT DOGHOUSE - DAY" |> Fountain.Parse
+   let doc = "INT./EXT DOGHOUSE - DAY" + NewLine(2) |> Fountain.Parse
    doc.Blocks
-   |> should equal [SceneHeading (false, [Literal ("INT./EXT DOGHOUSE - DAY", new Range(0,0))], new Range(0,0))]
+   |> should equal [SceneHeading (false, [Literal ("INT./EXT DOGHOUSE - DAY", new Range(0, 23))], new Range(0, 23 + NewLineLength * 2))]
 
 [<Test>]
 let ``Known INT/EXT Scene Head`` () =
-   let doc = "INT/EXT DOGHOUSE - DAY" |> Fountain.Parse
+   let doc = "INT/EXT DOGHOUSE - DAY" + NewLine(2) |> Fountain.Parse
    doc.Blocks
-   |> should equal [SceneHeading (false, [Literal ("INT/EXT DOGHOUSE - DAY", new Range(0,0))], new Range(0,0))]
+   |> should equal [SceneHeading (false, [Literal ("INT/EXT DOGHOUSE - DAY", new Range(0, 22))], new Range(0, 22 + NewLineLength * 2))]
 
 [<Test>]
 let ``Known I/E Scene Head`` () =
-   let doc = "I/E DOGHOUSE - DAY" |> Fountain.Parse
+   let doc = "I/E DOGHOUSE - DAY" + NewLine(2) |> Fountain.Parse
    doc.Blocks
-   |> should equal [SceneHeading (false, [Literal ("I/E DOGHOUSE - DAY", new Range(0,0))], new Range(0,0))]
+   |> should equal [SceneHeading (false, [Literal ("I/E DOGHOUSE - DAY", new Range(0, 18))], new Range(0, 18 + NewLineLength * 2))]
 
 [<Test>]
 let ``Scene Heading with line breaks and action`` () =
-   let doc = "EXT. BRICK'S PATIO - DAY\r\n\r\nSome Action" |> Fountain.Parse
+   let text = "EXT. BRICK'S PATIO - DAY" + NewLine(2) + "Some Action"
+   let doc = text |> Fountain.Parse
    doc.Blocks
-   |> should equal  [SceneHeading (false, [Literal ("EXT. BRICK'S PATIO - DAY", new Range(0,0))], new Range(0,0)); Action (false, [HardLineBreak(new Range(0,0)); Literal ("Some Action", new Range(0,0))], new Range(0,0))]
+   |> should equal  [SceneHeading (false, [Literal ("EXT. BRICK'S PATIO - DAY", new Range(0, 24))], new Range(0, 24 + NewLineLength * 2)); Action (false, [Literal ("Some Action", new Range(24 + NewLineLength * 2, 11))], new Range(24 + NewLineLength * 2, 11))]
 
 [<Test>]
 let ``Scene Heading with more line breaks and action`` () =
-   let doc = "EXT. BRICK'S PATIO - DAY\r\n\r\n\r\nSome Action" |> Fountain.Parse
+   let doc = "EXT. BRICK'S PATIO - DAY" + NewLine(3) + "Some Action" |> Fountain.Parse
    doc.Blocks
-   |> should equal  [SceneHeading (false, [Literal ("EXT. BRICK'S PATIO - DAY", new Range(0,0))], new Range(0,0)); Action(false, [HardLineBreak(new Range(0,0)); HardLineBreak(new Range(0,0)); Literal("Some Action", new Range(0,0))], new Range(0,0))]
+   |> should equal  [SceneHeading (false, [Literal ("EXT. BRICK'S PATIO - DAY", new Range(0, 24))], new Range(0, 24 + NewLineLength * 2)); Action(false, [HardLineBreak(new Range(24 + NewLineLength * 2, NewLineLength)); Literal("Some Action", new Range(24 + NewLineLength * 3, 11))], new Range(24 + NewLineLength * 2, NewLineLength + 11))]
 
 [<Test>]
 let ``Scene Heading - No empty line after`` () =
    // this must not be recognized as scene heading
-   let doc = "EXT. BRICK'S PATIO - DAY\r\nSome Action" |> Fountain.Parse
+   let text = "EXT. BRICK'S PATIO - DAY" + NewLine(1) + "Some Action"
+   let doc = text |> Fountain.Parse
    doc.Blocks
-   |> should equal  [Action (false, [Literal ("EXT. BRICK'S PATIO - DAY", Range.empty); HardLineBreak(Range.empty); Literal ("Some Action", Range.empty)], Range.empty)]
+   |> should equal  [Action (false, [Literal ("EXT. BRICK'S PATIO - DAY", new Range(0, 24)); HardLineBreak(new Range(24, NewLineLength)); Literal ("Some Action", new Range(24 + NewLineLength, 11))], new Range(0, text.Length))]
 
 //===== Action
 [<Test>]
 let ``Action - With line breaks`` () =
-   let doc = "EXT. BRICK'S PATIO - DAY\r\n\r\nSome Action\r\n\r\nSome More Action" |> Fountain.Parse
+   let action = "Some Action" + NewLine(2) + "Some More Action"
+   let sceneHeading = "EXT. BRICK'S PATIO - DAY" + NewLine(2)
+   let doc = sceneHeading + action |> Fountain.Parse
    doc.Blocks
-   |> should equal   [SceneHeading (false, [Literal ("EXT. BRICK'S PATIO - DAY", new Range(0,0))], new Range(0,0)); Action (false, [HardLineBreak(new Range(0,0)); Literal ("Some Action", new Range(0,0)); HardLineBreak(new Range(0,0)); HardLineBreak(new Range(0,0)); Literal ("Some More Action", new Range(0,0))], new Range(0,0))]
+   |> should equal   [SceneHeading (false, [Literal ("EXT. BRICK'S PATIO - DAY", new Range(0, 24))], new Range(0, 24 + NewLineLength * 2)); Action (false, [Literal ("Some Action", new Range(24 + NewLineLength * 2, 11)); HardLineBreak(new Range(35 + NewLineLength * 2, NewLineLength)); HardLineBreak(new Range(35 + NewLineLength * 3, NewLineLength)); Literal ("Some More Action", new Range(35 + NewLineLength * 4, 16))], new Range(24 + NewLineLength * 2, action.Length))]
 
 [<Test>]
 let ``Action - With line breaks and no heading`` () =
-   let doc = "Natalie looks around at the group, TIM, ROGER, NATE, and VEEK.\n\nTIM, is smiling broadly." |> Fountain.Parse
+   let text = "Natalie looks around at the group, TIM, ROGER, NATE, and VEEK." + Environment.NewLine + Environment.NewLine + "TIM, is smiling broadly."
+   let doc = text |> Fountain.Parse
    doc.Blocks
-   |> should equal  [Action (false, [Literal ("Natalie looks around at the group, TIM, ROGER, NATE, and VEEK.", new Range(0,0)); HardLineBreak(new Range(0,0)); HardLineBreak(new Range(0,0)); Literal ("TIM, is smiling broadly.", new Range(0,0))], new Range(0,0))]
+   |> should equal  [Action (false, [Literal ("Natalie looks around at the group, TIM, ROGER, NATE, and VEEK.", new Range(0, 62)); HardLineBreak(new Range(62, NewLineLength)); HardLineBreak(new Range(62 + NewLineLength, NewLineLength)); Literal ("TIM, is smiling broadly.", new Range(62 + 2 * NewLineLength, 24))], new Range(0, text.Length))]
 
 //===== Synopses
 
@@ -136,7 +145,7 @@ let ``Action - With line breaks and no heading`` () =
 let ``Basic Synopses`` () =
    let doc = "= Here is a synopses of this fascinating scene." |> Fountain.Parse
    doc.Blocks
-   |> should equal [Synopses ([Literal (" Here is a synopses of this fascinating scene.", new Range(0,0))], new Range(0,0))]
+   |> should equal [Synopses ([Literal ("Here is a synopses of this fascinating scene.", new Range(2, 45))], new Range(0, 47))]
 
 
 //===== Character
@@ -145,66 +154,72 @@ let ``Basic Synopses`` () =
 let ``Character - Normal`` () =
    let doc = "\r\nLINDSEY" |> Fountain.Parse
    doc.Blocks
-   |> should equal [Character (false, true, [Literal ("LINDSEY", new Range(0,0))], new Range(0,0))]
+   |> should equal [Character (false, true, [Literal ("LINDSEY", new Range(NewLineLength, 7))], new Range(0, 7 + NewLineLength))]
 
 [<Test>]
 let ``Character - With parenthetical extension`` () =
-   let character = "LINDSEY (on the radio)"
-   let doc = "\r\n" + character |> Fountain.Parse
+   let text = properNewLines "\r\nLINDSEY (on the radio)"
+   let doc = text |> Fountain.Parse
    doc.Blocks
-   |> should equal [Character (false, true, [Literal (character, Range.empty)], Range.empty)]
+   |> should equal [Character (false, true, [Literal ("LINDSEY (on the radio)", new Range(NewLineLength, 22))], new Range(0, text.Length))]
 
 [<Test>]
 let ``Character - With invalid parenthetical extension`` () =
    let character = "LINDSEY (on the Radio)"
-   let doc = "\r\n" + character |> Fountain.Parse
+   let text = Environment.NewLine + character
+   let doc = text |> Fountain.Parse
    doc.Blocks
-   |> should equal [Action (false, [HardLineBreak(Range.empty); Literal (character, new Range(0,0))], new Range(0,0))]
+   |> should equal [Action (false, [HardLineBreak(new Range(0, NewLineLength)); Literal (character, new Range(NewLineLength, character.Length))], new Range(0, text.Length))]
 
 [<Test>]
-let ``Character - With whitespace`` () =
-   let doc = "\r\nTHIS IS ALL UPPERCASE BUT HAS WHITESPACE" |> Fountain.Parse
-   doc.Blocks
-   |> should equal [Character (false, true, [Literal ("THIS IS ALL UPPERCASE BUT HAS WHITESPACE", new Range(0,0))], new Range(0,0))]
+let ``Character - With whitespace``() = 
+    let character = "THIS IS ALL UPPERCASE BUT HAS WHITESPACE"
+    let doc = "\r\n" + character |> Fountain.Parse
+    doc.Blocks 
+    |> should equal 
+           [ Character(false, true, [ Literal(character, new Range(NewLineLength, character.Length)) ], new Range(0, character.Length + NewLineLength)) ]
     
 [<Test>]
 let ``Character - With Numbers`` () =
    let doc = "\r\nR2D2" |> Fountain.Parse
    doc.Blocks
-   |> should equal [Character (false, true, [Literal ("R2D2", new Range(0,0))], new Range(0,0))]
+   |> should equal [Character (false, true, [Literal ("R2D2", new Range(NewLineLength, 4))], new Range(0, 4 + NewLineLength))]
 
 [<Test>]
 let ``Character - Number first`` () =
-   let doc = "\r\n25D2" |> Fountain.Parse
+   let text = properNewLines "\r\n25D2"
+   let doc = text |> Fountain.Parse
    doc.Blocks
-   |> should equal [Action (false, [HardLineBreak(Range.empty); Literal ("25D2", new Range(0,0))], new Range(0,0))]
+   |> should equal [Action (false, [HardLineBreak(new Range(0, NewLineLength)); Literal ("25D2", new Range(NewLineLength, 4))], new Range(0, text.Length))]
 
 [<Test>]
 let ``Character - Forced with at sign`` () =
-   let doc = "\r\n@McAvoy" |> Fountain.Parse
+   let text = NewLine(1) + "@McAvoy"
+   let doc = text |> Fountain.Parse
    doc.Blocks
-   |> should equal [Character (true, true, [Literal ("McAvoy", new Range(0,0))], new Range(0,0))]
+   |> should equal [Character (true, true, [Literal ("McAvoy", new Range(NewLineLength + 1, 6))], new Range(0, text.Length))]
 
 [<Test>]
-let ``Character - with forced at and parenthetical extension`` () =
+let ``Character - With forced at and parenthetical extension`` () =
    let doc = "\r\n@McAvoy (OS)" |> Fountain.Parse
    doc.Blocks
-   |> should equal [Character (true, true, [Literal ("McAvoy (OS)", new Range(0,0))], new Range(0,0))]
+   |> should equal [Character (true, true, [Literal ("McAvoy (OS)", new Range(NewLineLength + 1, 11))], new Range(0, 12 + NewLineLength))]
 
 
 //===== Parenthetical
 
 [<Test>]
 let ``Parenthetical `` () =
-   let doc = "\r\nLINDSEY\r\n(quietly)" |> Fountain.Parse
+   let doc = NewLine(1) + "LINDSEY" + NewLine(1) + "(quietly)" |> Fountain.Parse
    doc.Blocks
-   |> should equal [Character (false, true, [Literal ("LINDSEY", new Range(0,0))], new Range(0,0)); Parenthetical ([Literal ("quietly", new Range(0,0))], new Range(0,0))];
+   |> should equal [Character (false, true, [Literal ("LINDSEY", new Range(NewLineLength, 7))], new Range(0, 7 + NewLineLength * 2)); Parenthetical ([Literal ("quietly", new Range(8 + NewLineLength * 2, 7))], new Range(7 + NewLineLength * 2, 9))];
 
 [<Test>]
 let ``Parenthetical - After Dialogue`` () =
-   let doc = "\r\nLINDSEY\r\n(quietly)\r\nHello, friend.\r\n(loudly)\r\nFriendo!" |> Fountain.Parse
+   let text = "\r\nLINDSEY\r\n(quietly)\r\nHello, friend.\r\n(loudly)\r\nFriendo!"
+   let doc = properNewLines text |> Fountain.Parse
    doc.Blocks
-   |> should equal [Character (false, true, [Literal ("LINDSEY", Range.empty)], Range.empty); Parenthetical ([Literal ("quietly", Range.empty)], Range.empty); Dialogue ([Literal ("Hello, friend.", Range.empty)], Range.empty); Parenthetical ([Literal ("loudly", Range.empty)], Range.empty); Dialogue ([Literal ("Friendo!", Range.empty)], Range.empty)];
+   |> should equal [Character (false, true, [Literal ("LINDSEY", new Range(NewLineLength, 7))], new Range(0, 7 + NewLineLength * 2)); Parenthetical ([Literal ("quietly", new Range(8 + NewLineLength * 2, 7))], new Range(7 + NewLineLength * 2, 9 + NewLineLength)); Dialogue ([Literal ("Hello, friend.", new Range(16 + NewLineLength * 3, 14))], new Range(16 + NewLineLength * 3, 14)); Parenthetical ([Literal ("loudly", new Range(31 + NewLineLength * 3, 6))], new Range(30 + NewLineLength * 3, 8 + NewLineLength)); Dialogue ([Literal ("Friendo!", new Range(38 + NewLineLength * 4, 8))], new Range(38 + NewLineLength * 4, 8))];
 
 
 //===== Dialogue
@@ -213,50 +228,53 @@ let ``Parenthetical - After Dialogue`` () =
 let ``Dialogue - Normal`` () =
    let doc = "\r\nLINDSEY\r\nHello, friend." |> Fountain.Parse
    doc.Blocks
-   |> should equal [Character (false, true, [Literal ("LINDSEY", new Range(0,0))], new Range(0,0)); Dialogue ([Literal ("Hello, friend.", new Range(0,0))], new Range(0,0))]
+   |> should equal [Character (false, true, [Literal ("LINDSEY", new Range(NewLineLength, 7))], new Range(0, 7 + NewLineLength * 2)); Dialogue ([Literal ("Hello, friend.", new Range(7 + NewLineLength * 2, 14))], new Range(7 + NewLineLength * 2, 14))]
 
 [<Test>]
 let ``Dialogue - After Parenthetical`` () =
    let doc = "\r\nLINDSEY\r\n(quietly)\r\nHello, friend." |> Fountain.Parse
    doc.Blocks
-   |> should equal [Character (false, true, [Literal ("LINDSEY", new Range(0,0))], new Range(0,0)); Parenthetical ([Literal ("quietly", new Range(0,0))], new Range(0,0)); Dialogue ([Literal ("Hello, friend.", new Range(0,0))], new Range(0,0))]
+   |> should equal [Character (false, true, [Literal ("LINDSEY", new Range(NewLineLength, 7))], new Range(0, 7 + NewLineLength * 2)); Parenthetical ([Literal ("quietly", new Range(8 + NewLineLength * 2, 7))], new Range(7 + NewLineLength * 2, 9 + NewLineLength)); Dialogue ([Literal ("Hello, friend.", new Range(16 + NewLineLength * 3, 14))], new Range(16 + NewLineLength * 3, 14))]
 
 [<Test>]
 let ``Dialogue - With line break`` () =
-   let doc = "\r\nDEALER\r\nTen.\r\nFour.\r\nDealer gets a seven.\r\n\r\n  Hit or stand sir?" |> Fountain.Parse
+   let doc = "\r\nDEALER\r\nTen.\r\nFour.\r\nDealer gets a seven.\r\n  \r\nHit or stand sir?" |> Fountain.Parse
    doc.Blocks
-   |> should equal [Character (false, true, [Literal ("DEALER", Range.empty)], Range.empty);  Dialogue ([Literal ("Ten.", Range.empty); HardLineBreak(Range.empty); Literal ("Four.", Range.empty); HardLineBreak(Range.empty); Literal ("Dealer gets a seven.", Range.empty); HardLineBreak(Range.empty); HardLineBreak(Range.empty); Literal ("Hit or stand sir?", Range.empty)], Range.empty)]
+   |> should equal [Character (false, true, [Literal ("DEALER", new Range(NewLineLength, 6))], new Range(0, 6 + NewLineLength * 2));  Dialogue ([Literal ("Ten.", new Range(6 + NewLineLength * 2, 4)); HardLineBreak(new Range(10 + NewLineLength * 2, NewLineLength)); Literal ("Four.", new Range(10 + NewLineLength * 3, 5)); HardLineBreak(new Range(15 + NewLineLength * 3, NewLineLength)); Literal ("Dealer gets a seven.", new Range(15 + NewLineLength * 4, 20)); HardLineBreak(new Range(35 + NewLineLength * 4, NewLineLength)); HardLineBreak(new Range(35 + NewLineLength * 5, 2 + NewLineLength)); Literal ("Hit or stand sir?", new Range(37 + NewLineLength * 6, 17))], new Range(6 + NewLineLength * 2, 48 + NewLineLength * 4))]
 
 [<Test>]
 let ``Dialogue - With invalid line break`` () =
-   let doc = "\r\nDEALER\r\nTen.\r\nFour.\r\nDealer gets a seven.\r\n\r\nHit or stand sir?" |> Fountain.Parse
+   let action = "Hit or stand sir?"
+   let doc = "\r\nDEALER\r\nTen.\r\nFour.\r\nDealer gets a seven.\r\n\r\n" + action |> Fountain.Parse
    doc.Blocks
-   |> should equal [Character (false, true, [Literal ("DEALER", Range.empty)], Range.empty);  Dialogue ([Literal ("Ten.", Range.empty); HardLineBreak(Range.empty); Literal ("Four.", Range.empty); HardLineBreak(Range.empty); Literal ("Dealer gets a seven.", Range.empty)], Range.empty); Action (false, [Literal ("Hit or stand sir?", Range.empty)], Range.empty)]
+   |> should equal [Character (false, true, [Literal ("DEALER", new Range(NewLineLength, 6))], new Range(0, 6 + NewLineLength * 2));  Dialogue ([Literal ("Ten.", new Range(6 + NewLineLength * 2, 4)); HardLineBreak(new Range(10 + NewLineLength * 2, NewLineLength)); Literal ("Four.", new Range(10 + NewLineLength * 3, 5)); HardLineBreak(new Range(15 + NewLineLength * 3, NewLineLength)); Literal ("Dealer gets a seven.", new Range(15 + NewLineLength * 4, 20))], new Range(6 + NewLineLength * 2, 29 + NewLineLength * 3)); Action (false, [Literal ("Hit or stand sir?", new Range(35 + NewLineLength * 5, 17))], new Range(35 + NewLineLength * 5, action.Length))]
    // this test now fails: parsing places line break be after last Action
 
 [<Test>]
 let ``Dual Dialogue`` () =
-   let doc = "\r\nBRICK\r\nScrew retirement.\r\n\r\nSTEEL ^\r\nScrew retirement." |> Fountain.Parse
+   let firstCharacter = "\r\nBRICK\r\nScrew retirement.\r\n"
+   let secondCharacter = "\r\nSTEEL ^\r\nScrew retirement."
+   let doc = properNewLines firstCharacter + secondCharacter |> Fountain.Parse
    doc.Blocks
-   |> should equal [DualDialogue([Character (false, true, [Literal ("BRICK", Range.empty)], Range.empty); Dialogue ([Literal ("Screw retirement.", Range.empty)], Range.empty); Character (false, false, [Literal ("STEEL", Range.empty)], Range.empty); Dialogue ([Literal ("Screw retirement.", Range.empty)], Range.empty)], Range.empty)]
+   |> should equal [DualDialogue([Character (false, true, [Literal ("BRICK", new Range(NewLineLength, 5))], new Range(0, 5 + NewLineLength * 2)); Dialogue ([Literal ("Screw retirement.", new Range(5 + NewLineLength * 2, 17))], new Range(5 + NewLineLength * 2, 17)); Character (false, false, [Literal ("STEEL", new Range(22 + NewLineLength * 3, 5))], new Range(22 + NewLineLength * 2, 7 + NewLineLength * 2)); Dialogue ([Literal ("Screw retirement.", new Range(29 + NewLineLength * 4, 17))], new Range(29 + NewLineLength * 4, 17))], new Range(0, 46 + NewLineLength * 4))]
 
 [<Test>]
 let ``Dual Dialogue - Second character`` () =
    let doc = "\r\nLINDSEY     ^\r\nHello, friend." |> Fountain.Parse
    doc.Blocks
-   |> should equal [Character (false, false, [Literal ("LINDSEY", Range.empty)], Range.empty); Dialogue ([Literal ("Hello, friend.", Range.empty)], Range.empty)]
+   |> should equal [Character (false, false, [Literal ("LINDSEY", new Range(NewLineLength, 7))], new Range(0, 13 + NewLineLength * 2)); Dialogue ([Literal ("Hello, friend.", new Range(13 + NewLineLength * 2, 14))], new Range(13 + NewLineLength * 2, 14))]
 
 [<Test>]
 let ``Dual Dialogue - invalid`` () =
    // BRICK must not be recognized as character as there is no new line before
    let doc = "\r\nSTEEL\r\nBeer's ready!\r\nBRICK\r\nAre they cold?" |> Fountain.Parse
    doc.Blocks
-   |> should equal [Character (false, true, [Literal ("STEEL", Range.empty)], Range.empty); Dialogue ([Literal ("Beer's ready!", Range.empty); HardLineBreak(Range.empty); Literal("BRICK", Range.empty); HardLineBreak(Range.empty); Literal("Are they cold?", Range.empty)], Range.empty)]
+   |> should equal [Character (false, true, [Literal ("STEEL", new Range(NewLineLength, 5))], new Range(0, 5 + NewLineLength * 2)); Dialogue ([Literal ("Beer's ready!", new Range(5 + NewLineLength * 2, 13)); HardLineBreak(new Range(18 + NewLineLength * 2, NewLineLength)); Literal("BRICK", new Range(18 + NewLineLength * 3, 5)); HardLineBreak(new Range(23 + NewLineLength * 3, NewLineLength)); Literal("Are they cold?", new Range(23 + NewLineLength * 4, 14))], new Range(5 + NewLineLength * 2, 32 + NewLineLength * 2))]
 
 [<Test>]
 let ``Dual Dialogue - Parenthetical`` () =
    let doc = "\r\nSTEEL\r\n(beer raised)\r\nTo retirement.\r\n\r\nBRICK ^\r\nTo retirement." |> Fountain.Parse
-   let expected = [DualDialogue([Character (false, true, [Literal ("STEEL", Range.empty)], Range.empty); Parenthetical([Literal("beer raised", Range.empty)], Range.empty); Dialogue ([Literal ("To retirement.", Range.empty)], Range.empty); Character (false, false, [Literal ("BRICK", Range.empty)], Range.empty); Dialogue ([Literal ("To retirement.", Range.empty)], Range.empty)], Range.empty)]
+   let expected = [DualDialogue([Character (false, true, [Literal ("STEEL", new Range(NewLineLength, 5))], new Range(0, 5 + NewLineLength * 2)); Parenthetical([Literal("beer raised", new Range(6 + NewLineLength * 2, 11))], new Range(5 + NewLineLength * 2, 13 + NewLineLength)); Dialogue ([Literal ("To retirement.", new Range(18 + NewLineLength * 3, 14))], new Range(18 + NewLineLength * 3, 14)); Character (false, false, [Literal ("BRICK", new Range(32 + NewLineLength * 4, 5))], new Range(32 + NewLineLength * 3, 7 + NewLineLength * 2)); Dialogue ([Literal ("To retirement.", new Range(39 + NewLineLength * 5, 14))], new Range(39 + NewLineLength * 5, 14))], new Range(0, 53 + NewLineLength * 5))]
    doc.Blocks
    |> should equal expected
 
@@ -266,57 +284,64 @@ let ``Dual Dialogue - Parenthetical`` () =
 let ``PageBreak - ===`` () =
    let doc = "===" |> Fountain.Parse
    doc.Blocks
-   |> should equal [PageBreak]
+   |> should equal [PageBreak(new Range(0, 3))]
 
 [<Test>]
 // TODO: should this be a synopses? probably, yeah? need clarification from the spec
 let ``PageBreak - == (not enough =)`` () =
    let doc = "==" |> Fountain.Parse
    doc.Blocks
-   |> should equal [Synopses ([Literal ("=", new Range(0,0))], new Range(0,0))]
+   |> should equal [Synopses ([Literal ("=", new Range(1, 1))], new Range(0, 2))]
 
 [<Test>]
 let ``PageBreak - ==========`` () =
    let doc = "==========" |> Fountain.Parse
    doc.Blocks
-   |> should equal [PageBreak]
+   |> should equal [PageBreak(new Range(0, 10))]
 
 [<Test>]
 let ``PageBreak - ======= (with space at end)`` () =
    let doc = "======= " |> Fountain.Parse
    doc.Blocks
-   |> should equal [PageBreak]
+   |> should equal [PageBreak(new Range(0, 8))]
 
 
 [<Test>]
 let ``PageBreak - ======= blah (fail with other chars)`` () =
    let doc = "======= blah" |> Fountain.Parse
    doc.Blocks
-   |> should equal [Synopses ([Literal ("====== blah", new Range(0,0))], new Range(0,0))]
+   |> should equal [Synopses ([Literal ("====== blah", new Range(1, 11))], new Range(0, 12))]
 
 
 //===== Lyrics
 
 [<Test>]
-let ``Lyric - normal`` () =
+let ``Lyrics - normal`` () =
    let doc = "~Birdy hop, he do. He hop a long." |> Fountain.Parse
    doc.Blocks
-   |> should equal [Lyric ([Literal ("Birdy hop, he do. He hop a long.", new Range(0,0))], new Range(0,0))]
+   |> should equal [Lyrics ([Literal ("Birdy hop, he do. He hop a long.", new Range(1, 32))], new Range(0, 33))]
 
 
 //===== Transition
 
 [<Test>]
 let ``Transition - normal`` () =
-   let doc = "CUT TO:" |> Fountain.Parse
+   let doc = "\r\nCUT TO:\r\n\r\nSome action" |> Fountain.Parse
    doc.Blocks
-   |> should equal [Transition (false, [Literal ("CUT TO:", new Range(0,0))], new Range(0,0))]
+   |> should equal [Transition (false, [Literal ("CUT TO:", new Range(NewLineLength, 7))], new Range(0, 7 + NewLineLength * 3)); Action(false, [Literal("Some action", new Range(7 + NewLineLength * 3, 11))], new Range(7 + NewLineLength * 3, 11))]
+
+[<Test>]
+let ``Transition - Non uppercase`` () =
+   // This is not a transition as 'Cut' is not all uppercase
+   let doc = "\r\nCut TO:\r\n\r\nSome action" |> Fountain.Parse
+   doc.Blocks
+   |> should equal [Action (false, [HardLineBreak(new Range(0, NewLineLength)); Literal("Cut TO:", new Range(NewLineLength, 7)); HardLineBreak(new Range(7 + NewLineLength, NewLineLength)); HardLineBreak(new Range(7 + NewLineLength * 2, NewLineLength)); Literal("Some action", new Range(7 + NewLineLength * 3, 11))], new Range(0, 18 + NewLineLength * 3))]
 
 [<Test>]
 let ``Transition - forced`` () =
-   let doc = "> Burn to White." |> Fountain.Parse
+   let doc = "\r\n> Burn to White.\r\n\r\nSome action" |> Fountain.Parse
    doc.Blocks
-   |> should equal [Transition (true, [Literal ("Burn to White.", new Range(0,0))], new Range(0,0))]
+   |> should equal [Transition (true, [Literal ("Burn to White.", new Range(2 + NewLineLength, 14))], new Range(0, 16 + NewLineLength * 3)); Action(false, [Literal("Some action", new Range(16 + NewLineLength * 3, 11))], new Range(16 + NewLineLength * 3, 11))]
 
 //===== Centered
 
@@ -324,46 +349,50 @@ let ``Transition - forced`` () =
 let ``Centered `` () =
    let doc = ">The End<" |> Fountain.Parse
    doc.Blocks
-   |> should equal [Centered ([Literal ("The End", Range.empty)], Range.empty)]
+   |> should equal [Centered ([Literal ("The End", new Range(1, 7))], new Range(0, 9))]
 
 [<Test>]
 let ``Centered - with spaces`` () =
    let doc = "> The End <" |> Fountain.Parse
    doc.Blocks
-   |> should equal [Centered ([Literal ("The End", Range.empty)], Range.empty)]
+   |> should equal [Centered ([Literal ("The End", new Range(2, 7))], new Range(0, 11))]
 
 //===== Line Breaks
 
 [<Test>]
 let ``Line Breaks`` () =
-   let doc = "Murtaugh, springing...\n\nAn explosion of sound...\nAs it rises like an avenging angel ...\nHovers, shattering the air \n\nScreaming, chaos, frenzy.\nThree words that apply to this scene." |> Fountain.Parse
+   let text = "Murtaugh, springing..." + NewLine(2) + "An explosion of sound..." + NewLine(1) + "As it rises like an avenging angel ..." + NewLine(1) + "Hovers, shattering the air " + NewLine(2) + "Screaming, chaos, frenzy." + NewLine(1) + "Three words that apply to this scene."
+   let doc = text |> Fountain.Parse
    doc.Blocks
-   |> should equal ([Action (false, [Literal( "Murtaugh, springing...", Range.empty); HardLineBreak(Range.empty); HardLineBreak(Range.empty); Literal("An explosion of sound...", Range.empty); HardLineBreak(Range.empty); Literal("As it rises like an avenging angel ...", Range.empty); HardLineBreak(Range.empty); Literal("Hovers, shattering the air ", Range.empty); HardLineBreak(Range.empty); HardLineBreak(Range.empty); Literal ("Screaming, chaos, frenzy.", Range.empty); HardLineBreak(Range.empty); Literal( "Three words that apply to this scene.", Range.empty)], Range.empty)])
+   |> should equal ([Action (false, [Literal( "Murtaugh, springing...", new Range(0, 22)); HardLineBreak(new Range(22, NewLineLength)); HardLineBreak(new Range(22 + NewLineLength, NewLineLength)); Literal("An explosion of sound...", new Range(22 + 2 * NewLineLength, 24)); HardLineBreak(new Range(46 + 2 * NewLineLength, NewLineLength)); Literal("As it rises like an avenging angel ...", new Range(46 + 3 * NewLineLength, 38)); HardLineBreak(new Range(84 + 3 * NewLineLength, NewLineLength)); Literal("Hovers, shattering the air ", new Range(84 + 4 * NewLineLength, 27)); HardLineBreak(new Range(111 + 4 * NewLineLength, NewLineLength)); HardLineBreak(new Range(111 + 5 * NewLineLength, NewLineLength)); Literal ("Screaming, chaos, frenzy.", new Range(111 + 6 * NewLineLength, 25)); HardLineBreak(new Range(136 + 6 * NewLineLength, NewLineLength)); Literal( "Three words that apply to this scene.", new Range(136 + 7 * NewLineLength, 37))], new Range(0, text.Length))])
 
 //===== Notes
 [<Test>]
 let ``Notes - Inline`` () =
-   let doc = "Some text and then a [[bit of a note]]. And some more text." |> Fountain.Parse
+   let text = "Some text and then a [[bit of a note]]. And some more text."
+   let doc = text |> Fountain.Parse
    doc.Blocks
-   |> should equal [Action (false, [Literal ("Some text and then a ", Range.empty); Note ([Literal( "bit of a note", Range.empty)], Range.empty); Literal( ". And some more text.", Range.empty)], Range.empty)]
+   |> should equal [Action (false, [Literal ("Some text and then a ", new Range(0, 21)); Note ([Literal( "bit of a note", new Range(23, 13))], new Range(21, 17)); Literal( ". And some more text.", new Range(38, 21))], new Range(0, 59))]
 
 [<Test>]
 let ``Notes - Block`` () =
    let doc = "[[It was supposed to be Vietnamese, right?]]" |> Fountain.Parse
    doc.Blocks
-   |> should equal [Action(false, [Note ([Literal ("It was supposed to be Vietnamese, right?", Range.empty)], Range.empty)], Range.empty)]
+   |> should equal [Action(false, [Note ([Literal ("It was supposed to be Vietnamese, right?", new Range(2, 40))], new Range(0, 44))], new Range(0, 44))]
 
 [<Test>]
 let ``Notes - Line breaks`` () =
-   let doc = "His hand is an inch from the receiver when the phone RINGS. Scott pauses for a moment, suspicious for some reason.[[This section needs work.\r\nEither that, or I need coffee.\r\nDefinitely coffee.]] He looks around. Phone ringing." |> Fountain.Parse
+   let text = properNewLines "His hand is an inch from the receiver when the phone RINGS. Scott pauses for a moment, suspicious for some reason.[[This section needs work.\r\nEither that, or I need coffee.\r\nDefinitely coffee.]] He looks around. Phone ringing."
+   let doc = text |> Fountain.Parse
    doc.Blocks
-   |> should equal [Action(false, [Literal ("His hand is an inch from the receiver when the phone RINGS. Scott pauses for a moment, suspicious for some reason.", Range.empty); Note([Literal("This section needs work.", Range.empty); HardLineBreak(Range.empty); Literal("Either that, or I need coffee.", Range.empty); HardLineBreak(Range.empty); Literal("Definitely coffee.", Range.empty);], Range.empty); Literal(" He looks around. Phone ringing.", Range.empty)], Range.empty)]
+   |> should equal [Action(false, [Literal ("His hand is an inch from the receiver when the phone RINGS. Scott pauses for a moment, suspicious for some reason.", new Range(0, 114)); Note([Literal("This section needs work.", new Range(116, 24)); HardLineBreak(new Range(140, NewLineLength)); Literal("Either that, or I need coffee.", new Range(140 + NewLineLength, 30)); HardLineBreak(new Range(170 + NewLineLength, NewLineLength)); Literal("Definitely coffee.", new Range(170 + 2 * NewLineLength, 18))], new Range(114, 76 + NewLineLength * 2)); Literal(" He looks around. Phone ringing.", new Range(190 + NewLineLength * 2, 32))], new Range(0, text.Length))]
 
 [<Test>]
 let ``Notes - Line breaks with empty line`` () =
-   let doc = "His hand is an inch from the receiver when the phone RINGS. Scott pauses for a moment, suspicious for some reason.[[This section needs work.\r\nEither that, or I need coffee.\r\n  \r\nDefinitely coffee.]] He looks around. Phone ringing." |> Fountain.Parse
+   let text = properNewLines "His hand is an inch from the receiver when the phone RINGS. Scott pauses for a moment, suspicious for some reason.[[This section needs work.\r\nEither that, or I need coffee.\r\n  \r\nDefinitely coffee.]] He looks around. Phone ringing."
+   let doc = text |> Fountain.Parse
    doc.Blocks
-   |> should equal [Action(false, [Literal ("His hand is an inch from the receiver when the phone RINGS. Scott pauses for a moment, suspicious for some reason.", Range.empty); Note([Literal("This section needs work.", Range.empty); HardLineBreak(Range.empty); Literal("Either that, or I need coffee.", Range.empty); HardLineBreak(Range.empty); HardLineBreak(Range.empty); Literal("Definitely coffee.", Range.empty);], Range.empty); Literal(" He looks around. Phone ringing.", Range.empty)], Range.empty)]
+   |> should equal [Action(false, [Literal ("His hand is an inch from the receiver when the phone RINGS. Scott pauses for a moment, suspicious for some reason.", new Range(0, 114)); Note([Literal("This section needs work.", new Range(116, 24)); HardLineBreak(new Range(140, NewLineLength)); Literal("Either that, or I need coffee.", new Range(140 + NewLineLength, 30)); HardLineBreak(new Range(170 + NewLineLength, NewLineLength)); HardLineBreak(new Range(170 + 2 * NewLineLength, NewLineLength + 2)); Literal("Definitely coffee.", new Range(172 + NewLineLength * 3, 18))], new Range(114, 78 + NewLineLength * 3)); Literal(" He looks around. Phone ringing.", new Range(192 + NewLineLength * 3, 32))], new Range(0, text.Length))]
 
 //===== Boneyard (Comments)
 //TODO: not implemented yet.
@@ -374,112 +403,122 @@ let ``Notes - Line breaks with empty line`` () =
 
 [<Test>]
 let ``Emphasis - Bold`` () =
-   let doc = "**This is bold Text**" |> Fountain.Parse
+   let text = "**This is bold Text**"
+   let doc = text |> Fountain.Parse
    doc.Blocks
-   |> should equal [Action (false, [Strong ([Literal ("This is bold Text", new Range(0,0))], new Range(0,0))], new Range(0,0))]
+   |> should equal [Action (false, [Bold ([Literal ("This is bold Text", new Range(2, text.Length - 4))], new Range(0, text.Length))], new Range(0, text.Length))]
 
 [<Test>]
 let ``Emphasis - Italics`` () =
-   let doc = "*This is italic Text*" |> Fountain.Parse
+   let text = "*This is italic Text*"
+   let doc = text |> Fountain.Parse
    doc.Blocks
-   |> should equal [Action (false, [Italic ([Literal ("This is italic Text", new Range(0,0))], new Range(0,0))], new Range(0,0))]
+   |> should equal [Action (false, [Italic ([Literal ("This is italic Text", new Range(1, text.Length - 2))], new Range(0, text.Length))], new Range(0, text.Length))]
 
 [<Test>]
 let ``Emphasis - Bold Italic`` () =
-   let doc = "***This is bold Text***" |> Fountain.Parse
+   let text = "***This is bold Text***"
+   let doc = text |> Fountain.Parse
    doc.Blocks
-   |> should equal [Action (false, [Strong ([Italic ([Literal ("This is bold Text", new Range(0,0))], new Range(0,0))], new Range(0,0))], new Range(0,0))]
+   |> should equal [Action (false, [Bold ([Italic ([Literal ("This is bold Text", new Range(3, 17))], new Range(2, text.Length - 4))], new Range(0, text.Length))], new Range(0, text.Length))]
 
 [<Test>]
 let ``Emphasis - Nested Bold Italic`` () =
- let doc = "**This is bold *and Italic Text***" |> Fountain.Parse
+ let text = "**This is bold *and Italic Text***"
+ let doc = text |> Fountain.Parse
  doc.Blocks
-   |> should equal [Action (false, [Strong ([Literal ("This is bold ", new Range(0,0)); Italic ([Literal ("and Italic Text", new Range(0,0)) ], new Range(0,0)) ], new Range(0,0))], new Range(0,0))]
+   |> should equal [Action (false, [Bold ([Literal ("This is bold ", new Range(2, 13)); Italic ([Literal ("and Italic Text", new Range(16 ,15)) ], new Range(15, 17)) ], new Range(0, text.Length))], new Range(0, text.Length))]
 
 [<Test>]
 let ``Emphasis - Nested Underline Italic`` () =
-   let doc = "From what seems like only INCHES AWAY.  _Steel's face FILLS the *Leupold Mark 4* scope_." |> Fountain.Parse
+   let text = "From what seems like only INCHES AWAY.  _Steel's face FILLS the *Leupold Mark 4* scope_."
+   let doc = text |> Fountain.Parse
    doc.Blocks
-   |> should equal [Action (false, [Literal ("From what seems like only INCHES AWAY.  ", new Range(0,0)); Underline ([Literal ("Steel's face FILLS the ", new Range(0,0)); Italic ([Literal ("Leupold Mark 4", new Range(0,0))], new Range(0,0)); Literal (" scope", new Range(0,0))], new Range(0,0)); Literal (".", new Range(0,0))], new Range(0,0))]
+   |> should equal [Action (false, [Literal ("From what seems like only INCHES AWAY.  ", new Range(0, 40)); Underline ([Literal ("Steel's face FILLS the ", new Range(41, 23)); Italic ([Literal ("Leupold Mark 4", new Range(65, 14))], new Range(64, 16)); Literal (" scope", new Range(80, 6))], new Range(40,47)); Literal (".", new Range(87, 1))], new Range(0, text.Length))]
 
 [<Test>]
 let ``Emphasis - with escapes`` () =
-   let doc = "Steel enters the code on the keypad: **\*9765\***" |> Fountain.Parse
+   let text = "Steel enters the code on the keypad: **\*9765\***"
+   let doc = text |> Fountain.Parse
    doc.Blocks
-   |> should equal [Action (false, [Literal ("Steel enters the code on the keypad: ", new Range(0,0)); Strong ([Literal("*9765*", Range.empty)], Range.empty)], Range.empty)]
+   |> should equal [Action (false, [Literal ("Steel enters the code on the keypad: ", new Range(0, 37)); Bold ([Literal("*9765*", new Range(39, 8))], new Range(37, 12))], new Range(0, text.Length))]
 
 [<Test>]
 let ``Emphasis - italics with spaces to left`` () =
    // this is not italic, as there is a space on the left of the second one
-   let doc = "He dialed *69 and then *23, and then hung up." |> Fountain.Parse
+   let text = "He dialed *69 and then *23, and then hung up."
+   let doc = text |> Fountain.Parse
    doc.Blocks
-   |> should equal [Action (false, [Literal ("He dialed *69 and then *23, and then hung up.", Range.empty)], Range.empty)]
+   |> should equal [Action (false, [Literal ("He dialed *69 and then *23, and then hung up.", new Range(0, text.Length))], new Range(0, text.Length))]
 
 [<Test>]
 let ``Emphasis - italics with spaces to left but escaped`` () =
-   let doc = "He dialed *69 and then 23\*, and then hung up.." |> Fountain.Parse
+   let text = "He dialed *69 and then 23\*, and then hung up.."
+   let doc = text |> Fountain.Parse
    doc.Blocks
-   |> should equal [Action (false, [Literal( "He dialed *69 and then 23*, and then hung up..", Range.empty)], Range.empty)]
+   |> should equal [Action (false, [Literal( "He dialed *69 and then 23*, and then hung up..", new Range(0, text.Length))], new Range(0, text.Length))]
 
 [<Test>]
 let ``Emphasis - between line breaks`` () =
-   let doc = "As he rattles off the long list, Brick and Steel *share a look.\r\n\
-             \r\n\
-             This is going to be BAD.*" |> Fountain.Parse
+   let text = "As he rattles off the long list, Brick and Steel *share a look." + NewLine(2) + "This is going to be BAD.*"
+   let doc = text |> Fountain.Parse
    doc.Blocks
-   |> should equal [Action (false, [Literal( "As he rattles off the long list, Brick and Steel *share a look.", Range.empty); HardLineBreak(Range.empty); HardLineBreak(Range.empty); Literal ("This is going to be BAD.*", Range.empty)], Range.empty)]
+   |> should equal [Action (false, [Literal( "As he rattles off the long list, Brick and Steel *share a look.", new Range(0, 63)); HardLineBreak(new Range(63, NewLineLength)); HardLineBreak(new Range(63 + NewLineLength, NewLineLength)); Literal ("This is going to be BAD.*", new Range(text.Length - 25, 25))], new Range(0, text.Length))]
 
 
 //===== Indenting
 
 [<Test>]
 let ``Scene Heading - Indenting`` () =
-   let doc = "\t EXT. BRICK'S PATIO - DAY\r\n\r\nSome Action" |> Fountain.Parse
+   let text = "\t EXT. BRICK'S PATIO - DAY\r\n\r\nSome Action"
+   let doc = text |> Fountain.Parse
    doc.Blocks
-   |> should equal [SceneHeading (false, [Literal ("EXT. BRICK'S PATIO - DAY", Range.empty)], Range.empty); Action(false, [HardLineBreak(Range.empty); Literal ("Some Action", Range.empty)], Range.empty)]
+   |> should equal [SceneHeading (false, [Literal ("EXT. BRICK'S PATIO - DAY", new Range(2, 24))], new Range(0, 26 + NewLineLength * 2)); Action(false, [Literal ("Some Action", new Range(26 + NewLineLength * 2, 11))], new Range(26 + NewLineLength * 2, 11))]
 
 [<Test>]
 let ``Character - Indenting`` () =
    // white spaces have to be ignored
    let doc = "\r\n\t   LINDSEY" |> Fountain.Parse
    doc.Blocks
-   |> should equal [Character (false, true, [Literal ("LINDSEY", Range.empty)], Range.empty)]
+   |> should equal [Character (false, true, [Literal ("LINDSEY", new Range(NewLineLength + 4, 7))], new Range(0, 11 + NewLineLength))]
 
 [<Test>]
 let ``Dialogue - Indenting`` () =
    let doc = "\r\n\t  LINDSEY\r\n   \t Hello, friend." |> Fountain.Parse
    doc.Blocks
-   |> should equal [Character (false, true, [Literal ("LINDSEY", Range.empty)], Range.empty); Dialogue ([Literal ("Hello, friend.", Range.empty)], Range.empty)]
+   |> should equal [Character (false, true, [Literal ("LINDSEY", new Range(NewLineLength + 3, 7))], new Range(0, 10 + NewLineLength * 2)); Dialogue ([Literal ("Hello, friend.", new Range(15 + NewLineLength * 2, 14))], new Range(10 + NewLineLength * 2, 19))]
 
 [<Test>]
 let ``Action - indenting`` () =
-   let doc = "\tNatalie looks around at the group, TIM, ROGER, NATE, and VEEK.\n\n\t\tTIM, is smiling broadly." |> Fountain.Parse
+   let text = "\tNatalie looks around at the group, TIM, ROGER, NATE, and VEEK." + NewLine(2) + "\t\tTIM, is smiling broadly."
+   let doc = text |> Fountain.Parse
    doc.Blocks
-   |> should equal  [Action (false, [Literal ("\tNatalie looks around at the group, TIM, ROGER, NATE, and VEEK.", Range.empty); HardLineBreak(Range.empty); HardLineBreak(Range.empty); Literal ("\t\tTIM, is smiling broadly.", Range.empty)], Range.empty)]
+   |> should equal  [Action (false, [Literal ("\tNatalie looks around at the group, TIM, ROGER, NATE, and VEEK.", new Range(0, 63)); HardLineBreak(new Range(63, NewLineLength)); HardLineBreak(new Range(63 + NewLineLength, NewLineLength)); Literal ("\t\tTIM, is smiling broadly.", new Range(63 + 2 * NewLineLength, 26))], new Range(0, text.Length))]
 
 [<Test>]
 let ``Centered - indenting`` () =
    let doc = "\t   \t>The End <" |> Fountain.Parse
    doc.Blocks
-   |> should equal [Centered ([Literal ("The End", Range.empty)], Range.empty)]
+   |> should equal [Centered ([Literal ("The End", new Range(6, 7))], new Range(0, 15))]
 
 [<Test>]
 let ``Transition - indenting`` () =
-   let doc = "  \t  CUT TO:" |> Fountain.Parse
+   let doc = "\r\n  \t  CUT TO:\r\n\r\nSome action" |> Fountain.Parse
    doc.Blocks
-   |> should equal [Transition (false, [Literal ("CUT TO:", Range.empty)], Range.empty)]
+   |> should equal [Transition (false, [Literal ("CUT TO:", new Range(NewLineLength + 5, 7))], new Range(0, 12 + NewLineLength * 3)); Action(false, [Literal("Some action", new Range(12 + NewLineLength * 3, 11))], new Range(12 + NewLineLength * 3, 11))]
 
 [<Test>]
 let ``Transition - forced indenting`` () =
-   let doc = "\t > Burn to White." |> Fountain.Parse
+   let doc = "\r\n\t > Burn to White.\r\n\r\nSome action" |> Fountain.Parse
    doc.Blocks
-   |> should equal [Transition (true, [Literal ("Burn to White.", Range.empty)], Range.empty)]
+   |> should equal [Transition (true, [Literal ("Burn to White.", new Range(NewLineLength + 4, 14))], new Range(0, 18 + NewLineLength * 3)); Action(false, [Literal("Some action", new Range(18 + NewLineLength * 3, 11))], new Range(18 + NewLineLength * 3, 11))]
 
 //===== Title page
 
 [<Test>]
 let ``Title page`` () =
    // This is quite a complex title page with inline and not inline values, emphasized spans.
-   let doc = "Title:\n\t_**BRICK and STEEL**_\n\t_**FULL RETIRED**_\nCredit: Written by\n\nSome action" |> Fountain.Parse
+   let text = "Title:" + NewLine(1) + "\t_**BRICK and STEEL**_" + NewLine(1) + "\t_**FULL RETIRED**_" + NewLine(1) + "Credit: Written by" + NewLine(2) + "Some action"
+   let doc = text |> Fountain.Parse
    doc.Blocks
-   |> should equal [TitlePage ([("Title", [Underline ([Strong ([Literal("BRICK and STEEL", Range.empty)], Range.empty)], Range.empty); HardLineBreak(Range.empty); Underline([ Strong ([Literal("FULL RETIRED", Range.empty)], Range.empty)], Range.empty)]); ("Credit", [Literal("Written by", Range.empty)])], Range.empty); PageBreak; Action(false, [Literal("Some action", Range.empty)], Range.empty)]
+   |> should equal [TitlePage ([("Title", [Underline ([Bold ([Literal("BRICK and STEEL", new Range(3, 15))], new Range(1, 19))], new Range(0, 21)); HardLineBreak(new Range(21, NewLineLength)); Underline([ Bold ([Literal("FULL RETIRED", new Range(24 + NewLineLength, 12))], new Range(22 + NewLineLength, 16))], new Range(21 + NewLineLength, 18))]); ("Credit", [Literal("Written by", new Range(0, 10))])], new Range(0, text.Length - 11)); PageBreak(new Range(text.Length - 11, 0)); Action(false, [Literal("Some action", new Range(text.Length - 11, 11))], new Range(text.Length - 11, 11))]

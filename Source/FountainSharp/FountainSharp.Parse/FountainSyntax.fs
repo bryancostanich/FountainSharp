@@ -23,7 +23,7 @@ type Range(location:int,length:int) =
 
 type FountainSpanElement =
   | Literal of string * Range // some text
-  | Strong of FountainSpans * Range // **some bold text**
+  | Bold of FountainSpans * Range // **some bold text**
   | Italic of FountainSpans * Range // *some italicized text*
   | Underline of FountainSpans * Range// _some underlined text_
   | Note of FountainSpans * Range// [[this is my note]]
@@ -40,7 +40,7 @@ type FountainSpanElement =
 
   member fs.GetLength() : int =
     match fs with
-    | Strong(spans, r)
+    | Bold(spans, r)
     | Italic(spans, r)
     | Underline(spans, r)
     | Note(spans, r) ->
@@ -61,57 +61,37 @@ and FountainSpans = list<FountainSpanElement>
 /// Blocks are headings, action blocks, dialogue blocks, etc. 
 type FountainBlockElement = 
   | Action of bool * FountainSpans * Range
-  | Character of bool * bool * FountainSpans * Range //TODO: maybe just FountainSpanElement? or just string?
+  | Character of bool * bool * FountainSpans * Range
   | Dialogue of FountainSpans * Range
   | Parenthetical of FountainSpans * Range
   | Section of int * FountainSpans * Range
   | Synopses of FountainSpans * Range
-  | Span of FountainSpans * Range //TODO: do we even use this?
-  | Lyric of FountainSpans * Range
+  | Lyrics of FountainSpans * Range
   | SceneHeading of bool * FountainSpans * Range //TODO: Should this really just be a single span? i mean, you shouldn't be able to style/inline a scene heading, right?
-  | PageBreak
+  | PageBreak of Range
   | Transition of bool * FountainSpans * Range
   | Centered of FountainSpans * Range
   | Boneyard of string * Range
   | DualDialogue of FountainBlocks * Range
   | TitlePage of (string * FountainSpans) list * Range
 
-  member private this.GetLength(spans:FountainSpans) : int =
-    spans
-    |> List.map( fun span -> span.GetLength() )
-    |> List.sum
-
   member fb.GetLength() : int =
     match fb with
-    | TitlePage(items, r) ->
-      items
-      |> List.map( fun (key, spans) -> key.Length + fb.GetLength(spans) )
-      |> List.sum
-    | DualDialogue(blocks, r) ->
-      blocks
-      |> List.map( fun b -> b.GetLength() )
-      |> List.sum
-    | Character(forced, main, spans, r) ->
-        fb.GetLength(spans)
+    | TitlePage(items, r) -> r.Length
+    | DualDialogue(blocks, r) -> r.Length
+    | Character(forced, main, spans, r) -> r.Length
     | Boneyard(text, r) -> text.Length
     | Action(forced, spans, r)
     | SceneHeading(forced, spans, r)
-    | Transition(forced, spans, r) ->
-        fb.GetLength(spans)
+    | Transition(forced, spans, r) -> r.Length
     | Dialogue(spans, r)
     | Parenthetical(spans, r)
-    | Span(spans, r)
     | Synopses (spans, r)
-    | Lyric(spans, r)
-    | Centered(spans, r) ->
-        fb.GetLength(spans)
-    | Section(int, spans, r) ->
-        fb.GetLength(spans)
-    | PageBreak -> 3 //TODO: should we actually parse and keep the actual literal that folks use to define a pagebreak?
+    | Lyrics(spans, r)
+    | Centered(spans, r) -> r.Length
+    | Section(int, spans, r) -> r.Length
+    | PageBreak(r) -> r.Length
   
-  member fs.GetRange(start:int):Range =
-    new Range(start, fs.GetLength() + start)
-
 /// A type alias for a list of blocks
 and FountainBlocks = list<FountainBlockElement>
 
