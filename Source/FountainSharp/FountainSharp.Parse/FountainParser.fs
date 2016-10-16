@@ -530,8 +530,9 @@ let (|DualDialogue|_|) (ctx: ParsingContext) (input:string list) =
   match parse (ctx, input, []) with
   | Some([], _) -> None // no (Character, Dialogue) blocks found
   | Some(list, rest) ->
+    let length = list |> List.map(fun block -> block.GetLength()) |> List.sum
     if List.tryFind isPrimary list <> None &&  List.tryFind isSecondary list <> None then
-       Some(list, rest)
+       Some(list, length, rest)
     else
        None
   | None -> None
@@ -639,10 +640,10 @@ let rec parseBlocks (ctx:ParsingContext) (lines: _ list) = seq {
      yield item
      yield! parseBlocks (ctx.ChangeLastParsedBlock(Some(item))) rest
   
-  | DualDialogue ctx (blocks, rest) ->
-     let item = DualDialogue(blocks, Range.empty)
+  | DualDialogue ctx (blocks, length, rest) ->
+     let item = DualDialogue(blocks, new Range(ctx.Position, length))
      yield item
-     yield! parseBlocks (ctx.ChangeLastParsedBlock(Some(item))) rest
+     yield! parseBlocks (ctx.Modify(ctx.Position + length, Some(item))) rest
   
   | Character(forced, primary, result, rest) ->
      let item = Character(forced, primary, parseSpans (ctx.IncrementPosition(result.Offset)) result.Text, new Range(ctx.Position, result.Length))

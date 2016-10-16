@@ -75,41 +75,23 @@ type FountainBlockElement =
   | DualDialogue of FountainBlocks * Range
   | TitlePage of (string * FountainSpans) list * Range
 
-  member private this.GetLength(spans:FountainSpans) : int =
-    spans
-    |> List.map( fun span -> span.GetLength() )
-    |> List.sum
-
   member fb.GetLength() : int =
     match fb with
-    | TitlePage(items, r) ->
-      items
-      |> List.map( fun (key, spans) -> key.Length + fb.GetLength(spans) )
-      |> List.sum
-    | DualDialogue(blocks, r) ->
-      blocks
-      |> List.map( fun b -> b.GetLength() )
-      |> List.sum
-    | Character(forced, main, spans, r) ->
-        fb.GetLength(spans)
+    | TitlePage(items, r) -> r.Length
+    | DualDialogue(blocks, r) -> r.Length
+    | Character(forced, main, spans, r) -> r.Length
     | Boneyard(text, r) -> text.Length
     | Action(forced, spans, r)
     | SceneHeading(forced, spans, r)
-    | Transition(forced, spans, r) ->
-        fb.GetLength(spans)
+    | Transition(forced, spans, r) -> r.Length
     | Dialogue(spans, r)
     | Parenthetical(spans, r)
     | Synopses (spans, r)
     | Lyrics(spans, r)
-    | Centered(spans, r) ->
-        fb.GetLength(spans)
-    | Section(int, spans, r) ->
-        fb.GetLength(spans)
+    | Centered(spans, r) -> r.Length
+    | Section(int, spans, r) -> r.Length
     | PageBreak(r) -> r.Length
   
-  member fs.GetRange(start:int):Range =
-    new Range(start, fs.GetLength() + start)
-
 /// A type alias for a list of blocks
 and FountainBlocks = list<FountainBlockElement>
 
