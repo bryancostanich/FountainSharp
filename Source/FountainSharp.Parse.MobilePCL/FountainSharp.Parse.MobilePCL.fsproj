@@ -62,6 +62,12 @@
       <Link>Fountain.fs</Link>
     </Compile>
     <None Include="ScratchRenamed.fsx" />
-    <BundleResource Include="project.json" />
+    <BundleResource Include="project.json.bak" />
+    <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="FSharp.Core">
+      <HintPath>..\packages\FSharp.Core.4.0.0.1\lib\portable-net45+netcore45\FSharp.Core.dll</HintPath>
+    </Reference>
   </ItemGroup>
 </Project>
