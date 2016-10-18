@@ -40,11 +40,12 @@ type MatchResult<'T> =
 // TODO: Question: what is the Links part supposed to represent? Answer: for some reason he was creating a 
 // dictionary of known links. probably for additional processing. but fountain doesn't have links, so i got 
 // rid of it. but now we need to simplify this ParsingContext, probably.
-type ParsingContext(?newline : string, ?position : int, ?lastParsedBlock : FountainBlockElement option, ?treatDoubleSpaceAsNewLine : bool) =
+type ParsingContext(?newline : string, ?position : int, ?lastParsedBlock : FountainBlockElement option, ?treatDoubleSpaceAsNewLine : bool, ?preserveIndenting : bool) =
     let newLine = defaultArg newline Environment.NewLine
     let lastParsedBlock : FountainBlockElement option = defaultArg lastParsedBlock None
     let position = defaultArg position 0
     let doubleSpaceAsNewLine : bool = defaultArg treatDoubleSpaceAsNewLine false
+    let preserveIndenting : bool = defaultArg preserveIndenting false
 
     member this.NewLine with get() = newLine
 
@@ -52,18 +53,22 @@ type ParsingContext(?newline : string, ?position : int, ?lastParsedBlock : Fount
     member ctx.Position with get() = position
 
     member ctx.TreatDoubleSpaceAsNewLine with get() = doubleSpaceAsNewLine
+    member ctx.PreserveIndenting with get() = preserveIndenting
 
     member ctx.IncrementPosition(length) =
-        new ParsingContext(ctx.NewLine, ctx.Position + length, ctx.LastParsedBlock, ctx.TreatDoubleSpaceAsNewLine)
+        new ParsingContext(ctx.NewLine, ctx.Position + length, ctx.LastParsedBlock, ctx.TreatDoubleSpaceAsNewLine, ctx.PreserveIndenting)
 
     member ctx.ChangeLastParsedBlock(block : FountainBlockElement option) =
-        new ParsingContext(ctx.NewLine, ctx.Position, block, ctx.TreatDoubleSpaceAsNewLine)
+        new ParsingContext(ctx.NewLine, ctx.Position, block, ctx.TreatDoubleSpaceAsNewLine, ctx.PreserveIndenting)
 
     member ctx.Modify(position : int, block : FountainBlockElement option) =
-        new ParsingContext(ctx.NewLine, position, block, ctx.TreatDoubleSpaceAsNewLine)
+        new ParsingContext(ctx.NewLine, position, block, ctx.TreatDoubleSpaceAsNewLine, ctx.PreserveIndenting)
 
     member ctx.WithDoubleSpaceAsNewLine() =
-        new ParsingContext(ctx.NewLine, ctx.Position, ctx.LastParsedBlock, true)
+        new ParsingContext(ctx.NewLine, ctx.Position, ctx.LastParsedBlock, true, ctx.PreserveIndenting)
+    
+    member ctx.WithPreserveIndenting() =
+        new ParsingContext(ctx.NewLine, ctx.Position, ctx.LastParsedBlock, ctx.TreatDoubleSpaceAsNewLine, true)
 
 //====== Parser
 // Part 1: Inline Formatting
@@ -160,12 +165,11 @@ let rec parseChars (ctx:ParsingContext) acc numOfEscapedChars input = seq {
     if List.isEmpty acc then [] 
     else
         let text = String(List.rev acc |> Array.ofList)
+        let finalText = if ctx.PreserveIndenting then text else text.Trim()
         // add the number of escaped characters to the Range!
-        [Literal(text, new Range(ctx.Position, text.Length + numOfEscapedChars))] )
-
+        [Literal(finalText, new Range(ctx.Position + text.IndexOf(finalText), finalText.Length + numOfEscapedChars))] )
   
   let patternForcedLineBreak = "  " + NewLine(1) // new line pattern
-
 
   match input with 
   | List.StartsWithString patternForcedLineBreak rest when ctx.TreatDoubleSpaceAsNewLine ->
@@ -711,7 +715,7 @@ let rec parseBlocks (ctx:ParsingContext) (lines: _ list) = seq {
 
   | Action(forced, body, length, rest) ->
     // body: as a single string. this can be parsed for spans much better
-    let spans = parseSpans ctx body
+    let spans = parseSpans (ctx.WithPreserveIndenting()) body
     let item = Action(forced, spans, new Range(ctx.Position, length))
     yield item
     yield! parseBlocks (ctx.Modify(ctx.Position + length, Some(item))) rest // go on to parse the rest
