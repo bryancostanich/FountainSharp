@@ -40,25 +40,25 @@
   <Import Project="$(MSBuildExtensionsPath32)\..\Microsoft SDKs\F#\4.0\Framework\v4.0\Microsoft.Portable.FSharp.Targets" />
   <ItemGroup>
     <Compile Include="AssemblyInfo.fs" />
-    <Compile Include="..\..\FountainSharp.Parse\Collections.fs">
+    <Compile Include="..\FountainSharp.Parse\Collections.fs">
       <Link>Collections.fs</Link>
     </Compile>
-    <Compile Include="..\..\FountainSharp.Parse\StringParsing.fs">
+    <Compile Include="..\FountainSharp.Parse\StringParsing.fs">
       <Link>StringParsing.fs</Link>
     </Compile>
-    <Compile Include="..\..\FountainSharp.Parse\FountainSyntax.fs">
+    <Compile Include="..\FountainSharp.Parse\FountainSyntax.fs">
       <Link>FountainSyntax.fs</Link>
     </Compile>
-    <Compile Include="..\..\FountainSharp.Parse\FountainHelper.fs">
+    <Compile Include="..\FountainSharp.Parse\FountainHelper.fs">
       <Link>FountainHelper.fs</Link>
     </Compile>
-    <Compile Include="..\..\FountainSharp.Parse\FountainParser.fs">
+    <Compile Include="..\FountainSharp.Parse\FountainParser.fs">
       <Link>FountainParser.fs</Link>
     </Compile>
-    <Compile Include="..\..\FountainSharp.Parse\HtmlFormatting.fs">
+    <Compile Include="..\FountainSharp.Parse\HtmlFormatting.fs">
       <Link>HtmlFormatting.fs</Link>
     </Compile>
-    <Compile Include="..\..\FountainSharp.Parse\Fountain.fs">
+    <Compile Include="..\FountainSharp.Parse\Fountain.fs">
       <Link>Fountain.fs</Link>
     </Compile>
     <None Include="ScratchRenamed.fsx" />

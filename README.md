@@ -9,7 +9,6 @@ An F# based [Fountain Markdown](http://fountain.io) processor that's based on th
 
 This project is a work in progress. For a detailed list of outstanding tasks, see the [TODO](Source/FountainSharp/FountainSharp.Parse/ToDo.md), however, in general the following major items are outstanding:
 
- * **Add Range Support** - Document elements should have an associated `Range` so that the document representation can be more effectively used in an editor.
  * **Custom HTML CSS** - HTML transformation is largely done, but custom CSS templates should be allowed.
  * **Usage Documentation** - The library should be documented from a consumer perspective.
 
