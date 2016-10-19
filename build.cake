@@ -59,7 +59,7 @@ Task("Restore")
 });
 
 Task("Build")
-//    .IsDependentOn("Restore")
+    .IsDependentOn("Restore")
     .Does(() =>
 {
     if(IsRunningOnWindows())
