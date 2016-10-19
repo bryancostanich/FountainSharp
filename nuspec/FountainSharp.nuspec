@@ -14,28 +14,25 @@
     <copyright>Copyright - Bryan Costanich © 2015-2016</copyright>
     <tags>fountain screenwriters</tags>
     <dependencies>
-      <group targetFramework="netstandard1.6">
+      <!--<group targetFramework="netstandard1.6">
         <dependency id="FSharp.Core" version="4.0.1.7-alpha" />
         <dependency id="NetStandard.Library" version="1.6.0" />
       </group>
       <group targetFramework="netstandard1.1">
         <dependency id="FSharp.Core" version="4.0.1.7-alpha" />
         <dependency id="NetStandard.Library" version="1.6.0" />
-      </group>
-      <!--
-      <group targetFramework="portable-net45+win+MonoTouch10+MonoAndroid10+xamarinmac20+xamarintvos10+xamarinwatchos10+xamarinios10">
+      </group>-->
+      <group targetFramework="portable-net45+win8">
         <dependency id="FSharp.Core" version="4.0.0.1 " />
       </group>
-      -->
     </dependencies>
   </metadata>
   <files>
     <!-- .NET Standard 1.6 -->
-    <file src="../Source/FountainSharp.Parse.NetStandard/bin/Release/netstandard1.6/FountainSharp.Parse.NetStandard.dll" target="lib/netstandard1.6" />
+    <!--<file src="../Source/FountainSharp.Parse.NetStandard/bin/Release/netstandard1.6/FountainSharp.Parse.NetStandard.dll" target="lib/netstandard1.6" />-->
     <!-- .NET Standard 1.1 -->
-    <file src="../Source/FountainSharp.Parse.MobilePCL/bin/Release/FountainSharp.Parse.MobilePCL.dll" target="lib/netstandard1.1" />
-    <!-- PCL
-    <file src="../Source/FountainSharp.Parse.MobilePCL/bin/Release/FountainSharp.Parse.MobilePCL.dll" target="lib/portable-net45+win+MonoTouch10+MonoAndroid10+xamarinmac20+xamarintvos10+xamarinwatchos10+xamarinios10" />
-    -->
+    <!--<file src="../Source/FountainSharp.Parse.MobilePCL/bin/Release/FountainSharp.Parse.MobilePCL.dll" target="lib/netstandard1.1" />-->
+    <!-- PCL -->
+    <file src="../Source/FountainSharp.Parse.MobilePCL/bin/Release/FountainSharp.Parse.MobilePCL.dll" target="lib/portable-net45+win8" />
   </files>
 </package>
