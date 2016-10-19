@@ -1,0 +1,11 @@
+{
+	"nuget": {
+		"NuGetConfig": "./.nuget/NuGet.config",
+		"FeedUrl": "https://www.nuget.org",
+		"FeedAPIKey": "",
+		"ArtifactsPath": "./artifacts",
+		"NuspecPath": "./nuspec",
+		"UpdateVersion": true,
+		"VersionDependencyForLibrary": "exact"
+	}
+}
