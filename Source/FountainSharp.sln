@@ -11,9 +11,7 @@ Project("{f2a71f9b-5d33-465a-a702-920d77279786}") = "FountainSharp.Parse.Tests",
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FountainSharp.Editor", "TestProjects\FountainSharp.Editor\FountainSharp.Editor.csproj", "{0C9A4857-67C8-4D9C-A7D0-80E83F0CDDAE}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "PortableProjects", "PortableProjects", "{2758EE61-CE50-41DB-AEF0-C006E54FFD58}"
-EndProject
-Project("{f2a71f9b-5d33-465a-a702-920d77279786}") = "FountainSharp.Parse.MobilePCL", "PortableProjects\FountainSharp.Parse.MobilePCL\FountainSharp.Parse.MobilePCL.fsproj", "{EF7FFC79-964B-41EC-A90F-BBDE329D2DFD}"
+Project("{f2a71f9b-5d33-465a-a702-920d77279786}") = "FountainSharp.Parse.MobilePCL", "FountainSharp.Parse.MobilePCL\FountainSharp.Parse.MobilePCL.fsproj", "{EF7FFC79-964B-41EC-A90F-BBDE329D2DFD}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".nuget", ".nuget", "{232C3296-28F7-4490-96E9-1655FA2E9043}"
 	ProjectSection(SolutionItems) = preProject
@@ -39,7 +37,6 @@ Global
 		{0C9A4857-67C8-4D9C-A7D0-80E83F0CDDAE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{0C9A4857-67C8-4D9C-A7D0-80E83F0CDDAE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0C9A4857-67C8-4D9C-A7D0-80E83F0CDDAE}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{0C9A4857-67C8-4D9C-A7D0-80E83F0CDDAE}.Release|Any CPU.Build.0 = Release|Any CPU
 		{EF7FFC79-964B-41EC-A90F-BBDE329D2DFD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{EF7FFC79-964B-41EC-A90F-BBDE329D2DFD}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{EF7FFC79-964B-41EC-A90F-BBDE329D2DFD}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -51,6 +48,5 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{53A87A1F-1756-43C3-BF8A-BB1696439DC7} = {C794F080-C598-47E4-A1BF-FD8A051F5EB8}
 		{0C9A4857-67C8-4D9C-A7D0-80E83F0CDDAE} = {C794F080-C598-47E4-A1BF-FD8A051F5EB8}
-		{EF7FFC79-964B-41EC-A90F-BBDE329D2DFD} = {2758EE61-CE50-41DB-AEF0-C006E54FFD58}
 	EndGlobalSection
 EndGlobal

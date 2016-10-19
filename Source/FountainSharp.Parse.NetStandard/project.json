@@ -8,6 +8,7 @@
       "includeFiles": [
         "../FountainSharp.Parse/Collections.fs",
         "../FountainSharp.Parse/StringParsing.fs",
+        "../FountainSharp.Parse/FountainHelper.fs",
         "../FountainSharp.Parse/FountainSyntax.fs",
         "../FountainSharp.Parse/FountainParser.fs",
         "../FountainSharp.Parse/HtmlFormatting.fs",
