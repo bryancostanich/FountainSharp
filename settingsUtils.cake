@@ -60,13 +60,16 @@ public class NuGetSettings
 	public VersionDependencyTypes VersionDependencyForLibrary {get;set;}
 
 	public string NuSpecFileSpec {
-		get {
+		get
+	 	{
 			return string.Format("{0}/*.nuspec", NuSpecPath);
 		}
 	}
 
-	public string NuGetPackagesSpec {
-		get {
+	public string NuGetPackagesSpec
+	{
+		get
+		{
 			return string.Format("{0}/*.nupkg", ArtifactsPath);
 		}
 	}
