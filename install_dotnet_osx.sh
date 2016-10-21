@@ -9,6 +9,11 @@ SCRIPT_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 TOOLS_DIR=$SCRIPT_DIR/tools
 NETCORE_SDK_INSTALLER_PKG=$TOOLS_DIR/dotnet-dev.pkg
 
+# Make sure the tools folder exist.
+if [ ! -d "$TOOLS_DIR" ]; then
+  mkdir "$TOOLS_DIR"
+fi
+
 # Download .NET Core SDK if it does not exist.
 if [ ! -f "$NETCORE_SDK_INSTALLER_PKG" ]; then
     echo "Downloading .NET Core SDK..."
