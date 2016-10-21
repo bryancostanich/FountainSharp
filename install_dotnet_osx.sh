@@ -8,7 +8,7 @@
 SCRIPT_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 TOOLS_DIR=$SCRIPT_DIR/tools
 NETCORE_SDK_INSTALLER_PKG=$TOOLS_DIR/dotnet-dev.pkg
-NETCORE_SDK_CLI=/usr/local/share/dotnet/dotnet-dev
+NETCORE_SDK_CLI=/usr/local/share/dotnet/dotnet
 
 # Make sure the tools folder exist.
 if [ ! -d "$TOOLS_DIR" ]; then
