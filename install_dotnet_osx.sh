@@ -29,5 +29,8 @@ if [ ! -x "$(command -v dotnet)" ]; then
   sudo installer -verboseR -pkg "$NETCORE_SDK_INSTALLER_PKG" -target /
 fi
 
+echo "Checking path..."
+echo $PATH
+
 echo "Checking .NET Core CLI..."
-dotnet
+/usr/local/share/dotnet/dotnet
