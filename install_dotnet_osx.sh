@@ -14,8 +14,9 @@ if [ ! -d "$TOOLS_DIR" ]; then
   mkdir "$TOOLS_DIR"
 fi
 
-# Download .NET Core SDK if it does not exist.
-if [ ! -f "$NETCORE_SDK_INSTALLER_PKG" ]; then
+if [ ! -x "$(command -v dotnet)" ]; then
+  # Download .NET Core SDK if it does not exist.
+  if [ ! -f "$NETCORE_SDK_INSTALLER_PKG" ]; then
     echo "Downloading .NET Core SDK..."
     curl -Lsfo "$NETCORE_SDK_INSTALLER_PKG" https://dotnetcli.blob.core.windows.net/dotnet/Sdk/rel-1.0.0/dotnet-dev-osx-x64.latest.pkg
     # https://go.microsoft.com/fwlink/?LinkID=831679
@@ -23,6 +24,10 @@ if [ ! -f "$NETCORE_SDK_INSTALLER_PKG" ]; then
         echo "An error occured while downloading .NET Core SDK."
         exit 1
     fi
+  fi
+  echo "Installing .NET Core SDK..."
+  sudo installer -verboseR -pkg "$NETCORE_SDK_INSTALLER_PKG" -target /
 fi
 
-sudo installer -verboseR -pkg "$NETCORE_SDK_INSTALLER_PKG" -target /
+echo "Checking .NET Core CLI..."
+dotnet
