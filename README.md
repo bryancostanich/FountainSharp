@@ -129,3 +129,7 @@ FountainSharp is based on the [FSharp.Formatting library](https://github.com/tpe
 **Contributors**
 
 Gabor Nemeth
+
+**Thanks**
+
+Special thanks to [Frank Krueger](https://twitter.com/praeclarum) for tirelessly answering my F# questions.
