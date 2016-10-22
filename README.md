@@ -12,21 +12,21 @@ FountainSharp fully supports the entirety of the Fountain syntax and includes un
 
 ## Usage
 
-FountainSharp can operate on an entire script, or just a portion and expects a string as an input and will output an in-memory representation as a `MarkdownDocument`. A convenience. that takes a Fountain-formatted string and outputs an HTML string is also provided.
+FountainSharp can operate on an entire script, or just a portion and expects a string as an input and will output an in-memory representation as a `FountainDocument`. A convenience. that takes a Fountain-formatted string and outputs an HTML string is also provided.
 
 ### Parsing a Script
 
 To parse an entire script, simply call `Fountain.Parse` and pass a string:
 
 ```CSharp
-var markdown = FountainSharp.Parse.Fountain.Parse(script);
+var fountainDoc = FountainSharp.Parse.Fountain.Parse(script);
 
 ```
 
 You can also just parse a snippet, which can be useful if you're writing an editor and only want to process changes:
 
 ```CSharp
-var markdown = FountainSharp.Parse.Fountain.Parse(script, (TODO));
+var fountainDoc = FountainSharp.Parse.Fountain.Parse(script, (TODO));
 
 ```
 
@@ -63,6 +63,35 @@ protected async void UpdateHtml ()
 }
 ```
 
+### Understanding a FountainDocument
+
+A `FountainDocument` is an in-memory representation of a parsed fountain document and is represented as a `List<FountainBlockElement>`.  A block represents a (possibly) multi-line element of a fountain document. Blocks include:
+
+  * Action
+  * Character
+  * Dialogue
+  * Parenthetical
+  * Section
+  * Synopses
+  * Lyrics
+  * SceneHeading
+  * PageBreak
+  * Transition
+  * Centered
+  * Boneyard
+  * DualDialogue
+  * TitlePage
+  
+Most blocks contain a `List<FountainSpanElement>` which represent inline formatting inside a block. This can be literal (with text), various formattings such as:
+
+  * Literal
+  * Bold
+  * Italic
+  * Underline
+  * Note
+  * HardLineBreak
+  
+Note that many `FountainSpanElement` objects can actually contain span elements.  
 
 ## TODO
 
