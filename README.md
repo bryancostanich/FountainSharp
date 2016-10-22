@@ -14,13 +14,23 @@ FountainSharp fully supports the entirety of the Fountain syntax and includes un
 
 FountainSharp can operate on an entire script, or just a portion and expects a string as an input and will output an in-memory representation as a `MarkdownDocument`. A convenience. that takes a Fountain-formatted string and outputs an HTML string is also provided.
 
-### To parse an entire script:
+### Parsing a Script
+
+To parse an entire script, simply call `Fountain.Parse` and pass a string:
 
 ```CSharp
 var markdown = FountainSharp.Parse.Fountain.Parse(script);
 
 ```
 
+You can also just parse a snippet, which can be useful if you're writing an editor and only want to process changes:
+
+```CSharp
+var markdown = FountainSharp.Parse.Fountain.Parse(script, (TODO));
+
+```
+
+You can also transform text straight to HTML. For example, the following code from the `TestProjects/Fountainsharp.Editor` project reads a file in and then updates a WebView with the html output:
 
 ```CSharp
 
@@ -59,7 +69,6 @@ protected async void UpdateHtml ()
 This project is a work in progress. For a detailed list of outstanding tasks, see the [TODO](Source/FountainSharp/FountainSharp.Parse/ToDo.md), however, in general the following major items are outstanding:
 
  * **Custom HTML CSS** - HTML transformation is largely done, but custom CSS templates should be allowed.
- * **Usage Documentation** - The library should be documented from a consumer perspective.
  
 
 ## Contributing
