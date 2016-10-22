@@ -2,9 +2,9 @@
 
 [![Build Status](https://www.bitrise.io/app/45c89db89673e862.svg?token=HAU9M6A-HNZGe6rCJ4lnIw)](https://www.bitrise.io/app/45c89db89673e862)
 
-An F# based [Fountain Markdown](http://fountain.io) processor that's based on the [FSharp.Formatting library](https://github.com/tpetricek/FSharp.Formatting) by Tomas Petricek.
+An F# based [Fountain Markdown](http://fountain.io) processor for use via .NET/Xamarin projects. FoutainSharp parses Fountain-formatted scripts and loads them into model that can be transformed or used for WYSIWYG editing. 
 
-FoutainSharp parses Fountain-formatted scripts and loads them into model that can be transformed or used for WYSIWYG editing. It ships with a sample transformation engine that transforms Fountain markdown into HTML:
+It ships with a sample transformation engine that transforms Fountain markdown into HTML:
 
 ![Image of a parsed script formatted in HTML](ParsedOutput.png)
 
@@ -118,6 +118,8 @@ FountainSharp is made available via the [MIT License](License.md).
 
 
 ## People
+
+FountainSharp is based on the [FSharp.Formatting library](https://github.com/tpetricek/FSharp.Formatting) by Tomas Petricek.
 
 **Author**
 
