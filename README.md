@@ -10,6 +10,14 @@ FoutainSharp parses Fountain-formatted scripts and loads them into model that ca
 
 FountainSharp fully supports the entirety of the Fountain syntax and includes unit tests for all elements.
 
+## Consuming FountainSharp
+
+FountainSharp is published as a NuGet package and can be added from the **Package Manager Console**:
+
+```
+Install-Package FountainSharp -Pre
+```
+
 ## Usage
 
 FountainSharp can operate on an entire script, or just a portion and expects a string as an input and will output an in-memory representation as a `FountainDocument`. A convenience method that takes a Fountain-formatted string and outputs an HTML string is also provided.
@@ -104,7 +112,12 @@ This project is a work in progress. For a detailed list of outstanding tasks, se
 
 For contributing, please see the [Source Documentation](Source/FountainSharp.Parse/Documentation.md). I <3 well documented pull requests. :)
 
-# People
+## License
+
+FountainSharp is made available via the [MIT License](License.md). 
+
+
+## People
 
 **Author**
 
