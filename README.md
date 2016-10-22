@@ -12,7 +12,7 @@ FountainSharp fully supports the entirety of the Fountain syntax and includes un
 
 ## Usage
 
-FountainSharp can operate on an entire script, or just a portion and expects a string as an input and will output an in-memory representation as a `FountainDocument`. A convenience. that takes a Fountain-formatted string and outputs an HTML string is also provided.
+FountainSharp can operate on an entire script, or just a portion and expects a string as an input and will output an in-memory representation as a `FountainDocument`. A convenience method that takes a Fountain-formatted string and outputs an HTML string is also provided.
 
 ### Parsing a Script
 
@@ -102,7 +102,7 @@ This project is a work in progress. For a detailed list of outstanding tasks, se
 
 ## Contributing
 
-For contributing, please see the [Source Documentation](Source/FountainSharp/FountainSharp.Parse/Documentation.md). I <3 well documented pull requests. :)
+For contributing, please see the [Source Documentation](Source/FountainSharp.Parse/Documentation.md). I <3 well documented pull requests. :)
 
 # People
 
