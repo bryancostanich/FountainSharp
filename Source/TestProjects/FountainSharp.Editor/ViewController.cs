@@ -37,8 +37,6 @@ namespace FountainSharp.Editor
 			this.MainTextView.TextDidChange += (object sender, EventArgs e) => {
 				this.UpdateHtml();
 			};
-
-
 		}
 
 		protected async void UpdateHtml ()
