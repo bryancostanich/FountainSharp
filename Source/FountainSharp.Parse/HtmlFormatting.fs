@@ -227,7 +227,7 @@ let rec formatBlockElement (ctx:FormattingContext) block =
       ctx.Writer.Write("</div>")
   | Dialogue (spans, range)
   | Centered (spans, range) ->
-      ctx.Writer.Write("""<div style="text-align:center;">""")
+      ctx.Writer.Write("""<div style="text-align:center;word-wrap:break-word;">""")
       for span in spans do 
         formatSpan ctx span
       ctx.Writer.Write("</div>")
@@ -237,7 +237,9 @@ let rec formatBlockElement (ctx:FormattingContext) block =
         formatSpan ctx span
       ctx.Writer.Write(")</div>")
   | Action (forced, spans, range) ->
+      ctx.Writer.Write("""<div style="word-wrap:break-word;">(""")
       formatSpans ctx spans
+      ctx.Writer.Write(")</div>")
   ctx.LineBreak()
 
 /// Write a list of MarkdownParagraph values to a TextWriter
