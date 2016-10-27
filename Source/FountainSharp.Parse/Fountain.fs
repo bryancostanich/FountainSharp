@@ -27,10 +27,7 @@ type Fountain =
   static member Parse(text, newline) =
     //System.Diagnostics.Debug.WriteLine("Parsing: " + text)
     use reader = new StringReader(text)
-    let lines = 
-      [ let line = ref ""
-        while (line := reader.ReadLine(); line.Value <> null) do
-          yield line.Value ]
+    let lines = text.Split([|Environment.NewLine|], StringSplitOptions.None) |> List.ofArray
     let ctx = new ParsingContext(newline)
     let blocks = 
       lines 

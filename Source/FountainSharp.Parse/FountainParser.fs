@@ -591,9 +591,9 @@ let (|Action|_|) input =
           if sb.Length = 0 then
             None
           elif (hd.StartsWith "!") then // forced Action, trim off the '!'
-            Some(true, sb.ToString().Substring(1).TrimEnd(), sb.Length, rest)
+            Some(true, sb.ToString().Substring(1), sb.Length, rest)
           else
-            Some(false, sb.ToString().TrimEnd(), sb.Length, rest)
+            Some(false, sb.ToString(), sb.Length, rest)
       //| _ -> None
 
 //==== /Action

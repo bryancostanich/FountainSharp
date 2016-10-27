@@ -139,6 +139,20 @@ let ``Action - With line breaks and no heading`` () =
    doc.Blocks
    |> should equal  [Action (false, [Literal ("Natalie looks around at the group, TIM, ROGER, NATE, and VEEK.", new Range(0, 62)); HardLineBreak(new Range(62, NewLineLength)); HardLineBreak(new Range(62 + NewLineLength, NewLineLength)); Literal ("TIM, is smiling broadly.", new Range(62 + 2 * NewLineLength, 24))], new Range(0, text.Length))]
 
+[<Test>]
+let ``Action - Trailing whitespace`` () =
+    let text = "Some action. "
+    let doc = text |> Fountain.Parse
+    doc.Blocks
+    |> should equal [Action (false, [Literal(text, new Range(0, text.Length))], new Range(0, text.Length))]
+
+[<Test>]
+let ``Action - Trailing newline`` () =
+    let text = "Some action. " + NewLine(2)
+    let doc = text |> Fountain.Parse
+    doc.Blocks
+    |> should equal [Action (false, [Literal("Some action. ", new Range(0, 13)); HardLineBreak(new Range(13, NewLineLength)); HardLineBreak(new Range(13 + NewLineLength, NewLineLength))], new Range(0, 13 + NewLineLength * 2))]
+
 //===== Synopses
 
 [<Test>]
