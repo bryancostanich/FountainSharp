@@ -10,30 +10,39 @@ open FountainSharp.Parse.Patterns.Lines
 open FountainSharp.Parse
 open FountainSharp.Parse.Parser
 open FountainSharp.Fountain.Html
+open FountainSharp.Parse.Helper
 
 /// Representation of a Fountain document - the representation of Blocks
 /// uses an F# discriminated union type and so is best used from F#.
 // TODO: this doesn't really need a full blown type for one member (i removed the Links that was part of the markdown doc)
 // maybe do a dictionary of character names though. that could be useful.
-type FountainDocument(blocks) =
+type FountainDocument(blocks, ?text) =
   /// Returns a list of blocks in the document
   member x.Blocks : FountainBlocks = blocks
+  member doc.Text : string = defaultArg text null
 
 /// Static class that provides methods for formatting 
 /// and transforming Markdown documents.
 type Fountain =
   /// Parse the specified text into a MarkdownDocument. Line breaks in the
   /// inline HTML (etc.) will be stored using the specified string.
-  static member Parse(text, newline) =
+  static member Parse(text : string, newline) =
     //System.Diagnostics.Debug.WriteLine("Parsing: " + text)
-    use reader = new StringReader(text)
+    //let text = if text.EndsWith(NewLine(2)) then text.Remove(text.Length - NewLineLength) else text
     let lines = text.Split([|Environment.NewLine|], StringSplitOptions.None) |> List.ofArray
+
+    //use reader = new StringReader(text)
+//    let lines = 
+//      [ let line = ref ""
+//        while (line := reader.ReadLine(); line.Value <> null) do
+//          yield line.Value ]
+
     let ctx = new ParsingContext(newline)
     let blocks = 
       lines 
       |> parseBlocks ctx 
       |> List.ofSeq
-    FountainDocument(blocks)
+    FountainDocument(blocks, text)
 
   /// Parse the specified text into a MarkdownDocument.
   static member Parse(text) =
@@ -41,13 +50,13 @@ type Fountain =
 
   // Parses a single line. Used for optimization when working with a large doc from an editor.
   static member ParseLine(text:string, newline) =
-    let ctx = new ParsingContext()
+    let ctx = new ParsingContext(newline)
     let line = text::[]
     let blocks = 
       line 
       |> parseBlocks ctx 
       |> List.ofSeq
-    FountainDocument(blocks)
+    FountainDocument(blocks, text)
 
   /// Transform Fountain document into HTML format. The result
   /// will be written to the provided TextWriter.

@@ -138,6 +138,8 @@ let withInner ctx f =
 /// Write a FountainBlockElement value to a TextWriter
 let rec formatBlockElement (ctx:FormattingContext) block =
   match block with
+  | Empty(_) ->
+      ctx.Writer.Write("<br/>")
   | TitlePage(keyValuePairs, _) ->
       for (key, spans) in keyValuePairs do
           match key with
