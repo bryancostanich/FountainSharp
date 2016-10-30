@@ -20,13 +20,16 @@ module String =
     | _ -> true
 
   // convert a list of strings to a single string with the specified separator
-  let asSingleString (input:string list, sep:string) =
+  let asSingleString (input:string list, sep:string, addTrailingNewLine : bool) =
     // TODO: use StringBuilder!
     if (input.Length = 0) then
         ""
     else
         let s = input |> List.fold (fun r s -> r + s + sep) ""
-        s.Substring(0, s.Length - sep.Length)
+        if addTrailingNewLine then
+            s
+        else
+            s.Substring(0, s.Length - sep.Length)
 
   let asStringList (input:string, sep:string) =
     let result = input.Split([|sep|], StringSplitOptions.None)

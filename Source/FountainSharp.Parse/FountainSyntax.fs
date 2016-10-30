@@ -74,7 +74,6 @@ type FountainBlockElement =
   | Boneyard of string * Range
   | DualDialogue of FountainBlocks * Range
   | TitlePage of (string * FountainSpans) list * Range
-  | Empty of Range
 
   member fb.GetLength() : int =
     match fb with
@@ -91,8 +90,7 @@ type FountainBlockElement =
     | TitlePage(_, r)
     | DualDialogue(_, r)
     | Centered(_, r) -> r.Length
-    | PageBreak(r)
-    | Empty(r) -> r.Length
+    | PageBreak(r) -> r.Length
 
 /// A type alias for a list of blocks
 and FountainBlocks = list<FountainBlockElement>

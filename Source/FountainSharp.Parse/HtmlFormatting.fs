@@ -138,8 +138,6 @@ let withInner ctx f =
 /// Write a FountainBlockElement value to a TextWriter
 let rec formatBlockElement (ctx:FormattingContext) block =
   match block with
-  | Empty(_) ->
-      ctx.Writer.Write("<br/>")
   | TitlePage(keyValuePairs, _) ->
       for (key, spans) in keyValuePairs do
           match key with
@@ -239,9 +237,9 @@ let rec formatBlockElement (ctx:FormattingContext) block =
         formatSpan ctx span
       ctx.Writer.Write(")</div>")
   | Action (forced, spans, range) ->
-      ctx.Writer.Write("""<div style="word-wrap:break-word;">(""")
+      ctx.Writer.Write("""<div style="word-wrap:break-word;">""")
       formatSpans ctx spans
-      ctx.Writer.Write(")</div>")
+      ctx.Writer.Write("</div>")
   ctx.LineBreak()
 
 /// Write a list of MarkdownParagraph values to a TextWriter
