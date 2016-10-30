@@ -50,10 +50,10 @@ Task("Restore")
 {
     Information("Restoring {0}...", solution);
     // Nuget v3 restore does not work for project.json type projects on Unix-like systems
-    
+
     // Restore for projects using packages.config
     NuGetRestore(solution, new NuGetRestoreSettings { Verbosity = NuGetVerbosity.Detailed });
-   
+
     // Restore for projects using project.json
     DotNetCoreRestore(solutionDir);
 });
@@ -84,9 +84,13 @@ Task("Run-Unit-Tests")
     .IsDependentOn("Build")
     .Does(() =>
 {
-    NUnit3("./src/**/bin/" + configuration + "/*.Tests.dll", new NUnit3Settings {
+	  var fileExtensions = new[] { "exe", "dll" };
+		foreach (var fileExtension in fileExtensions)
+		{
+    	NUnit3(solutionDir + "/**/bin/" + configuration + "/*.Tests." + fileExtension, new NUnit3Settings {
         NoResults = true
         });
+		}
 });
 
 Task("Package")
@@ -170,6 +174,7 @@ Task("BuildNewVersion")
 	.Description("Increments and Builds a new version")
 	.IsDependentOn("IncrementVersion")
 	.IsDependentOn("Build")
+	.IsDependentOn("Run-Unit-Tests")
 	.Does(() =>
 {
 });
