@@ -408,7 +408,11 @@ let (|Centered|_|) (input:string list) =
     let text = head.Trim()
     if text.StartsWith(">") && text.EndsWith("<") then
         let textResult = text.Substring(1, text.Length - 2).Trim()
-        let result = { Text = textResult; Length = head.Length; Offset = head.IndexOf(textResult) }
+        let result = { 
+            Text = textResult; 
+            Length = if rest.IsEmpty then head.Length else head.Length + NewLineLength; 
+            Offset = head.IndexOf(textResult) 
+        }
         Some(result, rest) // strip '>' and '<'
     else
         None
@@ -440,25 +444,38 @@ let (|Parenthetical|_|) (ctx:ParsingContext) (input:string list) =
 
 // Transition
 let (|Transition|_|) (ctx:ParsingContext) (input:string list) =
-    match input with
-    // Has to be preceded by and followed by an empty line
-    | EmptyLine :: head :: EmptyLine :: rest ->
-    let blockContent = head.Trim() // Transition ignores indenting
+  let parseTransition (head:string) rest offset =
+    let blockContent = head.TrimStart() // Transition ignores indenting
     if blockContent.StartsWith "!" then // guard against forced action
         None
     elif blockContent.StartsWith ">" then // forced transition
-        let text = blockContent.Substring(1).Trim()
-        Some(true, { Text = text; Length = head.Length + NewLineLength * 3; Offset = head.IndexOf(text) + NewLineLength }, rest)
+        let text = blockContent.Substring(1).TrimStart()
+        Some(true, { Text = text; Length = head.Length + NewLineLength * 2 + offset; Offset = head.IndexOf(text) + NewLineLength }, rest)
     elif blockContent.EndsWith "TO:" then // non-forced transition
         // check for all uppercase
         if blockContent.ToCharArray() |> Seq.exists (fun c -> Char.IsLower(c)) then
           None
         else
-          let text = blockContent.Trim()
-          Some(false, { Text = text; Length = head.Length + NewLineLength * 3; Offset = head.IndexOf(text) + NewLineLength },  rest)
+          let text = blockContent.TrimStart()
+          Some(false, { Text = text; Length = head.Length + NewLineLength * 2 + offset; Offset = head.IndexOf(text) + offset },  rest)
     else
         None
-    | _ -> None
+
+  // Has to be preceded by and followed by an empty line
+  match ctx.LastParsedBlock with
+  | BlockWithTrailingEmptyLine x ->
+      match input with
+      | first :: EmptyLine :: rest ->
+        parseTransition first rest 0
+      | _ -> None
+  | _ ->
+      match input with
+      | [] -> None
+      | EmptyLine :: first :: EmptyLine :: rest ->
+        parseTransition first rest NewLineLength
+      | _ -> None
+
+
 
 //==== Dialogue
 

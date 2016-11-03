@@ -28,14 +28,7 @@ type Fountain =
   /// inline HTML (etc.) will be stored using the specified string.
   static member Parse(text : string, newline) =
     //System.Diagnostics.Debug.WriteLine("Parsing: " + text)
-    //let text = if text.EndsWith(NewLine(2)) then text.Remove(text.Length - NewLineLength) else text
     let lines = text.Split([|Environment.NewLine|], StringSplitOptions.None) |> List.ofArray
-
-    //use reader = new StringReader(text)
-//    let lines = 
-//      [ let line = ref ""
-//        while (line := reader.ReadLine(); line.Value <> null) do
-//          yield line.Value ]
 
     let ctx = new ParsingContext(newline)
     let blocks = 

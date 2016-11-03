@@ -1,18 +1,11 @@
-﻿//TODO: these aren't right.
-#if INTERACTIVE
-#r "../../bin/FountainSharp.Parse.dll"
-#r "../../packages/NUnit/lib/nunit.framework.dll"
-#else
-module FountainSharp.Tests.Parsing
-#endif
+﻿module FountainSharp.Parse.Tests.Unsorted
 
+open System
 open FsUnit
 open NUnit.Framework
 open FountainSharp.Parse
 open FountainSharp.Parse.Helper
-open System
-
-let properNewLines (text: string) = text.Replace("\r\n", System.Environment.NewLine)
+open FountainSharp.Parse.Tests.Helper
 
 //===== Block Elements ==============================================================
 
@@ -364,42 +357,6 @@ let ``Lyrics - Line break at the end`` () =
    doc.Blocks
    |> should equal [ Lyrics ([Literal ("Birdy hop, he do. He hop a long.", new Range(1, 32)); HardLineBreak(new Range(33, NewLineLength)) ], new Range(0, 33 + NewLineLength)); Action(false, [ HardLineBreak(new Range(33 + NewLineLength, NewLineLength))], new Range(33 + NewLineLength, NewLineLength)) ]
 
-
-//===== Transition
-
-[<Test>]
-let ``Transition - normal`` () =
-   let doc = properNewLines "\r\nCUT TO:\r\n\r\nSome action" |> Fountain.Parse
-   doc.Blocks
-   |> should equal [ Transition (false, [Literal ("CUT TO:", new Range(NewLineLength, 7))], new Range(0, 7 + NewLineLength * 3)); Action(false, [Literal("Some action", new Range(7 + NewLineLength * 3, 11))], new Range(7 + NewLineLength * 3, 11))]
-
-[<Test>]
-let ``Transition - Non uppercase`` () =
-   // This is not a transition as 'Cut' is not all uppercase
-   let doc = properNewLines "\r\nCut TO:\r\n\r\nSome action" |> Fountain.Parse
-   doc.Blocks
-   |> should equal [ Action (false, [HardLineBreak(new Range(0, NewLineLength)); Literal("Cut TO:", new Range(NewLineLength, 7)); HardLineBreak(new Range(7 + NewLineLength, NewLineLength)); HardLineBreak(new Range(7 + NewLineLength * 2, NewLineLength)); Literal("Some action", new Range(7 + NewLineLength * 3, 11))], new Range(0, 18 + NewLineLength * 3))]
-
-[<Test>]
-let ``Transition - forced`` () =
-   let doc = properNewLines "\r\n> Burn to White.\r\n\r\nSome action" |> Fountain.Parse
-   doc.Blocks
-   |> should equal [ Transition (true, [Literal ("Burn to White.", new Range(2 + NewLineLength, 14))], new Range(0, 16 + NewLineLength * 3)); Action(false, [Literal("Some action", new Range(16 + NewLineLength * 3, 11))], new Range(16 + NewLineLength * 3, 11)) ]
-
-//===== Centered
-
-[<Test>]
-let ``Centered `` () =
-   let doc = ">The End<" |> Fountain.Parse
-   doc.Blocks
-   |> should equal [Centered ([Literal ("The End", new Range(1, 7))], new Range(0, 9))]
-
-[<Test>]
-let ``Centered - with spaces`` () =
-   let doc = "> The End <" |> Fountain.Parse
-   doc.Blocks
-   |> should equal [Centered ([Literal ("The End", new Range(2, 7))], new Range(0, 11))]
-
 //===== Line Breaks
 
 [<Test>]
@@ -537,24 +494,6 @@ let ``Action - indenting`` () =
    doc.Blocks
    |> should equal  [Action (false, [Literal ("\tNatalie looks around at the group, TIM, ROGER, NATE, and VEEK.", new Range(0, 63)); HardLineBreak(new Range(63, NewLineLength)); HardLineBreak(new Range(63 + NewLineLength, NewLineLength)); Literal ("\t\tTIM, is smiling broadly.", new Range(63 + 2 * NewLineLength, 26))], new Range(0, text.Length))]
 
-[<Test>]
-let ``Centered - indenting`` () =
-   let doc = "\t   \t>The End <" |> Fountain.Parse
-   doc.Blocks
-   |> should equal [Centered ([Literal ("The End", new Range(6, 7))], new Range(0, 15))]
-
-[<Test>]
-let ``Transition - indenting`` () =
-   let doc = properNewLines "\r\n  \t  CUT TO:\r\n\r\nSome action" |> Fountain.Parse
-   doc.Blocks
-   |> should equal [ Transition (false, [Literal ("CUT TO:", new Range(NewLineLength + 5, 7))], new Range(0, 12 + NewLineLength * 3)); Action(false, [Literal("Some action", new Range(12 + NewLineLength * 3, 11))], new Range(12 + NewLineLength * 3, 11))]
-
-[<Test>]
-let ``Transition - forced indenting`` () =
-   let doc = properNewLines "\r\n\t > Burn to White.\r\n\r\nSome action" |> Fountain.Parse
-   doc.Blocks
-   |> should equal [ Transition (true, [Literal ("Burn to White.", new Range(NewLineLength + 4, 14))], new Range(0, 18 + NewLineLength * 3)); Action(false, [Literal("Some action", new Range(18 + NewLineLength * 3, 11))], new Range(18 + NewLineLength * 3, 11))]
-
 //===== Title page
 
 [<Test>]
@@ -564,29 +503,3 @@ let ``Title page`` () =
    let doc = text |> Fountain.Parse
    doc.Blocks
    |> should equal [TitlePage ([("Title", [Underline ([Bold ([Literal("BRICK and STEEL", new Range(3, 15))], new Range(1, 19))], new Range(0, 21)); HardLineBreak(new Range(21, NewLineLength)); Underline([ Bold ([Literal("FULL RETIRED", new Range(24 + NewLineLength, 12))], new Range(22 + NewLineLength, 16))], new Range(21 + NewLineLength, 18))]); ("Credit", [Literal("Written by", new Range(0, 10))])], new Range(0, text.Length - 11)); PageBreak(new Range(text.Length - 11, 0)); Action(false, [Literal("Some action", new Range(text.Length - 11, 11))], new Range(text.Length - 11, 11))]
-
-//===== Recognized bugs
-
-[<Test>]
-let ``#Bugfix - Character after Action`` () =
-   let doc = properNewLines "Some action\r\n\r\nSTEEL" |> Fountain.Parse
-   doc.Blocks
-   |> should equal [ Action (false, [ Literal ("Some action", new Range(0, 11)); HardLineBreak(new Range(11, NewLineLength)) ], new Range(0, 11 + NewLineLength)); Character(false, true, [Literal("STEEL", new Range(11 + NewLineLength * 2, 5))], new Range(11 + NewLineLength, 5 + NewLineLength)) ]
-
-[<Test>]
-let ``#Bugfix - Scene Heading, Action, Character`` () =
-   let doc = properNewLines "\r\nINT DOGHOUSE - DAY\r\n\r\nSome action\r\n\r\nSTEEL" |> Fountain.Parse
-   doc.Blocks
-   |> should equal [ SceneHeading(false, [ Literal("INT DOGHOUSE - DAY", new Range(NewLineLength, 18)) ], new Range(0, 18 + NewLineLength * 3)); Action (false, [ Literal ("Some action", new Range(18 + NewLineLength * 3, 11)); HardLineBreak(new Range(29 + NewLineLength * 3, NewLineLength)) ], new Range(18 + NewLineLength * 3, 11 + NewLineLength)); Character(false, true, [Literal("STEEL", new Range(29 + NewLineLength * 5, 5))], new Range(29 + NewLineLength * 4, 5 + NewLineLength)) ]
-
-[<Test>]
-let ``#Bugfix - Dialogue with trailing new lines`` () =
-   let doc = properNewLines "\r\nSTEEL\r\nTo retirement.\r\n\r\n" |> Fountain.Parse
-   doc.Blocks
-   |> should equal [ Character(false, true, [Literal("STEEL", new Range(NewLineLength, 5))], new Range(0, 5 + NewLineLength * 2)); Dialogue([ Literal ("To retirement.", new Range(5 + NewLineLength * 2, 14)); ], new Range(5 + NewLineLength * 2, 14 + NewLineLength)); Action(false, [ HardLineBreak(new Range(19 + NewLineLength * 3, NewLineLength)) ], new Range(19 + NewLineLength * 3, NewLineLength)) ]
-
-[<Test>]
-let ``#Bugfix - Action after Dialogue`` () =
-   let doc = properNewLines "\r\nSTEEL\r\nTo retirement.\r\n\r\nSome action" |> Fountain.Parse
-   doc.Blocks
-   |> should equal [ Character(false, true, [Literal("STEEL", new Range(NewLineLength, 5))], new Range(0, 5 + NewLineLength * 2)); Dialogue([ Literal ("To retirement.", new Range(5 + NewLineLength * 2, 14)); ], new Range(5 + NewLineLength * 2, 14 + NewLineLength)); Action(false, [ HardLineBreak(new Range(19 + NewLineLength * 3, NewLineLength)); Literal("Some action", new Range(19 + NewLineLength * 4, 11)) ], new Range(19 + NewLineLength * 3, 11 + NewLineLength)) ]

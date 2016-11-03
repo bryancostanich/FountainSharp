@@ -33,7 +33,11 @@
   </PropertyGroup>
   <Import Project="$(MSBuildExtensionsPath32)\..\Microsoft SDKs\F#\4.0\Framework\v4.0\Microsoft.FSharp.Targets" />
   <ItemGroup>
+    <Compile Include="Helper.fs" />
     <Compile Include="FountainTests.fs" />
+    <Compile Include="TransitionTests.fs" />
+    <Compile Include="CenteredTests.fs" />
+    <Compile Include="Bugfixes.fs" />
     <Compile Include="AssemblyInfo.fs" />
     <Compile Include="Resources.fs" />
     <Compile Include="Exec.fs" />
@@ -41,6 +45,7 @@
     <EmbeddedResource Include="TestFiles\SimpleTest.fountain" />
     <None Include="packages.config" />
     <Content Include="App.config" />
+    <None Include="TestScript.fsx" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="mscorlib" />
