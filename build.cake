@@ -22,6 +22,8 @@ var solutionDir = System.IO.Path.GetDirectoryName(solution);
 var versionInfo = VersionUtils.LoadVersion(Context);
 var settings = SettingsUtils.LoadSettings(Context);
 
+var netCoreProjects = new [] { "FountainSharp.Parse.NetStandard" };
+
 //////////////////////////////////////////////////////////////////////
 // TASKS
 //////////////////////////////////////////////////////////////////////
@@ -55,7 +57,14 @@ Task("Restore")
     NuGetRestore(solution, new NuGetRestoreSettings { Verbosity = NuGetVerbosity.Detailed });
 
     // Restore for projects using project.json
-    DotNetCoreRestore(solutionDir);
+		Information("Restoring .NET Core projects...");
+		foreach (var netCoreProject in netCoreProjects)
+		{
+			// Restore .NET Core projects with CLI
+			var netCoreProjectPath = System.IO.Path.Combine(solutionDir, netCoreProject);
+			Information($"Restoring {netCoreProject} from {netCoreProjectPath} ...");
+			DotNetCoreRestore(netCoreProjectPath);
+		}
 });
 
 Task("Build")
@@ -75,9 +84,12 @@ Task("Build")
         buildSettings.SetConfiguration(configuration));
     }
 
-    // Build .NET Core projects with CLI
-    DotNetCoreBuild(System.IO.Path.Combine(solutionDir, "FountainSharp.Parse.NetStandard"),
-        new DotNetCoreBuildSettings { Configuration = "Release" });
+		foreach (var netCoreProject in netCoreProjects)
+		{
+      // Build .NET Core projects with CLI
+      DotNetCoreBuild(System.IO.Path.Combine(solutionDir, netCoreProject),
+			  new DotNetCoreBuildSettings { Configuration = "Release" });
+		}
 });
 
 Task("Run-Unit-Tests")
