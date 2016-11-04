@@ -52,6 +52,9 @@
     <Compile Include="..\FountainSharp.Parse\FountainHelper.fs">
       <Link>FountainHelper.fs</Link>
     </Compile>
+    <Compile Include="..\FountainSharp.Parse\Utils.fs">
+      <Link>Utils.fs</Link>
+    </Compile>
     <Compile Include="..\FountainSharp.Parse\FountainParser.fs">
       <Link>FountainParser.fs</Link>
     </Compile>

@@ -34,6 +34,6 @@ echo "Checking path..."
 echo $PATH
 
 echo "Checking .NET Core CLI..."
-$NETCORE_SDK_CLI
+$NETCORE_SDK_CLI --version
 
 exit 0

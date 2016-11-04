@@ -7,7 +7,7 @@ open System.Text
 let NewLine(count) = 
     let sb = new StringBuilder()
     for i = 1 to count do
-        sb.AppendLine() |> ignore
+        sb.Append(Environment.NewLine) |> ignore
     sb.ToString()
 
 let NewLineLength = Environment.NewLine.Length

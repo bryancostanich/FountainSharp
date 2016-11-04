@@ -279,16 +279,24 @@ let (|Boneyard|_|) input =
     | _ -> None
 
 let (|SceneHeading|_|) (ctx:ParsingContext) (input:string list) =
-  let parseSceneHeading (first:string) tail =
+  let parseSceneHeading (first:string) tail offset =
     let head = first.TrimStart()
     match head with
     // look for normal heading
     | String.StartsWithAnyCaseInsensitive [ "INT"; "EXT"; "EST"; "INT./EXT."; "INT/EXT"; "I/E" ] matching ->
-      let result = { Text = head; Length = first.Length + NewLineLength * 3; Offset = first.IndexOf(head) + NewLineLength }
+      let result = {
+        Text = head;
+        Length = first.Length + NewLineLength * 2 + offset;
+        Offset = first.IndexOf(head) + offset
+      }
       Some(false, result, tail)
     // look for forced heading
     | String.StartsWith "." matching ->
-      let recognition = { Text = head.Substring(1); Length = first.Length + NewLineLength * 3; Offset = first.IndexOf(head) + 1 + NewLineLength }
+      let recognition = {
+        Text = head.Substring(1);
+        Length = first.Length + NewLineLength * 2 + offset;
+        Offset = first.IndexOf(head) + 1 + offset 
+      }
       Some(true, recognition, tail)
     | _ -> None
 
@@ -297,13 +305,13 @@ let (|SceneHeading|_|) (ctx:ParsingContext) (input:string list) =
       match input with
       | [] -> None
       | first :: EmptyLine :: rest ->
-        parseSceneHeading first rest
+        parseSceneHeading first rest 0
       | _ -> None
   | _ ->
       match input with
       | [] -> None
       | EmptyLine :: first :: EmptyLine :: rest ->
-        parseSceneHeading first rest
+        parseSceneHeading first rest NewLineLength
       | _ -> None
 
 
@@ -640,6 +648,7 @@ let (|Action|_|) (ctx:ParsingContext) input =
 
 let (|TitlePage|_|) (ctx:ParsingContext) (input: string list) =
   match ctx.LastParsedBlock with
+  | Some(_) -> None // Title page must be the first block of the document 
   | None ->
     // match "key: value" pattern at the beginning of the input as far as it is possible, and returns the matching values as well the remaining input
     let rec matchAndRemove acc (input:string) =
@@ -652,7 +661,7 @@ let (|TitlePage|_|) (ctx:ParsingContext) (input: string list) =
        let key = m.Groups.["key"] // text before ':'
        let value = m.Groups.["value"] // text after ':'
        // let's parse spans - white spaces must be trimmed per line
-       let spans = value.Value.Trim().Split('\n') |> List.ofArray |> List.map( fun s -> s.Trim() ) |> String.concat Environment.NewLine |> parseSpans ctx
+       let spans = value.Value.Trim().Split([|Environment.NewLine|], StringSplitOptions.None) |> List.ofArray |> List.map( fun s -> s.Trim() ) |> String.concat Environment.NewLine |> parseSpans ctx
        matchAndRemove ((key.Value, spans) :: acc) (input.Remove(m.Index, m.Length))
     
     // TODO: spare conversion from list to string and back to list of the remaining text!
@@ -667,7 +676,6 @@ let (|TitlePage|_|) (ctx:ParsingContext) (input: string list) =
         | ([], _) -> None
         | (keyValuePairs, rest) ->
             Some(keyValuePairs, titlePageText.Length + Environment.NewLine.Length, String.asStringList(inputAsSingleString.Substring(indexOfEmptyLine + Environment.NewLine.Length * 2), NewLine(1)))
-  | _ -> None // Title page must be the first block of the document 
 
 //==== /TitlePage
 
@@ -683,7 +691,7 @@ let rec parseBlocks (ctx:ParsingContext) (lines: _ list) = seq {
   | TitlePage ctx (keyValuePairs, length, rest) ->
      let item = TitlePage(keyValuePairs, new Range(0, length))
      yield item
-     yield PageBreak(new Range(length, 0)) // Page break is implicit after Title page
+     //yield PageBreak(new Range(length, 0)) // Page break is implicit after Title page
      yield! parseBlocks (ctx.Modify(ctx.Position + length, Some(item))) rest
   
   | Boneyard(result, rest) ->
@@ -735,12 +743,9 @@ let rec parseBlocks (ctx:ParsingContext) (lines: _ list) = seq {
      yield! parseBlocks (ctx.Modify(ctx.Position + result.Length, Some(item))) rest
 
   | Transition ctx (forced, result, rest) ->
-//     yield createLineBreak(ctx.Position)
      let spans = parseSpans (ctx.IncrementPosition(result.Offset)) result.Text
      let item = Transition(forced, spans, new Range(ctx.Position, result.Length))
      yield item
-//     let endingLineBreak = createLineBreak(ctx.Position + result.Length - NewLineLength)
-//     yield endingLineBreak
      yield! parseBlocks (ctx.Modify(ctx.Position + result.Length, Some(item))) rest
   
   | Parenthetical ctx (result, rest) ->

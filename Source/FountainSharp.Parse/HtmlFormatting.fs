@@ -148,6 +148,7 @@ let rec formatBlockElement (ctx:FormattingContext) block =
               ctx.Writer.Write("""<div style="text-align:center;"><br/>""")
           formatSpans ctx spans
           ctx.Writer.Write("</div>")
+      ctx.Writer.Write("<hr>") // implicit page break after Title Page
   | Boneyard(_, _) -> ()
   | Section(n, spans, range) -> 
       ctx.Writer.Write("<h" + string n + ">")

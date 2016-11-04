@@ -37,3 +37,12 @@ let ``#Bugfix - Transition after Scene Heading`` () =
    let doc = properNewLines "\r\nINT DOGHOUSE - DAY\r\n\r\nCUT TO:\r\n" |> Fountain.Parse
    doc.Blocks
    |> should equal [ SceneHeading(false, [ Literal("INT DOGHOUSE - DAY", new Range(NewLineLength, 18)) ], new Range(0, 18 + NewLineLength * 3)); Transition(false, [ Literal("CUT TO:", new Range(18 + NewLineLength * 3, 7)) ], new Range(18 + NewLineLength * 3, 7 + NewLineLength * 2)) ]
+
+
+//[<Test>]
+//let ``Scene Heading after Title page`` () =
+//   // This is quite a complex title page with inline and not inline values, emphasized spans.
+//   let text = properNewLines "Title:\r\n\t_**BRICK and STEEL**_\r\n\t_**FULL RETIRED**_\r\nCredit: Written by\r\nAuthor: Stu Maschwitz\r\nSource: Story by KTM\r\nDraft date: 1/27/2012\r\nContact\r\n\tNext Level Productions\r\n\t1588 Mission Dr.\r\n\tSolvang, CA 93463\r\n\r\nEXT. BRICK'S PATIO - DAY\r\n"
+//   let doc = text |> Fountain.Parse
+//   doc.Blocks
+//   |> should equal [TitlePage ([("Title", [Underline ([Bold ([Literal("BRICK and STEEL", new Range(3, 15))], new Range(1, 19))], new Range(0, 21)); HardLineBreak(new Range(21, NewLineLength)); Underline([ Bold ([Literal("FULL RETIRED", new Range(24 + NewLineLength, 12))], new Range(22 + NewLineLength, 16))], new Range(21 + NewLineLength, 18))]); ("Credit", [Literal("Written by", new Range(0, 10))])], new Range(0, text.Length - 24 - NewLineLength)); SceneHeading(false, [Literal("EXT. BRICK'S PATIO - DAY", new Range(text.Length - 24 - NewLineLength, 24))], new Range(text.Length - 24 - NewLineLength, 24 + NewLineLength * 2))]
