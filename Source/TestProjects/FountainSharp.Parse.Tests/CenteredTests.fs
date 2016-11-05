@@ -5,7 +5,6 @@ open FsUnit
 open NUnit.Framework
 open FountainSharp.Parse
 open FountainSharp.Parse.Helper
-open FountainSharp.Parse.Tests.Helper
 
 //===== Centered
 
@@ -29,6 +28,6 @@ let ``Centered - indenting`` () =
 
 [<Test>]
 let ``Centered - followed by line break`` () =
-   let doc = properNewLines ">The End<\r\n" |> Fountain.Parse
+   let doc = Utils.ProperNewLines ">The End<\r\n" |> Fountain.Parse
    doc.Blocks
    |> should equal [ Centered ([Literal ("The End", new Range(1, 7)) ], new Range(0, 9 + NewLineLength)); Action(false, [ HardLineBreak(new Range(9 + NewLineLength, NewLineLength)) ], new Range(9 + NewLineLength, NewLineLength)) ]

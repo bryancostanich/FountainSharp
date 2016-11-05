@@ -9,6 +9,9 @@ type Range(location:int,length:int) =
   member this.Location = location
   member this.Length = length
 
+  member this.Offset(offset) =
+    new Range(this.Location + offset, this.Length)
+
   override this.ToString() =
     sprintf "Location: %d; Length: %d" this.Location this.Length
 

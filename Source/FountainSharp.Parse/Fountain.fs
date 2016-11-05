@@ -18,8 +18,12 @@ open FountainSharp.Parse.Helper
 // maybe do a dictionary of character names though. that could be useful.
 type FountainDocument(blocks, ?text) =
   /// Returns a list of blocks in the document
-  member x.Blocks : FountainBlocks = blocks
+  member doc.Blocks : FountainBlocks = blocks
   member doc.Text : string = defaultArg text null
+
+  /// Returns the original text of a block
+  member doc.GetText(range:Range) =
+    doc.Text.Substring(range.Location, range.Length)
 
 /// Static class that provides methods for formatting 
 /// and transforming Markdown documents.

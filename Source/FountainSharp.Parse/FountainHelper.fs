@@ -18,3 +18,5 @@ let (|BlockWithTrailingEmptyLine|_|) = function
     | Some(FountainSharp.Parse.TitlePage(_, _))
       -> Some(true)
     | _ -> None
+
+let properNewLines (text: string) = text.Replace("\r\n", System.Environment.NewLine)

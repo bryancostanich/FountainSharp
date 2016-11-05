@@ -33,7 +33,7 @@
   </PropertyGroup>
   <Import Project="$(MSBuildExtensionsPath32)\..\Microsoft SDKs\F#\4.0\Framework\v4.0\Microsoft.FSharp.Targets" />
   <ItemGroup>
-    <Compile Include="Helper.fs" />
+    <Compile Include="RangeTests.fs" />
     <Compile Include="FountainTests.fs" />
     <Compile Include="TransitionTests.fs" />
     <Compile Include="CenteredTests.fs" />

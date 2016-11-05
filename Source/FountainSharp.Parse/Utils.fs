@@ -1,8 +1,9 @@
 ﻿namespace FountainSharp.Parse
 
 open System
+open FountainSharp.Parse.Helper
 
 type Utils =
     static member ProperNewLines(text:string) =
-        text.Replace("\r\n", Environment.NewLine)
+        properNewLines text
 
