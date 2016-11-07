@@ -510,10 +510,11 @@ let (|Dialogue|_|) (ctx:ParsingContext) (input:string list) =
           let rec addLines (acc: string list) (accLength : int) = function
             // TODO: the following matches could be simpler, I think
             | first :: second :: tail as input ->
-                let newLinesInLength = if tail.IsEmpty then 1 else 2
+                // add to length if the Dialogue block is followed by any line
+                let lengthInc = if tail.IsEmpty && rest.IsEmpty then 0 else NewLineLength
                 if first = EmptyLine then
                     if second.StartsWith("  ") then // dialogue continues
-                        addLines (second :: first :: acc) (accLength + first.Length + second.Length + NewLineLength * newLinesInLength) tail
+                        addLines (second :: first :: acc) (accLength + first.Length + NewLineLength + second.Length + lengthInc) tail
                     else
                         Some(List.rev acc, accLength, List.append(first :: second :: tail) rest)
                 elif isForcedAction(first) then // stop at forced Action
@@ -521,12 +522,14 @@ let (|Dialogue|_|) (ctx:ParsingContext) (input:string list) =
                 else if second = EmptyLine then
                     addLines (first :: acc) (accLength + first.Length + NewLineLength) (second :: tail)
                 else
-                    addLines (second :: first :: acc) (accLength + first.Length + second.Length + NewLineLength * newLinesInLength) tail
+                    addLines (second :: first :: acc) (accLength + first.Length + NewLineLength + second.Length + lengthInc) tail
             | [head] ->
                 if isForcedAction(head) then // stop at forced Action
                     Some(List.rev acc, accLength, rest)
                 else
-                    addLines (head :: acc) (accLength + head.Length) []
+                    // add to length if the Dialogue block is followed by any line
+                    let lengthInc = if rest.IsEmpty then 0 else NewLineLength
+                    addLines (head :: acc) (accLength + head.Length + lengthInc) []
             | [] ->
                 Some(List.rev acc, accLength, rest) // traversed all the lines
 
@@ -536,7 +539,7 @@ let (|Dialogue|_|) (ctx:ParsingContext) (input:string list) =
           | Some(body, length, rest) ->
               //let body = body |> List.map(fun line -> line.Trim())
               let result = String.asSingleString(body, Environment.NewLine, false)
-              Some({ Text =result; Length = length; Offset = 0 }, rest)
+              Some({ Text = result; Length = length; Offset = 0 }, rest)
           | _ -> None
   | _ -> None
 

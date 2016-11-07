@@ -37,6 +37,12 @@ let ``#Bugfix - Transition after Scene Heading`` () =
    doc.Blocks
    |> should equal [ SceneHeading(false, [ Literal("INT DOGHOUSE - DAY", new Range(NewLineLength, 18)) ], new Range(0, 18 + NewLineLength * 3)); Transition(false, [ Literal("CUT TO:", new Range(18 + NewLineLength * 3, 7)) ], new Range(18 + NewLineLength * 3, 7 + NewLineLength * 2)) ]
 
+[<Test>]
+let ``#Bugfix - Character after Dialogue`` () =
+   // Dialogue's range got incorrect if followed by a Character block
+   let doc = properNewLines "\r\nSTEEL\r\nDoes a bear crap in the woods?\r\n\r\nBRICK" |> Fountain.Parse
+   doc.Blocks
+   |> should equal [ Character(false, true, [ Literal("STEEL", new Range(NewLineLength, 5)) ], new Range(0, 5 + NewLineLength * 2)); Dialogue( [ Literal("Does a bear crap in the woods?", new Range(5 + NewLineLength * 2, 30)) ], new Range(5 + NewLineLength * 2, 30 + NewLineLength)); Character(false, true, [ Literal("BRICK", new Range(35 + NewLineLength * 4, 5)) ], new Range(35 + NewLineLength * 3, 5 + NewLineLength)) ]
 
 //[<Test>]
 //let ``Scene Heading after Title page`` () =
