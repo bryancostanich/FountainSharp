@@ -23,10 +23,11 @@ type FountainDocument(blocks, ?text) =
 
   /// Returns the original text of a block
   member doc.GetText(range:Range) =
-    if doc.Text.Length < range.Location + range.Length then
+    if doc.Text.Length < range.Location then
         ""
     else
-        doc.Text.Substring(range.Location, range.Length)
+        let length = min range.Length (doc.Text.Length - range.Location)
+        doc.Text.Substring(range.Location, length)
 
 /// Static class that provides methods for formatting 
 /// and transforming Markdown documents.

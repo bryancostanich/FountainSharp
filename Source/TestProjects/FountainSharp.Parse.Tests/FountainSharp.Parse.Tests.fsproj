@@ -35,10 +35,11 @@
   <ItemGroup>
     <Compile Include="RangeTests.fs" />
     <Compile Include="FountainTests.fs" />
-    <Compile Include="TransitionTests.fs" />
+    <Compile Include="BoneyardTests.fs" />
     <Compile Include="CenteredTests.fs" />
     <Compile Include="EmphasisTests.fs" />
     <Compile Include="TitlePageTests.fs" />
+    <Compile Include="TransitionTests.fs" />
     <Compile Include="Bugfixes.fs" />
     <Compile Include="AssemblyInfo.fs" />
     <Compile Include="Resources.fs" />

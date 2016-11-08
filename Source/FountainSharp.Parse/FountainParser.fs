@@ -272,10 +272,12 @@ let (|Boneyard|_|) input =
             addLines (head :: acc) (accLength + head.Length) []
         | head :: tail ->
             addLines (head :: acc) (accLength + head.Length + NewLineLength) tail // inside or outside of comment
-
-    match addLines [] 0 input with
-    | Some([], _, rest) -> None // no comment found
-    | Some(body, length, rest) -> Some({ Text = body; Length = length; Offset = 0 }, rest)
+    match input with
+    | String.StartsWith "/*" head:string :: tail ->
+      match addLines [] 0 input with
+      | Some([], _, rest) -> None // no comment found
+      | Some(body, length, rest) -> Some({ Text = body; Length = length; Offset = 0 }, rest)
+      | _ -> None
     | _ -> None
 
 let (|SceneHeading|_|) (ctx:ParsingContext) (input:string list) =
@@ -484,7 +486,6 @@ let (|Transition|_|) (ctx:ParsingContext) (input:string list) =
       | _ -> None
 
 
-
 //==== Dialogue
 
 let (|Dialogue|_|) (ctx:ParsingContext) (input:string list) =
@@ -503,6 +504,7 @@ let (|Dialogue|_|) (ctx:ParsingContext) (input:string list) =
      | Synopses _ -> false
      | PageBreak _ -> false
      | Parenthetical ctx _ -> false
+     | Boneyard _ -> false
      | _ -> true) input with // if we found a match, and it's not empty, return the Action and the rest
         | [], _ -> None
         | matching, rest ->
@@ -630,6 +632,7 @@ let (|Action|_|) (ctx:ParsingContext) input =
     | Section _ -> false
     | Synopses _ -> false
     | PageBreak _ -> false
+    | Boneyard _ -> false
     | _ -> true) input with // if we found a match, and it's not empty, return the Action and the rest
       | matching, rest ->
         match matching with
@@ -694,7 +697,6 @@ let rec parseBlocks (ctx:ParsingContext) (lines: _ list) = seq {
   | TitlePage ctx (keyValuePairs, length, rest) ->
      let item = TitlePage(keyValuePairs, new Range(0, length))
      yield item
-     //yield PageBreak(new Range(length, 0)) // Page break is implicit after Title page
      yield! parseBlocks (ctx.Modify(ctx.Position + length, Some(item))) rest
   
   | Boneyard(result, rest) ->

@@ -14,16 +14,6 @@ let ``Empty lines`` () =
    doc.Blocks
    |> should equal  [ Action(false, [ HardLineBreak(new Range(0, NewLineLength)); HardLineBreak(new Range(NewLineLength, NewLineLength)) ], new Range(0, NewLineLength * 2)) ]
 
-//===== Boneyard
-
-// TODO: should we support boneyards in a single line? Also in the middle of the line?
-[<Test>]
-let ``Boneyard`` () =
-   let text = properNewLines "/*\r\nThis is a simple comment\r\n*/"
-   let doc = text |> Fountain.Parse
-   doc.Blocks
-   |> should equal [Boneyard ("This is a simple comment", new Range(0, text.Length))]
-
 //===== Scene Headings
 [<Test>]
 let ``Basic Scene Heading`` () =
