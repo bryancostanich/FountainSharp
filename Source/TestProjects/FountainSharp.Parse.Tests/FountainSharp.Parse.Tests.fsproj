@@ -34,6 +34,7 @@
   <Import Project="$(MSBuildExtensionsPath32)\..\Microsoft SDKs\F#\4.0\Framework\v4.0\Microsoft.FSharp.Targets" />
   <ItemGroup>
     <Compile Include="RangeTests.fs" />
+    <Compile Include="ActionTests.fs" />
     <Compile Include="FountainTests.fs" />
     <Compile Include="BoneyardTests.fs" />
     <Compile Include="CenteredTests.fs" />

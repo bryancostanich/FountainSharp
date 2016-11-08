@@ -55,20 +55,17 @@ type ParsingContext(?newline : string, ?position : int, ?lastParsedBlock : Fount
     member ctx.TreatDoubleSpaceAsNewLine with get() = doubleSpaceAsNewLine
     member ctx.PreserveIndenting with get() = preserveIndenting
 
-    member ctx.IncrementPosition(length) =
+    member ctx.Offset(length) =
         new ParsingContext(ctx.NewLine, ctx.Position + length, ctx.LastParsedBlock, ctx.TreatDoubleSpaceAsNewLine, ctx.PreserveIndenting)
 
-    member ctx.ChangeLastParsedBlock(block : FountainBlockElement option) =
+    member ctx.WithLastParsedBlock(block : FountainBlockElement option) =
         new ParsingContext(ctx.NewLine, ctx.Position, block, ctx.TreatDoubleSpaceAsNewLine, ctx.PreserveIndenting)
 
-    member ctx.Modify(position : int, block : FountainBlockElement option) =
-        new ParsingContext(ctx.NewLine, position, block, ctx.TreatDoubleSpaceAsNewLine, ctx.PreserveIndenting)
-
-    member ctx.WithDoubleSpaceAsNewLine() =
-        new ParsingContext(ctx.NewLine, ctx.Position, ctx.LastParsedBlock, true, ctx.PreserveIndenting)
+    member ctx.WithDoubleSpaceAsNewLine(enable) =
+        new ParsingContext(ctx.NewLine, ctx.Position, ctx.LastParsedBlock, enable, ctx.PreserveIndenting)
     
-    member ctx.WithPreserveIndenting() =
-        new ParsingContext(ctx.NewLine, ctx.Position, ctx.LastParsedBlock, ctx.TreatDoubleSpaceAsNewLine, true)
+    member ctx.WithPreserveIndenting(enable) =
+        new ParsingContext(ctx.NewLine, ctx.Position, ctx.LastParsedBlock, ctx.TreatDoubleSpaceAsNewLine, enable)
 
 //====== Parser
 // Part 1: Inline Formatting
@@ -176,7 +173,7 @@ let rec parseChars (ctx:ParsingContext) acc numOfEscapedChars input = seq {
   | List.StartsWithString patternForcedLineBreak rest when ctx.TreatDoubleSpaceAsNewLine ->
   // ' ' :: ' ' :: '\r' :: '\n' :: rest when ctx.TreatDoubleSpaceAsNewLine ->
     yield HardLineBreak(new Range(ctx.Position, patternForcedLineBreak.Length))
-    yield! parseChars (ctx.IncrementPosition(patternForcedLineBreak.Length)) [] numOfEscapedChars rest
+    yield! parseChars (ctx.Offset(patternForcedLineBreak.Length)) [] numOfEscapedChars rest
 
   // markdown requires two spaces and then \r or \n, but fountain 
   // recognizes without
@@ -186,7 +183,7 @@ let rec parseChars (ctx:ParsingContext) acc numOfEscapedChars input = seq {
     //System.Diagnostics.Debug.WriteLine("found a hardlinebreak")
     yield! accLiterals.Value
     yield HardLineBreak(new Range(ctx.Position + acc.Length, Environment.NewLine.Length))
-    yield! parseChars (ctx.IncrementPosition(acc.Length + Environment.NewLine.Length)) [] numOfEscapedChars rest
+    yield! parseChars (ctx.Offset(acc.Length + Environment.NewLine.Length)) [] numOfEscapedChars rest
 
   // Encode & as an HTML entity
   | '&'::'a'::'m'::'p'::';'::rest 
@@ -200,16 +197,16 @@ let rec parseChars (ctx:ParsingContext) acc numOfEscapedChars input = seq {
   // Handle emphasised text
   | Emphasized ctx (body, length, emphasis, emphasisLength, rest) ->
       yield! accLiterals.Value
-      let bodyParsed = parseChars (ctx.IncrementPosition(acc.Length + emphasisLength)) [] numOfEscapedChars body |> List.ofSeq
+      let bodyParsed = parseChars (ctx.Offset(acc.Length + emphasisLength)) [] numOfEscapedChars body |> List.ofSeq
       yield emphasis(bodyParsed, (new Range(ctx.Position + acc.Length, length)))
-      yield! parseChars (ctx.IncrementPosition(length + acc.Length)) [] numOfEscapedChars rest
+      yield! parseChars (ctx.Offset(length + acc.Length)) [] numOfEscapedChars rest
 
   // Notes
   | Note (result, rest) ->
       yield! accLiterals.Value
-      let body = parseChars (ctx.IncrementPosition(acc.Length + result.Offset).WithDoubleSpaceAsNewLine()) [] numOfEscapedChars result.Text |> List.ofSeq
+      let body = parseChars (ctx.Offset(acc.Length + result.Offset).WithDoubleSpaceAsNewLine(true)) [] numOfEscapedChars result.Text |> List.ofSeq
       yield Note(body, new Range(ctx.Position + acc.Length, result.Length))
-      yield! parseChars (ctx.IncrementPosition(acc.Length + result.Length)) [] numOfEscapedChars rest
+      yield! parseChars (ctx.Offset(acc.Length + result.Length)) [] numOfEscapedChars rest
 
   // This calls itself recursively on the rest of the list
   | x::xs -> 
@@ -555,12 +552,12 @@ let (|DualDialogue|_|) (ctx: ParsingContext) (input:string list) =
   let rec parseCharacter (ctx:ParsingContext, input:string list, acc) = 
     match input with
     | Character ctx (forced, primary, result, rest) as item -> 
-        let characterItem = Character(forced, primary, parseSpans (ctx.IncrementPosition(result.Offset)) result.Text, new Range(ctx.Position, result.Length))
-        let ctx = ctx.Modify(ctx.Position + result.Length, Some(characterItem))
+        let characterItem = Character(forced, primary, parseSpans (ctx.Offset(result.Offset)) result.Text, new Range(ctx.Position, result.Length))
+        let ctx = ctx.Offset(result.Length).WithLastParsedBlock(Some(characterItem))
         match rest with
         | Parenthetical ctx (result, rest) ->
-            let parentheticalItem = Parenthetical(parseSpans (ctx.IncrementPosition(result.Offset)) result.Text, new Range(ctx.Position, result.Length))
-            parseCharacter (ctx.Modify(ctx.Position + result.Length, Some(parentheticalItem)), rest, parentheticalItem :: characterItem :: acc)
+            let parentheticalItem = Parenthetical(parseSpans (ctx.Offset(result.Offset)) result.Text, new Range(ctx.Position, result.Length))
+            parseCharacter (ctx.Offset(result.Length).WithLastParsedBlock(Some(parentheticalItem)), rest, parentheticalItem :: characterItem :: acc)
         | _ ->
             parseCharacter (ctx, rest, characterItem :: acc)
     | _ -> if acc.Length = 0 then None else Some(ctx, acc, input)
@@ -570,11 +567,11 @@ let (|DualDialogue|_|) (ctx: ParsingContext) (input:string list) =
     match input with
     | Dialogue ctx (dialogResult, rest) -> 
         let dialogueItem = Dialogue(parseSpans ctx dialogResult.Text, new Range(ctx.Position, dialogResult.Length))
-        let ctx = ctx.Modify(ctx.Position + dialogResult.Length, Some(dialogueItem))
+        let ctx = ctx.Offset(dialogResult.Length).WithLastParsedBlock(Some(dialogueItem))
         match rest with
         | Parenthetical ctx (result, rest) ->
-            let parentheticalItem = Parenthetical(parseSpans (ctx.IncrementPosition(result.Offset)) result.Text, new Range(ctx.Position, result.Length))
-            parseDialogue (ctx.Modify(ctx.Position + result.Length, Some(parentheticalItem)), rest, parentheticalItem :: dialogueItem :: acc)
+            let parentheticalItem = Parenthetical(parseSpans (ctx.Offset(result.Offset)) result.Text, new Range(ctx.Position, result.Length))
+            parseDialogue (ctx.Offset(result.Length).WithLastParsedBlock(Some(parentheticalItem)), rest, parentheticalItem :: dialogueItem :: acc)
         | _ ->
             parseDialogue (ctx, rest, dialogueItem :: acc)
     | _ -> if acc.Length = 0 then None else Some(ctx, acc, input)
@@ -621,7 +618,7 @@ let (|DualDialogue|_|) (ctx: ParsingContext) (input:string list) =
 //==== Action
 
 let (|Action|_|) (ctx:ParsingContext) input =
-  let ctxForLookAhead = ctx.ChangeLastParsedBlock(Some(FountainSharp.Parse.Action(false, [], Range.empty)))
+  let ctxForLookAhead = ctx.WithLastParsedBlock(Some(FountainSharp.Parse.Action(false, [], Range.empty)))
   // look ahead and keep matching while it's none of these.
   match List.partitionWhileLookahead (function
     | SceneHeading ctxForLookAhead _ -> false //note: it's decomposing the match and the rest and discarding the rest: `SceneHeading _` 
@@ -657,18 +654,19 @@ let (|TitlePage|_|) (ctx:ParsingContext) (input: string list) =
   | Some(_) -> None // Title page must be the first block of the document 
   | None ->
     // match "key: value" pattern at the beginning of the input as far as it is possible, and returns the matching values as well the remaining input
-    let rec matchAndRemove acc (input:string) =
+    let rec matchAndRemove acc accLength (input:string) =
       let validCharacterClass = "[^:]"
       let pattern = String.Format(@"^(?<key>\b{0}+):(?<value>{0}+\n)", validCharacterClass)
       let m = Regex.Match(input, pattern, RegexOptions.Singleline)
       if m.Success = false then
         (List.rev acc, input) // no more match found
       else
-       let key = m.Groups.["key"] // text before ':'
-       let value = m.Groups.["value"] // text after ':'
+       let keyGroup = m.Groups.["key"] // text before ':'
+       let valueGroup = m.Groups.["value"] // text after ':'
        // let's parse spans - white spaces must be trimmed per line
-       let spans = value.Value.Trim().Split([|Environment.NewLine|], StringSplitOptions.None) |> List.ofArray |> List.map( fun s -> s.Trim() ) |> String.concat Environment.NewLine |> parseSpans ctx
-       matchAndRemove ((key.Value, spans) :: acc) (input.Remove(m.Index, m.Length))
+       let spans = valueGroup.Value.Split([|Environment.NewLine|], StringSplitOptions.None) |> List.ofArray |> String.concat Environment.NewLine |> parseSpans (ctx.Offset(accLength + valueGroup.Index).WithPreserveIndenting(true))
+       let keyBlock = (keyGroup.Value, new Range(ctx.Position + accLength + keyGroup.Index, keyGroup.Value.Length + 1))
+       matchAndRemove ((keyBlock, spans) :: acc) (accLength + m.Length) (input.Remove(m.Index, m.Length))
     
     // TODO: spare conversion from list to string and back to list of the remaining text!
     let inputAsSingleString = String.asSingleString(input, NewLine(1), false) // treat input as one string
@@ -678,7 +676,7 @@ let (|TitlePage|_|) (ctx:ParsingContext) (input: string list) =
         None
     else
         let titlePageText = inputAsSingleString.Substring(0, indexOfEmptyLine + Environment.NewLine.Length) // text before the empty line (Environment.NewLine) at the end
-        match matchAndRemove [] titlePageText with
+        match matchAndRemove [] 0 titlePageText with
         | ([], _) -> None
         | (keyValuePairs, rest) ->
             Some(keyValuePairs, titlePageText.Length + Environment.NewLine.Length, String.asStringList(inputAsSingleString.Substring(indexOfEmptyLine + Environment.NewLine.Length * 2), NewLine(1)))
@@ -697,79 +695,79 @@ let rec parseBlocks (ctx:ParsingContext) (lines: _ list) = seq {
   | TitlePage ctx (keyValuePairs, length, rest) ->
      let item = TitlePage(keyValuePairs, new Range(0, length))
      yield item
-     yield! parseBlocks (ctx.Modify(ctx.Position + length, Some(item))) rest
+     yield! parseBlocks (ctx.Offset(length).WithLastParsedBlock(Some(item))) rest
   
   | Boneyard(result, rest) ->
      let item = Boneyard(String.asSingleString(result.Text, Environment.NewLine, false), new Range(ctx.Position, result.Length))
      yield item
-     yield! parseBlocks (ctx.ChangeLastParsedBlock(Some(item)).IncrementPosition(result.Length)) rest
+     yield! parseBlocks (ctx.Offset(result.Length).WithLastParsedBlock(Some(item))) rest
   // Recognize remaining types of blocks/paragraphs
   
   | SceneHeading ctx (forced, result, rest) ->
-     let item = SceneHeading(forced, parseSpans (ctx.IncrementPosition(result.Offset)) result.Text, new Range(ctx.Position, result.Length))
+     let item = SceneHeading(forced, parseSpans (ctx.Offset(result.Offset)) result.Text, new Range(ctx.Position, result.Length))
      yield item
-     yield! parseBlocks (ctx.Modify(ctx.Position + result.Length, Some(item))) rest
+     yield! parseBlocks (ctx.Offset(result.Length).WithLastParsedBlock(Some(item))) rest
   
   | Section(n, body, rest) ->
      let item = Section(n, parseSpans ctx body, new Range(0,0))
      yield item
-     yield! parseBlocks (ctx.ChangeLastParsedBlock(Some(item))) rest
+     yield! parseBlocks (ctx.WithLastParsedBlock(Some(item))) rest
   
   | DualDialogue ctx (blocks, length, rest) ->
      let item = DualDialogue(blocks, new Range(ctx.Position, length))
      yield item
-     yield! parseBlocks (ctx.Modify(ctx.Position + length, Some(item))) rest
+     yield! parseBlocks (ctx.Offset(length).WithLastParsedBlock(Some(item))) rest
   
   | Character ctx (forced, primary, result, rest) ->
-     let item = Character(forced, primary, parseSpans (ctx.IncrementPosition(result.Offset).WithPreserveIndenting()) result.Text, new Range(ctx.Position, result.Length))
+     let item = Character(forced, primary, parseSpans (ctx.Offset(result.Offset).WithPreserveIndenting(true)) result.Text, new Range(ctx.Position, result.Length))
      yield item
-     yield! parseBlocks (ctx.Modify(ctx.Position + result.Length, Some(item))) rest
+     yield! parseBlocks (ctx.Offset(result.Length).WithLastParsedBlock(Some(item))) rest
   
   | PageBreak(result, rest) ->
      let item = PageBreak(new Range(ctx.Position, result.Length))
      yield item
-     yield! parseBlocks (ctx.Modify(ctx.Position + result.Length, Some(item))) rest
+     yield! parseBlocks (ctx.Offset(result.Length).WithLastParsedBlock(Some(item))) rest
   
   | Synopses(result, rest) ->
-     let item = Synopses(parseSpans (ctx.IncrementPosition(result.Offset)) result.Text, new Range(ctx.Position, result.Length))
+     let item = Synopses(parseSpans (ctx.Offset(result.Offset)) result.Text, new Range(ctx.Position, result.Length))
      yield item
-     yield! parseBlocks (ctx.Modify(ctx.Position + result.Length, Some(item))) rest
+     yield! parseBlocks (ctx.Offset(result.Length).WithLastParsedBlock(Some(item))) rest
   
   | Lyrics(result, rest) ->
-     let body = parseSpans (ctx.IncrementPosition(result.Offset)) result.Text
+     let body = parseSpans (ctx.Offset(result.Offset)) result.Text
      let item = Lyrics(body, new Range(ctx.Position, result.Length))
      yield item
-     yield! parseBlocks (ctx.Modify(ctx.Position + result.Length, Some(item))) rest
+     yield! parseBlocks (ctx.Offset(result.Length).WithLastParsedBlock(Some(item))) rest
 
   | Centered(result, rest) ->
-     let body = parseSpans (ctx.IncrementPosition(result.Offset)) result.Text
+     let body = parseSpans (ctx.Offset(result.Offset)) result.Text
      let item = Centered(body, new Range(ctx.Position, result.Length))
      yield item
-     yield! parseBlocks (ctx.Modify(ctx.Position + result.Length, Some(item))) rest
+     yield! parseBlocks (ctx.Offset(result.Length).WithLastParsedBlock(Some(item))) rest
 
   | Transition ctx (forced, result, rest) ->
-     let spans = parseSpans (ctx.IncrementPosition(result.Offset)) result.Text
+     let spans = parseSpans (ctx.Offset(result.Offset)) result.Text
      let item = Transition(forced, spans, new Range(ctx.Position, result.Length))
      yield item
-     yield! parseBlocks (ctx.Modify(ctx.Position + result.Length, Some(item))) rest
+     yield! parseBlocks (ctx.Offset(result.Length).WithLastParsedBlock(Some(item))) rest
   
   | Parenthetical ctx (result, rest) ->
-     let item = Parenthetical(parseSpans (ctx.IncrementPosition(result.Offset)) result.Text, new Range(ctx.Position, result.Length))
+     let item = Parenthetical(parseSpans (ctx.Offset(result.Offset)) result.Text, new Range(ctx.Position, result.Length))
      yield item
-     yield! parseBlocks (ctx.Modify(ctx.Position + result.Length, Some(item))) rest
+     yield! parseBlocks (ctx.Offset(result.Length).WithLastParsedBlock(Some(item))) rest
 
   | Dialogue ctx (result, rest) ->
-    let spans = parseSpans (ctx.WithDoubleSpaceAsNewLine()) result.Text
+    let spans = parseSpans (ctx.WithDoubleSpaceAsNewLine(true)) result.Text
     let item = Dialogue(spans, new Range(ctx.Position, result.Length))
     yield item
-    yield! parseBlocks (ctx.Modify(ctx.Position + result.Length, Some(item))) rest // go on to parse the rest
+    yield! parseBlocks (ctx.Offset(result.Length).WithLastParsedBlock(Some(item))) rest // go on to parse the rest
 
   | Action ctx (forced, result, rest) ->
     // body: as a single string. this can be parsed for spans much better
-    let spans = parseSpans (ctx.WithPreserveIndenting().IncrementPosition(result.Offset)) result.Text
+    let spans = parseSpans (ctx.WithPreserveIndenting(true).Offset(result.Offset)) result.Text
     let item = Action(forced, spans, new Range(ctx.Position, result.Length))
     yield item
-    yield! parseBlocks (ctx.Modify(ctx.Position + result.Length, Some(item))) rest // go on to parse the rest
+    yield! parseBlocks (ctx.Offset(result.Length).WithLastParsedBlock(Some(item))) rest // go on to parse the rest
   | first :: rest -> 
     yield! parseBlocks ctx rest // let's try to skip this line and recognize the rest
   | _ -> () // reached the end

@@ -76,7 +76,7 @@ type FountainBlockElement =
   | Centered of FountainSpans * Range
   | Boneyard of string * Range
   | DualDialogue of FountainBlocks * Range
-  | TitlePage of (string * FountainSpans) list * Range
+  | TitlePage of (TitlePageKey * FountainSpans) list * Range
 
   member fb.GetLength() : int =
     match fb with
@@ -97,6 +97,8 @@ type FountainBlockElement =
 
 /// A type alias for a list of blocks
 and FountainBlocks = list<FountainBlockElement>
+and TitlePageKey = string * Range // range contains the trailing ":", but the string not
+and TitlePageBlock = FountainSpans * Range 
 
 (*
 // Document as a tree

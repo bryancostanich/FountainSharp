@@ -139,7 +139,7 @@ let withInner ctx f =
 let rec formatBlockElement (ctx:FormattingContext) block =
   match block with
   | TitlePage(keyValuePairs, _) ->
-      for (key, spans) in keyValuePairs do
+      for ((key, _), spans) in keyValuePairs do
           match key with
           | "Contact"
           | "Draft date" ->
