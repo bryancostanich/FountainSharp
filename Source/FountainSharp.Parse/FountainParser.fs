@@ -36,10 +36,7 @@ type MatchResult<'T> =
       Offset : int // offset from the beginning of the input
     }
 
-/// Defines a context for the main `parseBlocks` function
-// TODO: Question: what is the Links part supposed to represent? Answer: for some reason he was creating a 
-// dictionary of known links. probably for additional processing. but fountain doesn't have links, so i got 
-// rid of it. but now we need to simplify this ParsingContext, probably.
+/// Defines a context for the parsing
 type ParsingContext(?newline : string, ?position : int, ?lastParsedBlock : FountainBlockElement option, ?treatDoubleSpaceAsNewLine : bool, ?preserveIndenting : bool) =
     let newLine = defaultArg newline Environment.NewLine
     let lastParsedBlock : FountainBlockElement option = defaultArg lastParsedBlock None
@@ -47,23 +44,34 @@ type ParsingContext(?newline : string, ?position : int, ?lastParsedBlock : Fount
     let doubleSpaceAsNewLine : bool = defaultArg treatDoubleSpaceAsNewLine false
     let preserveIndenting : bool = defaultArg preserveIndenting false
 
+    /// New line literal
     member this.NewLine with get() = newLine
 
+    /// The block that has been parsed before the current block
     member ctx.LastParsedBlock with get() = lastParsedBlock
+
+    /// The position in the input where the block currently being parsed begins
     member ctx.Position with get() = position
 
+    /// Gets whether to treat '  ' as new line
     member ctx.TreatDoubleSpaceAsNewLine with get() = doubleSpaceAsNewLine
+
+    /// Gets whether we should preserve white spaces or not
     member ctx.PreserveIndenting with get() = preserveIndenting
 
+    /// Offsets the current position
     member ctx.Offset(length) =
         new ParsingContext(ctx.NewLine, ctx.Position + length, ctx.LastParsedBlock, ctx.TreatDoubleSpaceAsNewLine, ctx.PreserveIndenting)
-
+    
+    /// Sets the previously parsed block type
     member ctx.WithLastParsedBlock(block : FountainBlockElement option) =
         new ParsingContext(ctx.NewLine, ctx.Position, block, ctx.TreatDoubleSpaceAsNewLine, ctx.PreserveIndenting)
-
+    
+    /// Enable or disable treating '  ' as new line
     member ctx.WithDoubleSpaceAsNewLine(enable) =
         new ParsingContext(ctx.NewLine, ctx.Position, ctx.LastParsedBlock, enable, ctx.PreserveIndenting)
     
+    /// Enable or disable preserving white space
     member ctx.WithPreserveIndenting(enable) =
         new ParsingContext(ctx.NewLine, ctx.Position, ctx.LastParsedBlock, ctx.TreatDoubleSpaceAsNewLine, enable)
 
