@@ -4,13 +4,13 @@
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{EF7FFC79-964B-41EC-A90F-BBDE329D2DFD}</ProjectGuid>
-    <TargetProfile>netcore</TargetProfile>
-    <TargetFSharpCoreVersion>3.3.1.0</TargetFSharpCoreVersion>
     <OutputType>Library</OutputType>
     <RootNamespace>FountainSharp.Parse.MobilePCL</RootNamespace>
     <AssemblyName>FountainSharp.Parse.MobilePCL</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
-    <TargetFrameworkProfile>Profile7</TargetFrameworkProfile>
+    <TargetFrameworkProfile>Profile259</TargetFrameworkProfile>
+    <TargetFSharpCoreVersion>3.259.3.1</TargetFSharpCoreVersion>
+    <TargetProfile>netcore</TargetProfile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -52,6 +52,9 @@
     <Compile Include="..\FountainSharp.Parse\FountainHelper.fs">
       <Link>FountainHelper.fs</Link>
     </Compile>
+    <Compile Include="..\FountainSharp.Parse\Utils.fs">
+      <Link>Utils.fs</Link>
+    </Compile>
     <Compile Include="..\FountainSharp.Parse\FountainParser.fs">
       <Link>FountainParser.fs</Link>
     </Compile>
@@ -67,7 +70,7 @@
   </ItemGroup>
   <ItemGroup>
     <Reference Include="FSharp.Core">
-      <HintPath>..\packages\FSharp.Core.4.0.0.1\lib\portable-net45+netcore45\FSharp.Core.dll</HintPath>
+      <HintPath>..\packages\FSharp.Core.4.0.0.1\lib\portable-net45+netcore45+wpa81+wp8\FSharp.Core.dll</HintPath>
     </Reference>
   </ItemGroup>
 </Project>

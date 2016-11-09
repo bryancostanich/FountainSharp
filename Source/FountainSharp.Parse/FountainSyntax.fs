@@ -9,6 +9,9 @@ type Range(location:int,length:int) =
   member this.Location = location
   member this.Length = length
 
+  member this.Offset(offset) =
+    new Range(this.Location + offset, this.Length)
+
   override this.ToString() =
     sprintf "Location: %d; Length: %d" this.Location this.Length
 
@@ -73,27 +76,29 @@ type FountainBlockElement =
   | Centered of FountainSpans * Range
   | Boneyard of string * Range
   | DualDialogue of FountainBlocks * Range
-  | TitlePage of (string * FountainSpans) list * Range
+  | TitlePage of (TitlePageKey * FountainSpans) list * Range
 
   member fb.GetLength() : int =
     match fb with
-    | TitlePage(items, r) -> r.Length
-    | DualDialogue(blocks, r) -> r.Length
-    | Character(forced, main, spans, r) -> r.Length
-    | Boneyard(text, r) -> text.Length
-    | Action(forced, spans, r)
-    | SceneHeading(forced, spans, r)
-    | Transition(forced, spans, r) -> r.Length
-    | Dialogue(spans, r)
-    | Parenthetical(spans, r)
-    | Synopses (spans, r)
-    | Lyrics(spans, r)
-    | Centered(spans, r) -> r.Length
-    | Section(int, spans, r) -> r.Length
+    | Character(_, _, _, r) -> r.Length
+    | Action(_, _, r)
+    | SceneHeading(_, _, r)
+    | Section(_, _, r)
+    | Transition(_, _, r) -> r.Length
+    | Dialogue(_, r)
+    | Parenthetical(_, r)
+    | Synopses (_, r)
+    | Lyrics(_, r)
+    | Boneyard(_, r)
+    | TitlePage(_, r)
+    | DualDialogue(_, r)
+    | Centered(_, r) -> r.Length
     | PageBreak(r) -> r.Length
-  
+
 /// A type alias for a list of blocks
 and FountainBlocks = list<FountainBlockElement>
+and TitlePageKey = string * Range // range contains the trailing ":", but the string not
+and TitlePageBlock = FountainSpans * Range 
 
 (*
 // Document as a tree

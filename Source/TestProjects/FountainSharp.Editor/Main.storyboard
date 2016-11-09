@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.Storyboard.XIB" version="3.0" toolsVersion="9531" systemVersion="15C50" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES" initialViewController="B8D-0N-5wS">
+<document type="com.apple.InterfaceBuilder3.Cocoa.Storyboard.XIB" version="3.0" toolsVersion="11201" systemVersion="15G1004" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES" initialViewController="B8D-0N-5wS">
     <dependencies>
         <deployment identifier="macosx"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="9531"/>
-        <plugIn identifier="com.apple.WebKitIBPlugin" version="9531"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="11201"/>
+        <plugIn identifier="com.apple.WebKitIBPlugin" version="11201"/>
+        <capability name="Constraints with non-1.0 multipliers" minToolsVersion="5.1"/>
     </dependencies>
     <scenes>
         <!--Application-->
@@ -671,15 +672,11 @@
             <objects>
                 <viewController id="XfG-lQ-9wD" customClass="ViewController" sceneMemberID="viewController">
                     <view key="view" id="m2S-Jp-Qdl">
-                        <rect key="frame" x="0.0" y="0.0" width="752" height="507"/>
+                        <rect key="frame" x="0.0" y="0.0" width="738" height="507"/>
                         <autoresizingMask key="autoresizingMask"/>
                         <subviews>
                             <webView translatesAutoresizingMaskIntoConstraints="NO" id="Jso-hp-ZL5">
-                                <rect key="frame" x="377" y="0.0" width="375" height="507"/>
-                                <constraints>
-                                    <constraint firstAttribute="height" constant="507" id="3SE-4U-7nc"/>
-                                    <constraint firstAttribute="width" constant="375" id="xIg-US-bjb"/>
-                                </constraints>
+                                <rect key="frame" x="369" y="0.0" width="369" height="507"/>
                                 <webPreferences key="preferences" defaultFontSize="16" defaultFixedFontSize="13" minimumFontSize="0">
                                     <nil key="identifier"/>
                                 </webPreferences>
@@ -687,43 +684,39 @@
                             <scrollView horizontalLineScroll="10" horizontalPageScroll="10" verticalLineScroll="10" verticalPageScroll="10" hasHorizontalScroller="NO" usesPredominantAxisScrolling="NO" translatesAutoresizingMaskIntoConstraints="NO" id="PoH-Le-4wY">
                                 <rect key="frame" x="0.0" y="0.0" width="369" height="507"/>
                                 <clipView key="contentView" id="8Dg-MA-MZy">
-                                    <rect key="frame" x="1" y="1" width="367" height="505"/>
+                                    <rect key="frame" x="1" y="1" width="352" height="505"/>
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                     <subviews>
-                                        <textView importsGraphics="NO" findStyle="panel" continuousSpellChecking="YES" allowsUndo="YES" usesRuler="YES" usesFontPanel="YES" verticallyResizable="YES" allowsNonContiguousLayout="YES" quoteSubstitution="YES" dashSubstitution="YES" smartInsertDelete="YES" id="tpf-J8-3fS">
-                                            <rect key="frame" x="0.0" y="0.0" width="367" height="505"/>
+                                        <textView importsGraphics="NO" usesFontPanel="YES" findStyle="panel" continuousSpellChecking="YES" allowsUndo="YES" usesRuler="YES" allowsNonContiguousLayout="YES" quoteSubstitution="YES" dashSubstitution="YES" smartInsertDelete="YES" id="tpf-J8-3fS">
+                                            <rect key="frame" x="0.0" y="0.0" width="352" height="505"/>
                                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                             <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
-                                            <size key="minSize" width="367" height="505"/>
+                                            <size key="minSize" width="352" height="505"/>
                                             <size key="maxSize" width="463" height="10000000"/>
                                             <color key="insertionPointColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
-                                            <size key="minSize" width="367" height="505"/>
-                                            <size key="maxSize" width="463" height="10000000"/>
                                         </textView>
                                     </subviews>
                                     <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                                 </clipView>
-                                <constraints>
-                                    <constraint firstAttribute="width" constant="369" id="1PO-ZA-Set"/>
-                                    <constraint firstAttribute="height" constant="507" id="V09-jo-EA8"/>
-                                </constraints>
                                 <scroller key="horizontalScroller" hidden="YES" verticalHuggingPriority="750" doubleValue="1" horizontal="YES" id="END-t8-byg">
                                     <rect key="frame" x="-100" y="-100" width="87" height="18"/>
                                     <autoresizingMask key="autoresizingMask"/>
                                 </scroller>
                                 <scroller key="verticalScroller" verticalHuggingPriority="750" doubleValue="1" horizontal="NO" id="Iun-xA-ews">
-                                    <rect key="frame" x="352" y="1" width="16" height="505"/>
+                                    <rect key="frame" x="353" y="1" width="15" height="505"/>
                                     <autoresizingMask key="autoresizingMask"/>
                                 </scroller>
                             </scrollView>
                         </subviews>
                         <constraints>
-                            <constraint firstItem="Jso-hp-ZL5" firstAttribute="top" secondItem="m2S-Jp-Qdl" secondAttribute="top" id="Jam-zk-So6"/>
+                            <constraint firstItem="PoH-Le-4wY" firstAttribute="width" secondItem="m2S-Jp-Qdl" secondAttribute="width" multiplier="0.5" id="4L5-B4-a1E"/>
+                            <constraint firstItem="Jso-hp-ZL5" firstAttribute="top" secondItem="m2S-Jp-Qdl" secondAttribute="top" id="AIM-4i-Lee"/>
                             <constraint firstItem="PoH-Le-4wY" firstAttribute="top" secondItem="m2S-Jp-Qdl" secondAttribute="top" id="ZWI-qA-gaO"/>
-                            <constraint firstAttribute="bottom" secondItem="Jso-hp-ZL5" secondAttribute="bottom" id="dqz-dY-eVe"/>
-                            <constraint firstItem="PoH-Le-4wY" firstAttribute="leading" secondItem="m2S-Jp-Qdl" secondAttribute="leading" id="x3H-RI-b7j"/>
-                            <constraint firstAttribute="trailing" secondItem="Jso-hp-ZL5" secondAttribute="trailing" id="x6W-FE-yNd"/>
-                            <constraint firstAttribute="bottom" secondItem="PoH-Le-4wY" secondAttribute="bottom" id="yKW-J1-7LT"/>
+                            <constraint firstItem="Jso-hp-ZL5" firstAttribute="width" secondItem="m2S-Jp-Qdl" secondAttribute="width" multiplier="0.5" id="ftr-yT-oXu"/>
+                            <constraint firstItem="PoH-Le-4wY" firstAttribute="leading" secondItem="m2S-Jp-Qdl" secondAttribute="leading" id="hGb-lb-cKz"/>
+                            <constraint firstItem="Jso-hp-ZL5" firstAttribute="trailing" secondItem="m2S-Jp-Qdl" secondAttribute="trailing" id="j3Y-t6-7TN"/>
+                            <constraint firstItem="PoH-Le-4wY" firstAttribute="bottom" secondItem="m2S-Jp-Qdl" secondAttribute="bottom" id="lmV-Tf-ZUD"/>
+                            <constraint firstItem="Jso-hp-ZL5" firstAttribute="height" secondItem="m2S-Jp-Qdl" secondAttribute="height" id="q2W-nf-9eY"/>
                         </constraints>
                     </view>
                     <connections>

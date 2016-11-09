@@ -54,15 +54,18 @@ type UniqueNameGenerator() =
       generated.[name] <- 1
       name
 
+// TODO: a base FormattingContext (converted to class type) could be published for clients
 /// Context passed around while formatting the HTML
 type FormattingContext =
-  { LineBreak : unit -> unit
+  { LineBreak : unit -> unit // line break appending routine
     Newline : string
     Writer : TextWriter
     // don't think i'll ever need this in fountain, but perhaps. so i'll keep it commented for now.
     //GenerateHeaderAnchors : bool
     UniqueNameGenerator : UniqueNameGenerator
-    ParagraphIndent : unit -> unit }
+    ParagraphIndent : unit -> unit
+    PreserveWhiteSpace : bool // whether to preserve white spaces or not
+  }
 
 let bigBreak (ctx:FormattingContext) () =
   ctx.Writer.Write(ctx.Newline + ctx.Newline)
@@ -76,7 +79,7 @@ let rec formatSpan (ctx:FormattingContext) = function
   | Literal(str, range) ->
       // preserve white spaces - Action possibly have those
       ctx.Writer.Write("""<span style="white-space: pre;">""")
-      ctx.Writer.Write(str)
+      ctx.Writer.Write(if ctx.PreserveWhiteSpace then str else str.Trim())
       ctx.Writer.Write("</span>");
   | HardLineBreak (range) -> ctx.Writer.Write("<br />")
   | Bold(body, range) -> 
@@ -139,15 +142,16 @@ let withInner ctx f =
 let rec formatBlockElement (ctx:FormattingContext) block =
   match block with
   | TitlePage(keyValuePairs, _) ->
-      for (key, spans) in keyValuePairs do
+      for ((key, _), spans) in keyValuePairs do
           match key with
           | "Contact"
           | "Draft date" ->
               ctx.Writer.Write("""<div style="text-align:left;"><br/>""")
           | _ ->
               ctx.Writer.Write("""<div style="text-align:center;"><br/>""")
-          formatSpans ctx spans
+          formatSpans { ctx with PreserveWhiteSpace = false } spans
           ctx.Writer.Write("</div>")
+      ctx.Writer.Write("<hr>") // implicit page break after Title Page
   | Boneyard(_, _) -> ()
   | Section(n, spans, range) -> 
       ctx.Writer.Write("<h" + string n + ">")
@@ -227,7 +231,7 @@ let rec formatBlockElement (ctx:FormattingContext) block =
       ctx.Writer.Write("</div>")
   | Dialogue (spans, range)
   | Centered (spans, range) ->
-      ctx.Writer.Write("""<div style="text-align:center;">""")
+      ctx.Writer.Write("""<div style="text-align:center;word-wrap:break-word;">""")
       for span in spans do 
         formatSpan ctx span
       ctx.Writer.Write("</div>")
@@ -237,7 +241,9 @@ let rec formatBlockElement (ctx:FormattingContext) block =
         formatSpan ctx span
       ctx.Writer.Write(")</div>")
   | Action (forced, spans, range) ->
+      ctx.Writer.Write("""<div style="word-wrap:break-word;">""")
       formatSpans ctx spans
+      ctx.Writer.Write("</div>")
   ctx.LineBreak()
 
 /// Write a list of MarkdownParagraph values to a TextWriter
@@ -259,5 +265,7 @@ let formatFountain writer generateAnchors newline wrap =
       LineBreak = ignore
       //GenerateHeaderAnchors = generateAnchors
       UniqueNameGenerator = new UniqueNameGenerator()
-      ParagraphIndent = ignore }
+      ParagraphIndent = ignore
+      PreserveWhiteSpace = true
+    }
 

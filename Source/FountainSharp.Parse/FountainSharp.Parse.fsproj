@@ -38,6 +38,7 @@
     <Compile Include="StringParsing.fs" />
     <Compile Include="FountainSyntax.fs" />
     <Compile Include="FountainHelper.fs" />
+    <Compile Include="Utils.fs" />
     <Compile Include="FountainParser.fs" />
     <Compile Include="HtmlFormatting.fs" />
     <Compile Include="Fountain.fs" />
