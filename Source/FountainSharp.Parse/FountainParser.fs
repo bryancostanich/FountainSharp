@@ -185,11 +185,6 @@ let rec parseChars (ctx:ParsingContext) acc numOfEscapedChars input = seq {
     yield HardLineBreak(new Range(ctx.Position + acc.Length, Environment.NewLine.Length))
     yield! parseChars (ctx.Offset(acc.Length + Environment.NewLine.Length)) [] numOfEscapedChars rest
 
-  // Encode & as an HTML entity
-  | '&'::'a'::'m'::'p'::';'::rest 
-  | '&'::rest ->
-      yield! parseChars ctx (';'::'p'::'m'::'a'::'&'::acc) numOfEscapedChars rest
-
   // Ignore escaped characters that might mean something else
   | EscapedChar(c, rest) ->
       yield! parseChars ctx (c::acc) (numOfEscapedChars + 1) rest
@@ -224,32 +219,22 @@ let parseSpans (ctx:ParsingContext) (s:string) =
 // Part 2: Block Formatting
 
 /// Recognizes a Section (# Some section, ## another section), prefixed with '#'s
-let (|Section|_|) input = //function
-// conceptually, this is what is happening
-//  let head :: rest = input
-//  match head with
-//  // ## Some Heading or # Some heading
-//  | String.StartsWithRepeated "#" head -> { n, matchedText -> {
-//       Some (n, matchedText.Trim(), rest)
-//      }
-
-// another way to write this:
-//  match input with
-//  | String.StartsWithRepeated "#" s :: rest ->
-//      let (n, header) = s
-//      let header = 
+let (|Section|_|) input =
   match input with
-  | String.StartsWithRepeated "#" (n, header) :: rest -> // step 1: decouple head :: tail. step 2: pass head to startsWith and it returns the n, header
-      //TODO: at some point, re visit the header variable name because we're actually hiding in this next line
-      let header = 
-        // Drop "##" at the end, but only when it is preceded by some whitespace
-        // (For example "## Hello F#" should be "Hello F#")
-        if header.EndsWith "#" then
-          let noHash = header.TrimEnd [| '#' |]
-          if noHash.Length > 0 && Char.IsWhiteSpace(noHash.Chars(noHash.Length - 1)) 
-          then noHash else header
-        else header        
-      Some(n, header, rest)
+  | String.StartsWithRepeated "#" (n, header) :: rest ->
+      // input starts with n piece of '#' characters followed by header
+      let text = header
+      // Why would we need to deal with the following? There is nothing about this in the Fountain spec
+//      let text = 
+//        // Drop "##" at the end, but only when it is preceded by some whitespace
+//        // (For example "## Hello F#" should be "Hello F#")
+//        if header.EndsWith "#" then
+//          let noHash = header.TrimEnd [| '#' |]
+//          if noHash.Length > 0 && Char.IsWhiteSpace(noHash.Chars(noHash.Length - 1))
+//          then noHash else header
+//        else header
+      let length = if rest.IsEmpty then header.Length + n else header.Length + n + NewLineLength
+      Some(n, { Text = header; Length = length; Offset = n }, rest)
   | rest ->
       None
 
@@ -708,10 +693,11 @@ let rec parseBlocks (ctx:ParsingContext) (lines: _ list) = seq {
      yield item
      yield! parseBlocks (ctx.Offset(result.Length).WithLastParsedBlock(Some(item))) rest
   
-  | Section(n, body, rest) ->
-     let item = Section(n, parseSpans ctx body, new Range(0,0))
+  | Section(n, result, rest) ->
+     let body = parseSpans (ctx.Offset(result.Offset)) result.Text
+     let item = Section(n, body, new Range(ctx.Position, result.Length))
      yield item
-     yield! parseBlocks (ctx.WithLastParsedBlock(Some(item))) rest
+     yield! parseBlocks (ctx.Offset(result.Length).WithLastParsedBlock(Some(item))) rest
   
   | DualDialogue ctx (blocks, length, rest) ->
      let item = DualDialogue(blocks, new Range(ctx.Position, length))

@@ -340,11 +340,13 @@ let ``Notes - Line breaks with empty line`` () =
    doc.Blocks
    |> should equal [Action(false, [Literal ("His hand is an inch from the receiver when the phone RINGS. Scott pauses for a moment, suspicious for some reason.", new Range(0, 114)); Note([Literal("This section needs work.", new Range(116, 24)); HardLineBreak(new Range(140, NewLineLength)); Literal("Either that, or I need coffee.", new Range(140 + NewLineLength, 30)); HardLineBreak(new Range(170 + NewLineLength, NewLineLength)); HardLineBreak(new Range(170 + 2 * NewLineLength, NewLineLength + 2)); Literal("Definitely coffee.", new Range(172 + NewLineLength * 3, 18))], new Range(114, 78 + NewLineLength * 3)); Literal(" He looks around. Phone ringing.", new Range(192 + NewLineLength * 3, 32))], new Range(0, text.Length))]
 
-//===== Boneyard (Comments)
-//TODO: not implemented yet.
-
 //===== Span Elements ==============================================================
 
+[<Test>]
+let ``Escaped char`` () =
+   let doc = "Tom & Jerry" |> Fountain.Parse
+   doc.Blocks
+   |> should equal [Action (false, [Literal ("Tom & Jerry", new Range(0, 11))], new Range(0, 11))]
 
 //===== Indenting
 
