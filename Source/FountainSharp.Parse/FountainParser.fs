@@ -442,24 +442,28 @@ let (|Parenthetical|_|) (ctx:ParsingContext) (input:string list) =
 
 //==== Transition
 
-// Transition
+/// Matches a Transition block. Returns forced, MatchResult, rest
 let (|Transition|_|) (ctx:ParsingContext) (input:string list) =
+  // parsing Transition block from the line containing the text
   let parseTransition (head:string) rest offset =
-    let blockContent = head.TrimStart() // Transition ignores indenting
-    if blockContent.StartsWith "!" then // guard against forced action
-        None
-    elif blockContent.StartsWith ">" then // forced transition
-        let text = blockContent.Substring(1).TrimStart()
-        Some(true, { Text = text; Length = head.Length + NewLineLength * 2 + offset; Offset = head.IndexOf(text) + NewLineLength }, rest)
-    elif blockContent.EndsWith "TO:" then // non-forced transition
-        // check for all uppercase
-        if blockContent.ToCharArray() |> Seq.exists (fun c -> Char.IsLower(c)) then
-          None
+    match [head] with
+    | Centered _ -> None // prevent Centered being recognized as forced Transition
+    | _ ->
+        let blockContent = head.TrimStart() // Transition ignores indenting
+        if blockContent.StartsWith "!" then // guard against forced action
+            None
+        elif blockContent.StartsWith ">" then // forced transition
+            let text = blockContent.Substring(1).TrimStart()
+            Some(true, { Text = text; Length = head.Length + NewLineLength * 2 + offset; Offset = head.IndexOf(text) + NewLineLength }, rest)
+        elif blockContent.EndsWith "TO:" then // non-forced transition
+            // check for all uppercase
+            if blockContent.ToCharArray() |> Seq.exists (fun c -> Char.IsLower(c)) then
+              None
+            else
+              let text = blockContent.TrimStart()
+              Some(false, { Text = text; Length = head.Length + NewLineLength * 2 + offset; Offset = head.IndexOf(text) + offset },  rest)
         else
-          let text = blockContent.TrimStart()
-          Some(false, { Text = text; Length = head.Length + NewLineLength * 2 + offset; Offset = head.IndexOf(text) + offset },  rest)
-    else
-        None
+            None
 
   // Has to be preceded by and followed by an empty line
   match ctx.LastParsedBlock with

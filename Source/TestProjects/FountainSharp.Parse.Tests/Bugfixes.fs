@@ -44,6 +44,12 @@ let ``#Bugfix - Character after Dialogue`` () =
    doc.Blocks
    |> should equal [ Character(false, true, [ Literal("STEEL", new Range(NewLineLength, 5)) ], new Range(0, 5 + NewLineLength * 2)); Dialogue( [ Literal("Does a bear crap in the woods?", new Range(5 + NewLineLength * 2, 30)) ], new Range(5 + NewLineLength * 2, 30 + NewLineLength)); Character(false, true, [ Literal("BRICK", new Range(35 + NewLineLength * 4, 5)) ], new Range(35 + NewLineLength * 3, 5 + NewLineLength)) ]
 
+[<Test>]
+let ``#Bugfix - Centered recognized as Transition`` () =
+   let doc = properNewLines "\r\n> Brick & Steel <\r\n\r\nSome action" |> Fountain.Parse
+   doc.Blocks
+   |> should equal [ Action(false, [ HardLineBreak(new Range(0, NewLineLength)) ], new Range(0, NewLineLength)); Centered ([Literal ("Brick & Steel", new Range(2 + NewLineLength, 13))], new Range(NewLineLength, 17 + NewLineLength)); Action(false, [ HardLineBreak(new Range(17 + NewLineLength * 2, NewLineLength)); Literal("Some action", new Range(17 + NewLineLength * 3, 11)) ], new Range(17 + NewLineLength * 2, 11 + NewLineLength))]
+
 //[<Test>]
 //let ``Scene Heading after Title page`` () =
 //   // This is quite a complex title page with inline and not inline values, emphasized spans.
