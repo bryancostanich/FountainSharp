@@ -12,6 +12,13 @@ type Range(location:int,length:int) =
   member this.Offset(offset) =
     new Range(this.Location + offset, this.Length)
 
+  member this.Contains(position) =
+    if position >= this.Location && position < this.Location + this.Length then true
+    else false
+  
+  member this.HasIntersectionWith(range:Range) =
+      this.Contains(range.Location) || this.Contains(range.Location + range.Length)
+
   override this.ToString() =
     sprintf "Location: %d; Length: %d" this.Location this.Length
 
@@ -32,30 +39,18 @@ type FountainSpanElement =
   | Note of FountainSpans * Range// [[this is my note]]
   | HardLineBreak of Range
 
-  //let range:Range = new Range(0,0)
-
-  //member fs.Range =
-  //  with get () = range
-  //  and set (value) = range <- value
-
-  // Sigh, if F# allowed lets in DUs, we could cache the length. :(
-  //let mutable length = -1
-
+  // TODO: make Range available for all types without pattern matching
   member fs.GetLength() : int =
     match fs with
     | Bold(spans, r)
     | Italic(spans, r)
     | Underline(spans, r)
-    | Note(spans, r) ->
-      spans
-      |> List.map( fun span -> span.GetLength() )
-      |> List.sum
-    | HardLineBreak(r) -> 1
-    | Literal(str, r) -> str.Length
+    | Note(spans, r) -> r.Length
+    | HardLineBreak(r) -> r.Length
+    | Literal(str, r) -> r.Length
   
   member fs.GetRange(start:int):Range =
     new Range(start, fs.GetLength() + start)
-
 
 /// A type alias for a list of `FountainSpan` values
 and FountainSpans = list<FountainSpanElement>
