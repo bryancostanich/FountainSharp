@@ -42,3 +42,8 @@ let ``Range - intersection`` () =
 let ``Range - no intersection`` () =
    let range = new Range(10, 5)
    range.HasIntersectionWith(new Range(8, 1)) |> should be False
+
+[<Test>]
+let ``Range - end`` () =
+   let range = new Range(10, 5)
+   range.EndLocation |> should equal 14

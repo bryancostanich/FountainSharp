@@ -9,6 +9,8 @@ type Range(location:int,length:int) =
   member this.Location = location
   member this.Length = length
 
+  member this.EndLocation with get() = location + length - 1
+
   member this.Offset(offset) =
     new Range(this.Location + offset, this.Length)
 
@@ -91,7 +93,7 @@ type FountainBlockElement =
     | PageBreak(r) -> r.Length
 
 /// A type alias for a list of blocks
-and FountainBlocks = list<FountainBlockElement>
+and FountainBlocks = FountainBlockElement list
 and TitlePageKey = string * Range // range contains the trailing ":", but the string not
 and TitlePageBlock = FountainSpans * Range 
 

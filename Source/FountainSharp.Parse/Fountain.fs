@@ -16,6 +16,7 @@ open FountainSharp.Parse.Helper
 /// uses an F# discriminated union type and so is best used from F#.
 // TODO: this doesn't really need a full blown type for one member (i removed the Links that was part of the markdown doc)
 // maybe do a dictionary of character names though. that could be useful.
+[<AllowNullLiteral>]
 type FountainDocument(blocks, ?text) =
   /// Returns a list of blocks in the document
   member doc.Blocks : FountainBlocks = blocks
