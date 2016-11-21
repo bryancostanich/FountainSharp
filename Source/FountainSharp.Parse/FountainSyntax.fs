@@ -4,15 +4,26 @@ open System
 open System.IO
 open System.Collections.Generic
 
-[<Struct>]
-type Range(location:int,length:int) = 
-  member this.Location = location
-  member this.Length = length
+type Range =
+  val mutable private _location : int
+  val mutable private _length : int
+  
+  new(location:int,length:int) = { _location = location; _length = length }
+  
+  member this.Location with get() = this._location and set(l) = this._location <- l
+  member this.Length with get() = this._length
 
-  member this.EndLocation with get() = location + length - 1
+  member this.EndLocation
+    with get() =
+      if this.Length = 0 then this.Location
+      else this.Location + this.Length - 1
 
   member this.Offset(offset) =
-    new Range(this.Location + offset, this.Length)
+    this._location <- this._location + offset
+    ()
+  
+  static member Offset(r:Range, offset) =
+    new Range(r.Location + offset, r.Length)
 
   member this.Contains(position) =
     if position >= this.Location && position < this.Location + this.Length then true
@@ -23,6 +34,15 @@ type Range(location:int,length:int) =
 
   override this.ToString() =
     sprintf "Location: %d; Length: %d" this.Location this.Length
+  
+  override this.GetHashCode() =
+    hash(this.Location, this.Length)
+
+  // override equality check to be structural instead of reference comparison
+  override this.Equals(obj) =
+    match obj with
+    | :? Range as r -> (this.Location, this.Length) = (r.Location, r.Length)
+    | _ -> false
 
   static member empty = new Range(0, 0)
 
@@ -42,17 +62,15 @@ type FountainSpanElement =
   | HardLineBreak of Range
 
   // TODO: make Range available for all types without pattern matching
-  member fs.GetLength() : int =
-    match fs with
-    | Bold(spans, r)
-    | Italic(spans, r)
-    | Underline(spans, r)
-    | Note(spans, r) -> r.Length
-    | HardLineBreak(r) -> r.Length
-    | Literal(str, r) -> r.Length
-  
-  member fs.GetRange(start:int):Range =
-    new Range(start, fs.GetLength() + start)
+  member fs.Range
+    with get() =
+        match fs with
+        | Bold(_, r)
+        | Italic(_, r)
+        | Underline(_, r)
+        | Note(_, r) -> r
+        | Literal(_, r) -> r
+        | HardLineBreak(r) -> r
 
 /// A type alias for a list of `FountainSpan` values
 and FountainSpans = list<FountainSpanElement>
@@ -75,13 +93,13 @@ type FountainBlockElement =
   | DualDialogue of FountainBlocks * Range
   | TitlePage of (TitlePageKey * FountainSpans) list * Range
 
-  member fb.GetLength() : int =
+  member fb.Range : Range =
     match fb with
-    | Character(_, _, _, r) -> r.Length
+    | Character(_, _, _, r) -> r
     | Action(_, _, r)
     | SceneHeading(_, _, r)
     | Section(_, _, r)
-    | Transition(_, _, r) -> r.Length
+    | Transition(_, _, r) -> r
     | Dialogue(_, r)
     | Parenthetical(_, r)
     | Synopses (_, r)
@@ -89,8 +107,8 @@ type FountainBlockElement =
     | Boneyard(_, r)
     | TitlePage(_, r)
     | DualDialogue(_, r)
-    | Centered(_, r) -> r.Length
-    | PageBreak(r) -> r.Length
+    | Centered(_, r) -> r
+    | PageBreak(r) -> r
 
 /// A type alias for a list of blocks
 and FountainBlocks = FountainBlockElement list

@@ -16,7 +16,13 @@ let ``Range - empty`` () =
 [<Test>]
 let ``Range - offset`` () =
    let range = new Range(10, 5)
-   range.Offset(8) |> should equal (new Range(18, 5))
+   range.Offset(8)
+   range |> should equal (new Range(18, 5))
+
+[<Test>]
+let ``Range - static offset`` () =
+   let range = new Range(10, 5)
+   Range.Offset(range, 8) |> should equal (new Range(18, 5))
 
 [<Test>]
 let ``Range - contains`` () =

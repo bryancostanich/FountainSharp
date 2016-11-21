@@ -603,7 +603,7 @@ let (|DualDialogue|_|) (ctx: ParsingContext) (input:string list) =
   match parse (ctx, input, []) with
   | Some([], _) -> None // no (Character, Dialogue) blocks found
   | Some(list, rest) ->
-    let length = list |> List.map(fun block -> block.GetLength()) |> List.sum
+    let length = list |> List.map(fun block -> block.Range.Length) |> List.sum
     if List.tryFind isPrimary list <> None &&  List.tryFind isSecondary list <> None then
        Some(list, length, rest)
     else
