@@ -17,10 +17,16 @@ open FountainSharp.Parse.Helper
 // TODO: this doesn't really need a full blown type for one member (i removed the Links that was part of the markdown doc)
 // maybe do a dictionary of character names though. that could be useful.
 [<AllowNullLiteral>]
-type FountainDocument(blocks, ?text) =
+type FountainDocument =
+  val mutable private _blocks : FountainBlocks
+  val mutable private _text : string
+
+  new (blocks, ?text) = { _blocks = blocks; _text = defaultArg text null }
+
   /// Returns a list of blocks in the document
-  member doc.Blocks : FountainBlocks = blocks
-  member doc.Text : string = defaultArg text null
+  member doc.Blocks with get() = doc._blocks
+  /// Returns the original text of the whole document
+  member doc.Text with get() = doc._text
 
   /// Returns the original text of a block
   member doc.GetText(range:Range) =
@@ -29,6 +35,49 @@ type FountainDocument(blocks, ?text) =
     else
         let length = min range.Length (doc.Text.Length - range.Location)
         doc.Text.Substring(range.Location, length)
+
+  member doc.ReplaceText(location, length, newText:string) =
+       let predicateContains (block:FountainBlockElement) = 
+           if block.Range.HasIntersectionWith(new Range(location, length)) then true
+           else false
+       let predicateDoesNotContain (block:FountainBlockElement) =
+           if predicateContains block then false
+           else true
+
+       // replace the text
+       let newTextBuilder = new StringBuilder(doc._text.Remove(location, length))
+       newTextBuilder.Insert(location, newText) |> ignore
+
+       let lengthChange = newText.Length - length
+       // blocks being dropped: they are touched by the deletion
+       let touchedBlocks = List.where predicateContains doc.Blocks
+       // blocks to be preserved: they are not touched by the deletion
+       // TODO: this is not always true (some blocks rely on last parsed block)
+       let notTouchedBlocks = List.where predicateDoesNotContain doc.Blocks
+       // determine the first and last position of touched blocks
+       let minTouchedPosition =
+         if touchedBlocks.IsEmpty then location
+         else touchedBlocks |> List.map(fun block -> block.Range.Location) |> List.min
+       let maxTouchedPosition =
+         if touchedBlocks.IsEmpty then location
+         else touchedBlocks |> List.map(fun block -> block.Range.EndLocation) |> List.max
+       let textToParse =
+         if minTouchedPosition = maxTouchedPosition then
+           newTextBuilder.ToString().Substring(minTouchedPosition, max lengthChange 0)
+         else
+           newTextBuilder.ToString().Substring(minTouchedPosition, maxTouchedPosition - minTouchedPosition + 1 + lengthChange)
+       // parse the text
+       let lines = textToParse.Split([|Environment.NewLine|], StringSplitOptions.None) |> List.ofArray
+       let ctx = new ParsingContext(Environment.NewLine, minTouchedPosition)
+       let newBlocks = lines |> parseBlocks ctx |> List.ofSeq
+       // offset the range of blocks after the change
+       notTouchedBlocks |> List.iter(fun block -> if block.Range.Location > maxTouchedPosition then block.OffsetRange(lengthChange))
+       let finalBlocks = 
+           notTouchedBlocks
+           |> List.append newBlocks
+           |> List.sortBy (fun block -> block.Range.Location)
+       doc._blocks <- finalBlocks
+       doc._text <- newTextBuilder.ToString() // finalize text change
 
 /// Static class that provides methods for formatting 
 /// and transforming Markdown documents.
@@ -44,21 +93,12 @@ type Fountain =
       lines 
       |> parseBlocks ctx 
       |> List.ofSeq
+      |> List.where(fun block -> block.Range.Location < text.Length)
     FountainDocument(blocks, text)
 
   /// Parse the specified text into a MarkdownDocument.
   static member Parse(text) =
     Fountain.Parse(text, Environment.NewLine)
-
-  // Parses a single line. Used for optimization when working with a large doc from an editor.
-  static member ParseLine(text:string, newline) =
-    let ctx = new ParsingContext(newline)
-    let line = text::[]
-    let blocks = 
-      line 
-      |> parseBlocks ctx 
-      |> List.ofSeq
-    FountainDocument(blocks, text)
 
   /// Transform Fountain document into HTML format. The result
   /// will be written to the provided TextWriter.

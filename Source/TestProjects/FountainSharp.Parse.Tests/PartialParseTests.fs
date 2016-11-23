@@ -1,0 +1,44 @@
+﻿module FountainSharp.Parse.Tests.PartialParsing
+
+open System
+open FsUnit
+open NUnit.Framework
+open FountainSharp.Parse
+open FountainSharp.Parse.Helper
+
+//===== Partial parsing
+
+[<Test>]
+let ``Deleting when simple Action is present`` () =
+   let doc = "Some action" |> Fountain.Parse
+   doc.ReplaceText(0, 1, "")
+   doc.Blocks
+   |> should equal [ Action (false, [Literal ("ome action", new Range(0, 10))], new Range(0, 10)) ]
+
+[<Test>]
+let ``Deleting when more blocks are present`` () =
+   let doc = properNewLines "Some action\r\n\r\nINT DOGHOUSE - DAY\r\n" |> Fountain.Parse
+   doc.ReplaceText(0, 1, "")
+   doc.Blocks
+   |> should equal [ Action (false, [Literal ("ome action", new Range(0, 10)); HardLineBreak(new Range(10, NewLineLength))], new Range(0, 10 + NewLineLength)); SceneHeading(false, [ Literal("INT DOGHOUSE - DAY", new Range(10 + NewLineLength * 2, 18)) ], new Range(10 + NewLineLength, 18 + NewLineLength * 3)) ]
+
+[<Test>]
+let ``Inserting when empty`` () =
+   let doc = "" |> Fountain.Parse
+   doc.ReplaceText(0, 0, "Action")
+   doc.Blocks
+   |> should equal [ Action (false, [Literal ("Action", new Range(0, 6))], new Range(0, 6)) ]
+
+[<Test>]
+let ``Replacing non empty`` () =
+   let doc = "Ac" |> Fountain.Parse
+   doc.ReplaceText(1, 1, "ction")
+   doc.Blocks
+   |> should equal [ Action (false, [Literal ("Action", new Range(0, 6))], new Range(0, 6)) ]
+
+[<Test>]
+let ``Appending`` () =
+   let doc = "Ac" |> Fountain.Parse
+   doc.ReplaceText(2, 0, "tion")
+   doc.Blocks
+   |> should equal [ Action (false, [Literal ("Action", new Range(0, 6))], new Range(0, 6)) ]

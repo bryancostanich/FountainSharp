@@ -71,6 +71,19 @@ type FountainSpanElement =
         | Note(_, r) -> r
         | Literal(_, r) -> r
         | HardLineBreak(r) -> r
+  
+  /// Offsets the range of the span (including inner spans)
+  member fs.OffsetRange(offset) =
+    match fs with
+    | Bold(spans, r)
+    | Italic(spans, r)
+    | Underline(spans, r)
+    | Note(spans, r) ->
+      for span in spans do
+        span.OffsetRange(offset)
+      r.Offset(offset)
+    | Literal(_, r) -> r.Offset(offset)
+    | HardLineBreak(r) -> r.Offset(offset)
 
 /// A type alias for a list of `FountainSpan` values
 and FountainSpans = list<FountainSpanElement>
@@ -109,6 +122,38 @@ type FountainBlockElement =
     | DualDialogue(_, r)
     | Centered(_, r) -> r
     | PageBreak(r) -> r
+  
+  /// Offsets the range of the block (including inner blocks and spans)
+  member fb.OffsetRange(offset) =
+    let offsetSpans (spans:FountainSpans) offset =
+      for span in spans do
+        span.OffsetRange(offset)
+    match fb with
+    | Character(_, _, spans, r) ->
+      offsetSpans spans offset
+      r.Offset(offset)
+    | Action(_, spans, r)
+    | SceneHeading(_, spans, r)
+    | Section(_, spans, r)
+    | Transition(_, spans, r) ->
+      offsetSpans spans offset
+      r.Offset(offset)
+    | Dialogue(spans, r)
+    | Parenthetical(spans, r)
+    | Synopses (spans, r)
+    | Lyrics(spans, r)
+    | Centered(spans, r) ->
+      offsetSpans spans offset
+      r.Offset(offset)
+    | DualDialogue(blocks, r) ->
+      for block in blocks do block.OffsetRange(offset)
+    | Boneyard(_, r)
+    | PageBreak(r) -> r.Offset(offset)
+    | TitlePage(blocks, r) ->
+      for (key, spans) in blocks do
+        offsetSpans spans offset
+        r.Offset(offset)
+
 
 /// A type alias for a list of blocks
 and FountainBlocks = FountainBlockElement list

@@ -301,7 +301,7 @@ let ``Lyrics - normal`` () =
 let ``Lyrics - Line break at the end`` () =
    let doc = properNewLines "~Birdy hop, he do. He hop a long.\r\n" |> Fountain.Parse
    doc.Blocks
-   |> should equal [ Lyrics ([Literal ("Birdy hop, he do. He hop a long.", new Range(1, 32)); HardLineBreak(new Range(33, NewLineLength)) ], new Range(0, 33 + NewLineLength)); Action(false, [ HardLineBreak(new Range(33 + NewLineLength, NewLineLength))], new Range(33 + NewLineLength, NewLineLength)) ]
+   |> should equal [ Lyrics ([Literal ("Birdy hop, he do. He hop a long.", new Range(1, 32)); HardLineBreak(new Range(33, NewLineLength)) ], new Range(0, 33 + NewLineLength)) ]
 
 //===== Line Breaks
 

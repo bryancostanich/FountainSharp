@@ -39,6 +39,7 @@
     <Compile Include="BoneyardTests.fs" />
     <Compile Include="CenteredTests.fs" />
     <Compile Include="EmphasisTests.fs" />
+    <Compile Include="PartialParseTests.fs" />
     <Compile Include="SectionTests.fs" />
     <Compile Include="TitlePageTests.fs" />
     <Compile Include="TransitionTests.fs" />

@@ -24,7 +24,7 @@ let ``Section - simple`` () =
 let ``Section - with new line`` () =
    let doc = properNewLines "# Section\r\n" |> Fountain.Parse
    doc.Blocks
-   |> should equal [ Section (1, [Literal ("Section", new Range(2, 7))], new Range(0, 9 + NewLineLength)); Action(false, [ HardLineBreak(new Range(9 + NewLineLength, NewLineLength)) ], new Range(9 + NewLineLength, NewLineLength)) ]
+   |> should equal [ Section (1, [Literal ("Section", new Range(2, 7))], new Range(0, 9 + NewLineLength)) ]
 
 [<Test>]
 let ``Section - nested`` () =
