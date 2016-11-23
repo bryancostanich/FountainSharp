@@ -45,6 +45,11 @@ let ``Range - intersection`` () =
    range.HasIntersectionWith(new Range(8, 3)) |> should be True
 
 [<Test>]
+let ``Range - intersection containing`` () =
+   let range = new Range(10, 5)
+   range.HasIntersectionWith(new Range(8, 20)) |> should be True
+
+[<Test>]
 let ``Range - no intersection`` () =
    let range = new Range(10, 5)
    range.HasIntersectionWith(new Range(8, 1)) |> should be False

@@ -36,44 +36,51 @@ type FountainDocument =
         let length = min range.Length (doc.Text.Length - range.Location)
         doc.Text.Substring(range.Location, length)
 
-  member doc.ReplaceText(location, length, newText:string) =
+  member doc.ReplaceText(location, length, replaceText:string) =
        let predicateContains (block:FountainBlockElement) = 
            if block.Range.HasIntersectionWith(new Range(location, length)) then true
            else false
        let predicateDoesNotContain (block:FountainBlockElement) =
            if predicateContains block then false
            else true
+       let getLength startLocation endLocation =
+           if startLocation = endLocation then 0
+           else endLocation - startLocation + 1
 
-       // replace the text
+       // build the new text
        let newTextBuilder = new StringBuilder(doc._text.Remove(location, length))
-       newTextBuilder.Insert(location, newText) |> ignore
+       newTextBuilder.Insert(location, replaceText) |> ignore
+       let newText = newTextBuilder.ToString()
 
-       let lengthChange = newText.Length - length
-       // blocks being dropped: they are touched by the deletion
+       let lengthChange = replaceText.Length - length
+       // blocks touched by the deletion
        let touchedBlocks = List.where predicateContains doc.Blocks
-       // blocks to be preserved: they are not touched by the deletion
+       // blocks not touched by the deletion
        // TODO: this is not always true (some blocks rely on last parsed block)
        let notTouchedBlocks = List.where predicateDoesNotContain doc.Blocks
        // determine the first and last position of touched blocks
-       let minTouchedPosition =
+       let mutable minTouchLocation =
          if touchedBlocks.IsEmpty then location
          else touchedBlocks |> List.map(fun block -> block.Range.Location) |> List.min
-       let maxTouchedPosition =
+       let maxTouchLocation =
          if touchedBlocks.IsEmpty then location
          else touchedBlocks |> List.map(fun block -> block.Range.EndLocation) |> List.max
-       let textToParse =
-         if minTouchedPosition = maxTouchedPosition then
-           newTextBuilder.ToString().Substring(minTouchedPosition, max lengthChange 0)
-         else
-           newTextBuilder.ToString().Substring(minTouchedPosition, maxTouchedPosition - minTouchedPosition + 1 + lengthChange)
+       let touchLength = getLength minTouchLocation maxTouchLocation
+       // we have to look back to the last new line before the modification
+       let lookBackLocation = max (doc._text.LastIndexOf(Environment.NewLine, minTouchLocation)) 0
+       let lookBackLength = minTouchLocation - lookBackLocation
+       let parseRange = new Range(lookBackLocation, max (lookBackLength + touchLength + lengthChange) 0)
+       let textToParse = newText.Substring(parseRange.Location, parseRange.Length)
+       System.Diagnostics.Debug.WriteLine("Parsing text: '{0}'", textToParse)
        // parse the text
        let lines = textToParse.Split([|Environment.NewLine|], StringSplitOptions.None) |> List.ofArray
-       let ctx = new ParsingContext(Environment.NewLine, minTouchedPosition)
+       let ctx = new ParsingContext(Environment.NewLine, lookBackLocation)
        let newBlocks = lines |> parseBlocks ctx |> List.ofSeq
        // offset the range of blocks after the change
-       notTouchedBlocks |> List.iter(fun block -> if block.Range.Location > maxTouchedPosition then block.OffsetRange(lengthChange))
+       notTouchedBlocks |> List.iter(fun block -> if block.Range.Location > maxTouchLocation then block.OffsetRange(lengthChange))
        let finalBlocks = 
            notTouchedBlocks
+           |> List.choose (fun block -> if block.Range.HasIntersectionWith(parseRange) then None else Some(block))
            |> List.append newBlocks
            |> List.sortBy (fun block -> block.Range.Location)
        doc._blocks <- finalBlocks

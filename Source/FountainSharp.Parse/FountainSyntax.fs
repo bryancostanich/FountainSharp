@@ -17,20 +17,24 @@ type Range =
     with get() =
       if this.Length = 0 then this.Location
       else this.Location + this.Length - 1
-
+  
+  /// Offsets the location
   member this.Offset(offset) =
     this._location <- this._location + offset
     ()
   
+  /// Returns a new Range instance offset from r
   static member Offset(r:Range, offset) =
     new Range(r.Location + offset, r.Length)
 
+  /// Returns true, position is inside
   member this.Contains(position) =
     if position >= this.Location && position < this.Location + this.Length then true
     else false
-  
+
   member this.HasIntersectionWith(range:Range) =
-      this.Contains(range.Location) || this.Contains(range.Location + range.Length)
+      this.Contains(range.Location) || this.Contains(range.EndLocation) ||
+      range.Contains(this.Location) || range.Contains(this.EndLocation)
 
   override this.ToString() =
     sprintf "Location: %d; Length: %d" this.Location this.Length
