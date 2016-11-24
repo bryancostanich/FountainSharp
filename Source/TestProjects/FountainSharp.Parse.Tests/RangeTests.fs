@@ -40,6 +40,11 @@ let ``Range - contains end`` () =
    range.Contains(14) |> should be True
 
 [<Test>]
+let ``Range - contains range`` () =
+   let range = new Range(10, 5)
+   range.Contains(new Range(10, 2)) |> should be True
+
+[<Test>]
 let ``Range - intersection`` () =
    let range = new Range(10, 5)
    range.HasIntersectionWith(new Range(8, 3)) |> should be True

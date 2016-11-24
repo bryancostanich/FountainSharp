@@ -66,25 +66,34 @@ type FountainDocument =
          if touchedBlocks.IsEmpty then location
          else touchedBlocks |> List.map(fun block -> block.Range.EndLocation) |> List.max
        let touchLength = getLength minTouchLocation maxTouchLocation
-       // we have to look back to the last new line before the modification
-       let lookBackLocation = max (doc._text.LastIndexOf(Environment.NewLine, minTouchLocation)) 0
+       
+       // idea: let's parse from the last non touched block
+       let prevBlocks = doc.Blocks |> List.map (fun block -> (block, block.Range.EndLocation)) |> List.where (fun (block, l) -> l < location) |> List.sortBy(fun (block, location) -> -location)
+       // let's determine the last valid block to look back - the second to last one it is.
+       let lastParsedBlock =
+         if prevBlocks.Length < 2 then None
+         else Some(fst(prevBlocks |> List.skip 1 |> List.head))
+       let lookBackLocation = // from here we parse now
+         if lastParsedBlock.IsSome then lastParsedBlock.Value.Range.Location
+         else 0 // not enough preceding blocks (at most 1), start from the beginning
        let lookBackLength = minTouchLocation - lookBackLocation
-       let parseRange = new Range(lookBackLocation, max (lookBackLength + touchLength + lengthChange) 0)
+       
+       let parseRange = new Range(lookBackLocation, min (max (lookBackLength + touchLength + lengthChange) 0) (newText.Length - lookBackLocation) )
        let textToParse = newText.Substring(parseRange.Location, parseRange.Length)
-       System.Diagnostics.Debug.WriteLine("Parsing text: '{0}'", textToParse)
+       System.Diagnostics.Debug.WriteLine(String.Format("Parsing text: '{0}'", textToParse))
        // parse the text
        let lines = textToParse.Split([|Environment.NewLine|], StringSplitOptions.None) |> List.ofArray
-       let ctx = new ParsingContext(Environment.NewLine, lookBackLocation)
+       let ctx = new ParsingContext(Environment.NewLine, lookBackLocation, lastParsedBlock)
        let newBlocks = lines |> parseBlocks ctx |> List.ofSeq
        // offset the range of blocks after the change
        notTouchedBlocks |> List.iter(fun block -> if block.Range.Location > maxTouchLocation then block.OffsetRange(lengthChange))
        let finalBlocks = 
            notTouchedBlocks
-           |> List.choose (fun block -> if block.Range.HasIntersectionWith(parseRange) then None else Some(block))
+           |> List.choose (fun block -> if parseRange.Contains(block.Range) then None else Some(block))
            |> List.append newBlocks
            |> List.sortBy (fun block -> block.Range.Location)
        doc._blocks <- finalBlocks
-       doc._text <- newTextBuilder.ToString() // finalize text change
+       doc._text <- newText // finalize text change
 
 /// Static class that provides methods for formatting 
 /// and transforming Markdown documents.

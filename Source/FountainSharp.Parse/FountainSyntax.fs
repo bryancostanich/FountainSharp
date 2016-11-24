@@ -31,7 +31,10 @@ type Range =
   member this.Contains(position) =
     if position >= this.Location && position < this.Location + this.Length then true
     else false
-
+  /// Determines whether the this contains range
+  member this.Contains(range:Range) =
+      this.Contains(range.Location) && this.Contains(range.EndLocation)
+  /// Determines whether this has intersection with range
   member this.HasIntersectionWith(range:Range) =
       this.Contains(range.Location) || this.Contains(range.EndLocation) ||
       range.Contains(this.Location) || range.Contains(this.EndLocation)

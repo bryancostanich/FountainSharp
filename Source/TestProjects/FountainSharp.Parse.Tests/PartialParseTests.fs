@@ -42,3 +42,17 @@ let ``Appending`` () =
    doc.ReplaceText(2, 0, "tion")
    doc.Blocks
    |> should equal [ Action (false, [Literal ("Action", new Range(0, 6))], new Range(0, 6)) ]
+
+[<Test>]
+let ``Appending to Scene Heading`` () =
+   let doc = properNewLines "\r\nEXT. BRICK'S PATIO - DAY" |> Fountain.Parse
+   doc.ReplaceText(24 + NewLineLength, 0, properNewLines "\r\n")
+   doc.Blocks 
+   |> should equal [ SceneHeading(false, [ Literal("EXT. BRICK'S PATIO - DAY", new Range(NewLineLength, 24)) ], new Range(0, 24 + NewLineLength * 3)) ]
+
+[<Test>]
+let ``Appending Dialogue after Character`` () =
+   let doc = properNewLines "\r\nLINDSEY\r\n" |> Fountain.Parse
+   doc.ReplaceText(7 + NewLineLength * 2, 0, "Hello, friend.")
+   doc.Blocks
+   |> should equal [ Character (false, true, [Literal ("LINDSEY", new Range(NewLineLength, 7))], new Range(0, 7 + NewLineLength * 2)); Dialogue ([Literal ("Hello, friend.", new Range(7 + NewLineLength * 2, 14))], new Range(7 + NewLineLength * 2, 14))]
