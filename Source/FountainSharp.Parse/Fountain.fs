@@ -97,7 +97,6 @@ type FountainDocument =
            |> List.sortBy (fun block -> block.Range.Location)
        doc._blocks <- finalBlocks
        doc._text <- newText // finalize text change
-       reparsedBlocks
 
   /// Check blocks intersecting each other
   member doc.CheckIntersections() =
