@@ -4,6 +4,7 @@ open System
 open System.IO
 open System.Collections.Generic
 open System.Text
+open System.Diagnostics
 
 open FountainSharp.Parse.Patterns
 open FountainSharp.Parse.Patterns.Lines
@@ -20,8 +21,9 @@ open FountainSharp.Parse.Helper
 type FountainDocument =
   val mutable private _blocks : FountainBlocks
   val mutable private _text : string
+  val mutable private _classDebug : bool
 
-  new (blocks, ?text) = { _blocks = blocks; _text = defaultArg text null }
+  new (blocks, ?text) = { _blocks = blocks; _text = defaultArg text null; _classDebug = true }
 
   /// Returns a list of blocks in the document
   member doc.Blocks with get() = doc._blocks
@@ -74,26 +76,48 @@ type FountainDocument =
          if prevBlocks.Length < 2 then None
          else Some(fst(prevBlocks |> List.skip 1 |> List.head))
        let lookBackLocation = // from here we parse now
-         if lastParsedBlock.IsSome then lastParsedBlock.Value.Range.Location
+         if lastParsedBlock.IsSome then lastParsedBlock.Value.Range.EndLocation + 1
          else 0 // not enough preceding blocks (at most 1), start from the beginning
        let lookBackLength = minTouchLocation - lookBackLocation
        
        let parseRange = new Range(lookBackLocation, min (max (lookBackLength + touchLength + lengthChange) 0) (newText.Length - lookBackLocation) )
        let textToParse = newText.Substring(parseRange.Location, parseRange.Length)
-       System.Diagnostics.Debug.WriteLine(String.Format("Parsing text: '{0}'", textToParse))
+       Debug.WriteLineIf(doc._classDebug, String.Format("Parsing text: '{0}'", textToParse))
        // parse the text
        let lines = textToParse.Split([|Environment.NewLine|], StringSplitOptions.None) |> List.ofArray
        let ctx = new ParsingContext(Environment.NewLine, lookBackLocation, lastParsedBlock)
-       let newBlocks = lines |> parseBlocks ctx |> List.ofSeq
+       let reparsedBlocks = lines |> parseBlocks ctx |> List.ofSeq
+       Debug.WriteLineIf(doc._classDebug && reparsedBlocks.IsEmpty, "No block has been recognized.")
        // offset the range of blocks after the change
        notTouchedBlocks |> List.iter(fun block -> if block.Range.Location > maxTouchLocation then block.OffsetRange(lengthChange))
        let finalBlocks = 
            notTouchedBlocks
            |> List.choose (fun block -> if parseRange.Contains(block.Range) then None else Some(block))
-           |> List.append newBlocks
+           |> List.append reparsedBlocks
            |> List.sortBy (fun block -> block.Range.Location)
        doc._blocks <- finalBlocks
        doc._text <- newText // finalize text change
+       reparsedBlocks
+
+  /// Check blocks intersecting each other
+  member doc.CheckIntersections() =
+      let rec hasBlockIntersectionWith (block:FountainBlockElement) (blocks:FountainBlocks) =
+        match blocks with
+        | [] -> false
+        | head :: tail -> 
+          if head.Equals(block) = false && block.Range.HasIntersectionWith(head.Range) then
+            true
+          else
+            hasBlockIntersectionWith block tail
+     
+      let rec hasIntersectionWith (blocks:FountainBlocks) (blocks2:FountainBlocks) =
+          match blocks with
+          | [] -> false   
+          | head :: tail ->
+              if hasBlockIntersectionWith head blocks2 then true
+              else hasIntersectionWith tail blocks2
+      
+      hasIntersectionWith doc.Blocks doc.Blocks
 
 /// Static class that provides methods for formatting 
 /// and transforming Markdown documents.

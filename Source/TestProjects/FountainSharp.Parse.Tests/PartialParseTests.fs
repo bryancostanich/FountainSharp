@@ -56,3 +56,17 @@ let ``Appending Dialogue after Character`` () =
    doc.ReplaceText(7 + NewLineLength * 2, 0, "Hello, friend.")
    doc.Blocks
    |> should equal [ Character (false, true, [Literal ("LINDSEY", new Range(NewLineLength, 7))], new Range(0, 7 + NewLineLength * 2)); Dialogue ([Literal ("Hello, friend.", new Range(7 + NewLineLength * 2, 14))], new Range(7 + NewLineLength * 2, 14))]
+
+[<Test>]
+let ``#Bugfix - Appending new line to Character`` () =
+   let doc = properNewLines "\r\nCUT TO:\r\n\r\nLINDSEYHello, friend." |> Fountain.Parse
+   doc.ReplaceText(14 + NewLineLength * 3, 0, properNewLines "\r\n")
+   doc.Blocks
+   |> should equal [ Transition(false, [ Literal("CUT TO:", new Range(NewLineLength, 7)) ], new Range(0, 7 + NewLineLength * 3)); Character (false, true, [Literal ("LINDSEY", new Range(7 + NewLineLength * 3, 7))], new Range(7 + NewLineLength * 3, 7 + NewLineLength)); Dialogue ([Literal ("Hello, friend.", new Range(14 + NewLineLength * 4, 14))], new Range(14 + NewLineLength * 4, 14))]
+
+[<Test>]
+let ``#Bugfix - Appending to Character after Transition`` () =
+   let doc = properNewLines "\r\nCUT TO:\r\n\r\nL" |> Fountain.Parse
+   doc.ReplaceText(8 + NewLineLength * 3, 0, "I")
+   doc.Blocks
+   |> should equal [ Transition(false, [ Literal("CUT TO:", new Range(NewLineLength, 7)) ], new Range(0, 7 + NewLineLength * 3)); Character (false, true, [Literal ("LI", new Range(7 + NewLineLength * 3, 2))], new Range(7 + NewLineLength * 3, 2)) ]
