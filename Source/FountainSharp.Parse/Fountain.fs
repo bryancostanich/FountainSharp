@@ -23,7 +23,7 @@ type FountainDocument =
   val mutable private _text : string
   val mutable private _classDebug : bool
 
-  new (blocks, ?text) = { _blocks = blocks; _text = defaultArg text null; _classDebug = true }
+  new (blocks, ?text) = { _blocks = blocks; _text = defaultArg text null; _classDebug = false }
 
   /// Returns a list of blocks in the document
   member doc.Blocks with get() = doc._blocks
@@ -118,13 +118,11 @@ type FountainDocument =
       
       hasIntersectionWith doc.Blocks doc.Blocks
 
-/// Static class that provides methods for formatting 
-/// and transforming Markdown documents.
-type Fountain =
+module private TextParser =
   /// Parse the specified text into a MarkdownDocument. Line breaks in the
   /// inline HTML (etc.) will be stored using the specified string.
-  static member Parse(text : string, newline) =
-    //System.Diagnostics.Debug.WriteLine("Parsing: " + text)
+  let parse(text : string, newline) =
+    let text = properNewLines text
     let lines = text.Split([|Environment.NewLine|], StringSplitOptions.None) |> List.ofArray
 
     let ctx = new ParsingContext(newline)
@@ -135,9 +133,26 @@ type Fountain =
       |> List.where(fun block -> block.Range.Location < text.Length)
     FountainDocument(blocks, text)
 
+  let parseAsync(text, newline) = async {
+      return parse(text, newline)
+  }
+
+/// Static class that provides methods for formatting 
+/// and transforming Markdown documents.
+type Fountain =
+
+  static member Parse(text, newline) =
+    TextParser.parse(text, newline)
+
+  static member ParseAsync(text, newline) =
+      Async.StartAsTask(TextParser.parseAsync(text, newline))
+
   /// Parse the specified text into a MarkdownDocument.
   static member Parse(text) =
     Fountain.Parse(text, Environment.NewLine)
+
+  static member ParseAsync(text) =
+      Async.StartAsTask(TextParser.parseAsync(text, Environment.NewLine))
 
   /// Transform Fountain document into HTML format. The result
   /// will be written to the provided TextWriter.
