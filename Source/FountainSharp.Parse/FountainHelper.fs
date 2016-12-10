@@ -13,9 +13,9 @@ let NewLine(count) =
 let NewLineLength = Environment.NewLine.Length
 
 let (|BlockWithTrailingEmptyLine|_|) = function
-    | Some(FountainSharp.Parse.Transition(_, _, _))
-    | Some(FountainSharp.Parse.SceneHeading(_, _, _))
-    | Some(FountainSharp.Parse.TitlePage(_, _))
+    | Some(FountainSharp.Transition(_, _, _))
+    | Some(FountainSharp.SceneHeading(_, _, _))
+    | Some(FountainSharp.TitlePage(_, _))
       -> Some(true)
     | _ -> None
 

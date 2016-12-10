@@ -8,16 +8,13 @@
 module internal FountainSharp.Parse.Parser
 
 open System
-open System.IO
-open System.Collections.Generic
-open System.Text
 open System.Text.RegularExpressions
 
 open FSharp.Collections
+open FountainSharp
 open FountainSharp.Parse.Collections
 open FountainSharp.Parse.Patterns
 open FountainSharp.Parse.Patterns.List
-open FountainSharp.Parse.Patterns.String
 open FountainSharp.Parse.Helper
 
 let printDebug fmt par =
@@ -425,9 +422,9 @@ let isForcedAction (input:string) =
 let (|Parenthetical|_|) (ctx:ParsingContext) (input:string list) =
   match ctx.LastParsedBlock with
   // parenthetical can come after character OR dialogue
-  | Some (FountainSharp.Parse.Character(_)) 
-  | Some (FountainSharp.Parse.Parenthetical(_)) // parenthetical can occur in a dialog which preceded by a character-parenthetical duo (in this case parenthetical is the last parsed block)
-  | Some (FountainSharp.Parse.Dialogue(_)) ->
+  | Some (FountainSharp.Character(_)) 
+  | Some (FountainSharp.Parenthetical(_)) // parenthetical can occur in a dialog which preceded by a character-parenthetical duo (in this case parenthetical is the last parsed block)
+  | Some (FountainSharp.Dialogue(_)) ->
      match input with
      | blockContent :: rest ->
         let trimmed = blockContent.Trim()
@@ -484,8 +481,8 @@ let (|Transition|_|) (ctx:ParsingContext) (input:string list) =
 
 let (|Dialogue|_|) (ctx:ParsingContext) (input:string list) =
   match ctx.LastParsedBlock with
-  | Some (FountainSharp.Parse.Character(_)) 
-  | Some (FountainSharp.Parse.Parenthetical(_)) ->
+  | Some (FountainSharp.Character(_)) 
+  | Some (FountainSharp.Parenthetical(_)) ->
      // Dialogue starts after Character or Character (parenthetical)
      // look ahead and keep matching while it's none of these.
      match List.partitionWhileLookahead (function
@@ -615,7 +612,7 @@ let (|DualDialogue|_|) (ctx: ParsingContext) (input:string list) =
 //==== Action
 
 let (|Action|_|) (ctx:ParsingContext) input =
-  let ctxForLookAhead = ctx.WithLastParsedBlock(Some(FountainSharp.Parse.Action(false, [], Range.empty)))
+  let ctxForLookAhead = ctx.WithLastParsedBlock(Some(FountainSharp.Action(false, [], Range.empty)))
   // look ahead and keep matching while it's none of these.
   match List.partitionWhileLookahead (function
     | SceneHeading ctxForLookAhead _ -> false //note: it's decomposing the match and the rest and discarding the rest: `SceneHeading _` 

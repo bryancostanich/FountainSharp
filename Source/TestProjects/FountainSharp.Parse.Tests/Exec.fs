@@ -2,7 +2,6 @@
 
 open System
 
-open FountainSharp.Parse
 open FountainSharp
 
 type Exec (args) = 
@@ -71,9 +70,9 @@ Here comes a page break!
     "
 
     // 2 step
-    let doc = Fountain.Parse string7
+    let doc = FountainDocument.Parse string7
     printfn "%A" doc
-    let html = Fountain.WriteHtml doc
+    let html = HtmlFormatter.WriteHtml doc
 
 //    // can also do 1 step
 //    let html2 = FountainSharp.Parse.Fountain.TransformHtml string7

@@ -1,4 +1,4 @@
-﻿namespace FountainSharp.Parse
+﻿namespace FountainSharp
 
 open System
 open System.IO

@@ -1,5 +1,5 @@
 ﻿using System;
-
+using System.Threading.Tasks;
 using AppKit;
 using Foundation;
 
@@ -7,54 +7,63 @@ namespace FountainSharp.Editor
 {
 	public partial class ViewController : NSViewController
 	{
-		public ViewController (IntPtr handle) : base (handle)
+		public ViewController(IntPtr handle) : base(handle)
 		{
 		}
 
-		public override void ViewDidLoad ()
+		public override void ViewDidLoad()
 		{
-			base.ViewDidLoad ();
-
+			base.ViewDidLoad();
 
 			var scriptResource = "FountainSharp.Editor.Scripts.SimpleTest.fountain";
 			string script;
 
-			using (var stream = Resource.FromPath (scriptResource)) {
-				if (stream != null) {
-					using (var reader = new System.IO.StreamReader (stream)) {
-						script = reader.ReadToEnd ();
+			using (var stream = Resource.FromPath(scriptResource))
+			{
+				if (stream != null)
+				{
+					using (var reader = new System.IO.StreamReader(stream))
+					{
+						script = reader.ReadToEnd();
 
-						this.MainTextView.Value = script;
-						this.UpdateHtml ();
-
+						MainTextView.Value = script;
+						UpdateHtml();
 					}
-				} else {
-					Console.WriteLine ("Couldn't load " + scriptResource);
+				}
+				else
+				{
+					Console.WriteLine("Couldn't load " + scriptResource);
 				}
 
 			}
 
-			this.MainTextView.TextDidChange += (object sender, EventArgs e) => {
-				this.UpdateHtml();
+			MainTextView.TextDidChange += (object sender, EventArgs e) =>
+			{
+				UpdateHtml();
 			};
 		}
 
-		protected async void UpdateHtml ()
+		protected void UpdateHtml()
 		{
-			await System.Threading.Tasks.Task.Run (() => {
-				
-				InvokeOnMainThread (()=>{
-					this.MainWebView.MainFrame.LoadHtmlString (FountainSharp.Parse.Fountain.TransformHtml (this.MainTextView.Value), NSUrl.FromString (""));
-				});
+			Task.Run(() =>
+			{
+
+				InvokeOnMainThread(() =>
+			   {
+				   MainWebView.MainFrame.LoadHtmlString(HtmlFormatter.TransformHtml(MainTextView.Value), NSUrl.FromString(""));
+			   });
 			});
 		}
 
 
-		public override NSObject RepresentedObject {
-			get {
+		public override NSObject RepresentedObject
+		{
+			get
+			{
 				return base.RepresentedObject;
 			}
-			set {
+			set
+			{
 				base.RepresentedObject = value;
 				// Update the view, if already loaded.
 			}

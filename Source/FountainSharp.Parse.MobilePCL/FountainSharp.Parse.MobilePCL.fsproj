@@ -58,11 +58,11 @@
     <Compile Include="..\FountainSharp.Parse\FountainParser.fs">
       <Link>FountainParser.fs</Link>
     </Compile>
+    <Compile Include="..\FountainSharp.Parse\FountainDocument.fs">
+      <Link>FountainDocument.fs</Link>
+    </Compile>
     <Compile Include="..\FountainSharp.Parse\HtmlFormatting.fs">
       <Link>HtmlFormatting.fs</Link>
-    </Compile>
-    <Compile Include="..\FountainSharp.Parse\Fountain.fs">
-      <Link>Fountain.fs</Link>
     </Compile>
     <None Include="ScratchRenamed.fsx" />
     <BundleResource Include="project.json.bak" />

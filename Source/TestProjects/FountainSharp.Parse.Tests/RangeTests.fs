@@ -3,8 +3,7 @@
 open System
 open FsUnit
 open NUnit.Framework
-open FountainSharp.Parse
-open FountainSharp.Parse.Helper
+open FountainSharp
 
 //===== Range
 
