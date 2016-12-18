@@ -37,6 +37,8 @@
     <Compile Include="FountainTests.fs" />
     <Compile Include="BoneyardTests.fs" />
     <Compile Include="CenteredTests.fs" />
+    <Compile Include="CharacterTests.fs" />
+    <Compile Include="DialogueTests.fs" />
     <Compile Include="EmphasisTests.fs" />
     <Compile Include="PartialParseTests.fs" />
     <Compile Include="RangeTests.fs" />

@@ -20,3 +20,5 @@ let (|BlockWithTrailingEmptyLine|_|) = function
     | _ -> None
 
 let properNewLines (text: string) = text.Replace("\r\n", System.Environment.NewLine)
+
+let splitIntoLines(text: string) = text.Split([|Environment.NewLine|], StringSplitOptions.None) |> List.ofArray

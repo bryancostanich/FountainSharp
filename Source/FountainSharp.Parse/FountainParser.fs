@@ -528,7 +528,12 @@ let (|Dialogue|_|) (ctx:ParsingContext) (input:string list) =
 
           let lines = addLines [] 0 matching
           match lines with
-          | Some([], _, _) -> None // no lines found
+          | Some([], length, rest) ->
+            match rest with
+            | EmptyLine :: tail ->
+              // starts with empty line (this is treated as dialogue)
+              Some({ Text = Environment.NewLine; Length = NewLineLength; Offset = 0 }, tail)
+            | _ -> None  // no lines found
           | Some(body, length, rest) ->
               //let body = body |> List.map(fun line -> line.Trim())
               let result = String.asSingleString(body, Environment.NewLine, false)
