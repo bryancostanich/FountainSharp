@@ -10,7 +10,7 @@
 <!--    <iconUrl>http://ICON_URL_HERE_OR_DELETE_THIS_LINE</iconUrl>-->
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>An F# based Fountain Markdown processor that's based on the FSharp.Formatting library by Tomas Petricek.</description>
-    <releaseNotes>First release on Nuget.</releaseNotes>
+<!--    <releaseNotes>First release on Nuget.</releaseNotes> -->
     <copyright>Copyright - Bryan Costanich © 2015-2016</copyright>
     <tags>fountain screenwriters</tags>
     <dependencies>
