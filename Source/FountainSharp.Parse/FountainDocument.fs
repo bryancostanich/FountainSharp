@@ -16,25 +16,33 @@ open FountainSharp.Parse.Helper
 type FountainDocument(blocks : FountainBlocks, ?text : string) =
   /// Parse the specified text into a MarkdownDocument. Line breaks in the
   /// inline HTML (etc.) will be stored using the specified string.
-  static let parse(text : string, newline) =
+  static let parse(text : string, ctx:ParsingContext) =
     let text = properNewLines text
     let lines = text.Split([|Environment.NewLine|], StringSplitOptions.None) |> List.ofArray
 
-    let ctx = new ParsingContext(newline)
     let blocks = 
       lines 
       |> parseBlocks ctx 
       |> List.ofSeq
-      |> List.where(fun block -> block.Range.Location < text.Length)
+      |> List.where(fun block -> block.Range.Location < ctx.LastParsedLocation + text.Length)
     FountainDocument(blocks, text)
 
   static let parseAsync(text, newline) = async {
-      return parse(text, newline)
+      return parse(text, new ParsingContext(newline))
   }
 
   let mutable _blocks = blocks
   let mutable _text = defaultArg text null
   let mutable _classDebug = false
+
+  let rec hasBlockIntersectionWith (block:FountainBlockElement) (blocks:FountainBlocks) =
+    match blocks with
+    | [] -> false
+    | head :: tail -> 
+        if head.Equals(block) = false && block.Range.HasIntersectionWith(head.Range) then
+          true
+        else
+          hasBlockIntersectionWith block tail
 
   /// Returns a list of blocks in the document
   member doc.Blocks with get() = _blocks
@@ -48,6 +56,30 @@ type FountainDocument(blocks : FountainBlocks, ?text : string) =
     else
         let length = min range.Length (doc.Text.Length - range.Location)
         doc.Text.Substring(range.Location, length)
+
+  /// Check blocks intersecting each other
+  member doc.CheckIntersections() =
+      let rec hasIntersectionWith (blocks:FountainBlocks) (blocks2:FountainBlocks) =
+          match blocks with
+          | [] -> false   
+          | head :: tail ->
+              if hasBlockIntersectionWith head blocks2 then true
+              else hasIntersectionWith tail blocks2
+      
+      hasIntersectionWith doc.Blocks doc.Blocks
+
+  static member Parse(text, newline) =
+    parse(text, new ParsingContext(newline))
+
+  static member ParseAsync(text, newline) =
+      Async.StartAsTask(parseAsync(text, newline))
+
+  /// Parse the specified text into a MarkdownDocument.
+  static member Parse(text) =
+    FountainDocument.Parse(text, Environment.NewLine)
+
+  static member ParseAsync(text) =
+      Async.StartAsTask(parseAsync(text, Environment.NewLine))
 
   member doc.ReplaceText(location, length, replaceText:string) =
        let predicateContains (block:FountainBlockElement) = 
@@ -95,49 +127,17 @@ type FountainDocument(blocks : FountainBlocks, ?text : string) =
        let textToParse = newText.Substring(parseRange.Location, parseRange.Length)
        Debug.WriteLineIf(_classDebug, String.Format("Parsing text: '{0}'", textToParse))
        // parse the text
-       let lines = textToParse.Split([|Environment.NewLine|], StringSplitOptions.None) |> List.ofArray
        let ctx = new ParsingContext(Environment.NewLine, lookBackLocation, lastParsedBlock)
-       let reparsedBlocks = lines |> parseBlocks ctx |> List.ofSeq
+       let reparsedDoc = parse(textToParse, ctx)
+       let reparsedBlocks = reparsedDoc.Blocks
        Debug.WriteLineIf(_classDebug && reparsedBlocks.IsEmpty, "No block has been recognized.")
        // offset the range of blocks after the change
        notTouchedBlocks |> List.iter(fun block -> if block.Range.Location > maxTouchLocation then block.OffsetRange(lengthChange))
+       let finalNotTouchedBlocks = notTouchedBlocks |> List.choose (fun block -> if parseRange.Contains(block.Range) then None else Some(block))
+
        let finalBlocks = 
-           notTouchedBlocks
-           |> List.choose (fun block -> if parseRange.Contains(block.Range) then None else Some(block))
-           |> List.append reparsedBlocks
+           finalNotTouchedBlocks
+           |> List.append (reparsedBlocks |> List.where(fun block -> hasBlockIntersectionWith block finalNotTouchedBlocks = false))
            |> List.sortBy (fun block -> block.Range.Location)
        _blocks <- finalBlocks
        _text <- newText // finalize text change
-
-  /// Check blocks intersecting each other
-  member doc.CheckIntersections() =
-      let rec hasBlockIntersectionWith (block:FountainBlockElement) (blocks:FountainBlocks) =
-        match blocks with
-        | [] -> false
-        | head :: tail -> 
-          if head.Equals(block) = false && block.Range.HasIntersectionWith(head.Range) then
-            true
-          else
-            hasBlockIntersectionWith block tail
-     
-      let rec hasIntersectionWith (blocks:FountainBlocks) (blocks2:FountainBlocks) =
-          match blocks with
-          | [] -> false   
-          | head :: tail ->
-              if hasBlockIntersectionWith head blocks2 then true
-              else hasIntersectionWith tail blocks2
-      
-      hasIntersectionWith doc.Blocks doc.Blocks
-
-  static member Parse(text, newline) =
-    parse(text, newline)
-
-  static member ParseAsync(text, newline) =
-      Async.StartAsTask(parseAsync(text, newline))
-
-  /// Parse the specified text into a MarkdownDocument.
-  static member Parse(text) =
-    FountainDocument.Parse(text, Environment.NewLine)
-
-  static member ParseAsync(text) =
-      Async.StartAsTask(parseAsync(text, Environment.NewLine))

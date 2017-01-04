@@ -71,3 +71,17 @@ let ``#Bugfix - Appending to Character after Transition`` () =
    doc.ReplaceText(8 + NewLineLength * 3, 0, "I")
    doc.Blocks
    |> should equal [ Transition(false, [ Literal("CUT TO:", new Range(NewLineLength, 7)) ], new Range(0, 7 + NewLineLength * 3)); Character (false, true, [Literal ("LI", new Range(7 + NewLineLength * 3, 2))], new Range(7 + NewLineLength * 3, 2)) ]
+
+[<Test>]
+let ``#Bugfix - Inserting into Character`` () =
+   let doc = properNewLines "\r\nC\r\nSome action\r\n" |> FountainDocument.Parse
+   doc.ReplaceText(1 + NewLineLength, 0, "H")
+   doc.Blocks
+   |> should equal [ Character(false, true, [ Literal("CH", new Range(NewLineLength, 2)) ], new Range(0, 2 + NewLineLength * 2)); Dialogue ( [Literal ("Some action", new Range(2 + NewLineLength * 2, 11)); HardLineBreak(new Range(13 + NewLineLength * 2, NewLineLength)) ], new Range(2 + NewLineLength * 2, 11 + NewLineLength)) ]
+
+[<Test>]
+let ``#Bugfix - Character transforms into Transition`` () =
+   let doc = properNewLines "\r\nCUT TO\r\nSome action\r\n" |> FountainDocument.Parse
+   doc.ReplaceText(6 + NewLineLength, 0, ":" + Environment.NewLine)
+   doc.Blocks
+   |> should equal [ Transition(false, [ Literal("CUT TO:", new Range(NewLineLength, 7)) ], new Range(0, 7 + NewLineLength * 3)); Action (false, [Literal ("Some action", new Range(7 + NewLineLength * 3, 11)); HardLineBreak(new Range(18 + NewLineLength * 3, NewLineLength)) ], new Range(7 + NewLineLength * 3, 11 + NewLineLength)) ]

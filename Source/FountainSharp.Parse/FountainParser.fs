@@ -72,6 +72,13 @@ type ParsingContext(?newline : string, ?position : int, ?lastParsedBlock : Fount
     member ctx.WithPreserveIndenting(enable) =
         new ParsingContext(ctx.NewLine, ctx.Position, ctx.LastParsedBlock, ctx.TreatDoubleSpaceAsNewLine, enable)
 
+    /// Gets the last position of last parsed block's range. When there is no last parsed block, it returns 0
+    member ctx.LastParsedLocation
+      with get() =
+        match ctx.LastParsedBlock with
+        | None -> 0
+        | Some(block) -> block.Range.EndLocation
+
 //====== Parser
 // Part 1: Inline Formatting
 
@@ -524,7 +531,10 @@ let (|Dialogue|_|) (ctx:ParsingContext) (input:string list) =
                     let lengthInc = if rest.IsEmpty then 0 else NewLineLength
                     addLines (head :: acc) (accLength + head.Length + lengthInc) []
             | [] ->
-                Some(List.rev acc, accLength, rest) // traversed all the lines
+                if accLength = 0 then
+                  None
+                else
+                  Some(List.rev acc, accLength, rest) // traversed all the lines
 
           let lines = addLines [] 0 matching
           match lines with
