@@ -92,17 +92,30 @@ type FountainDocument(blocks : FountainBlocks, ?text : string) =
            if startLocation = endLocation then 0
            else endLocation - startLocation + 1
 
+       let rec getTouchedBlocks (accTouchedBlocks, accNotTouchedBlocks) (blocks: FountainBlocks) =
+           match blocks with
+           | [] -> (List.rev accTouchedBlocks, List.rev accNotTouchedBlocks)
+           | head :: tail ->
+             if head.Range.EndLocation < location then
+               // haven't reached the modified range yet
+               getTouchedBlocks (accTouchedBlocks, head :: accNotTouchedBlocks) tail
+             else if predicateContains(head) then
+               // inside the modified range
+               getTouchedBlocks (head :: accTouchedBlocks, accNotTouchedBlocks) tail
+             else
+               // after the modified range we consider blocks touched until an Action block
+               match head with
+               | FountainSharp.Action(_, _, _) -> (List.rev accTouchedBlocks, List.rev accNotTouchedBlocks)
+               | _ -> getTouchedBlocks (head :: accTouchedBlocks, accNotTouchedBlocks) tail
+
        // build the new text
        let newTextBuilder = new StringBuilder(doc.Text.Remove(location, length))
        newTextBuilder.Insert(location, replaceText) |> ignore
        let newText = newTextBuilder.ToString()
 
        let lengthChange = replaceText.Length - length
-       // blocks touched by the deletion
-       let touchedBlocks = List.where predicateContains doc.Blocks
-       // blocks not touched by the deletion
-       // TODO: this is not always true (some blocks rely on last parsed block)
-       let notTouchedBlocks = List.where predicateDoesNotContain doc.Blocks
+       // determine blocks touched by the deletion
+       let (touchedBlocks, notTouchedBlocks) = getTouchedBlocks ([],[]) doc.Blocks
        // determine the first and last position of touched blocks
        let mutable minTouchLocation =
          if touchedBlocks.IsEmpty then location
