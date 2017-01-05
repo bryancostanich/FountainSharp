@@ -85,3 +85,11 @@ let ``#Bugfix - Character transforms into Transition`` () =
    doc.ReplaceText(6 + NewLineLength, 0, ":" + Environment.NewLine)
    doc.Blocks
    |> should equal [ Transition(false, [ Literal("CUT TO:", new Range(NewLineLength, 7)) ], new Range(0, 7 + NewLineLength * 3)); Action (false, [Literal ("Some action", new Range(7 + NewLineLength * 3, 11)); HardLineBreak(new Range(18 + NewLineLength * 3, NewLineLength)) ], new Range(7 + NewLineLength * 3, 11 + NewLineLength)) ]
+
+[<Test>]
+let ``#Bugfix - Starting dialogue`` () =
+   let doc = properNewLines "\r\nSTEEL\r\n\r\n" |> FountainDocument.Parse
+   doc.ReplaceText(5 + 2 * NewLineLength, 0, "T")
+   doc.Blocks
+   |> should equal [ Character(false, true, [Literal("STEEL", new Range(NewLineLength, 5))], new Range(0, 5 + NewLineLength * 2)); Dialogue([ Literal("T", new Range(5 + NewLineLength * 2, 1)); createHardLineBreak(6 + NewLineLength * 2); ], new Range(5 + NewLineLength * 2, 1 + NewLineLength)) ]
+

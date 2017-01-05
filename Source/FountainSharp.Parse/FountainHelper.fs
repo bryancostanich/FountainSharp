@@ -2,6 +2,7 @@
 
 open System
 open System.Text
+open FountainSharp
 
 // Returns count Environment.NewLines in a String
 let NewLine(count) = 
@@ -22,3 +23,5 @@ let (|BlockWithTrailingEmptyLine|_|) = function
 let properNewLines (text: string) = text.Replace("\r\n", System.Environment.NewLine)
 
 let splitIntoLines(text: string) = text.Split([|Environment.NewLine|], StringSplitOptions.None) |> List.ofArray
+
+let createHardLineBreak(location) = HardLineBreak(new Range(location, NewLineLength))

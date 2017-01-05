@@ -89,7 +89,8 @@ type FountainDocument(blocks : FountainBlocks, ?text : string) =
            if predicateContains block then false
            else true
        let getLength startLocation endLocation =
-           if startLocation = endLocation then 0
+           if endLocation < startLocation then 0
+           elif startLocation = endLocation then 1
            else endLocation - startLocation + 1
 
        let rec getTouchedBlocks (accTouchedBlocks, accNotTouchedBlocks) (blocks: FountainBlocks) =
