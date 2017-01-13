@@ -8,16 +8,13 @@
 module internal FountainSharp.Parse.Parser
 
 open System
-open System.IO
-open System.Collections.Generic
-open System.Text
 open System.Text.RegularExpressions
 
 open FSharp.Collections
+open FountainSharp
 open FountainSharp.Parse.Collections
 open FountainSharp.Parse.Patterns
 open FountainSharp.Parse.Patterns.List
-open FountainSharp.Parse.Patterns.String
 open FountainSharp.Parse.Helper
 
 let printDebug fmt par =
@@ -74,6 +71,13 @@ type ParsingContext(?newline : string, ?position : int, ?lastParsedBlock : Fount
     /// Enable or disable preserving white space
     member ctx.WithPreserveIndenting(enable) =
         new ParsingContext(ctx.NewLine, ctx.Position, ctx.LastParsedBlock, ctx.TreatDoubleSpaceAsNewLine, enable)
+
+    /// Gets the last position of last parsed block's range. When there is no last parsed block, it returns 0
+    member ctx.LastParsedLocation
+      with get() =
+        match ctx.LastParsedBlock with
+        | None -> 0
+        | Some(block) -> block.Range.EndLocation
 
 //====== Parser
 // Part 1: Inline Formatting
@@ -425,9 +429,9 @@ let isForcedAction (input:string) =
 let (|Parenthetical|_|) (ctx:ParsingContext) (input:string list) =
   match ctx.LastParsedBlock with
   // parenthetical can come after character OR dialogue
-  | Some (FountainSharp.Parse.Character(_)) 
-  | Some (FountainSharp.Parse.Parenthetical(_)) // parenthetical can occur in a dialog which preceded by a character-parenthetical duo (in this case parenthetical is the last parsed block)
-  | Some (FountainSharp.Parse.Dialogue(_)) ->
+  | Some (FountainSharp.Character(_)) 
+  | Some (FountainSharp.Parenthetical(_)) // parenthetical can occur in a dialog which preceded by a character-parenthetical duo (in this case parenthetical is the last parsed block)
+  | Some (FountainSharp.Dialogue(_)) ->
      match input with
      | blockContent :: rest ->
         let trimmed = blockContent.Trim()
@@ -442,24 +446,28 @@ let (|Parenthetical|_|) (ctx:ParsingContext) (input:string list) =
 
 //==== Transition
 
-// Transition
+/// Matches a Transition block. Returns forced, MatchResult, rest
 let (|Transition|_|) (ctx:ParsingContext) (input:string list) =
+  // parsing Transition block from the line containing the text
   let parseTransition (head:string) rest offset =
-    let blockContent = head.TrimStart() // Transition ignores indenting
-    if blockContent.StartsWith "!" then // guard against forced action
-        None
-    elif blockContent.StartsWith ">" then // forced transition
-        let text = blockContent.Substring(1).TrimStart()
-        Some(true, { Text = text; Length = head.Length + NewLineLength * 2 + offset; Offset = head.IndexOf(text) + NewLineLength }, rest)
-    elif blockContent.EndsWith "TO:" then // non-forced transition
-        // check for all uppercase
-        if blockContent.ToCharArray() |> Seq.exists (fun c -> Char.IsLower(c)) then
-          None
+    match [head] with
+    | Centered _ -> None // prevent Centered being recognized as forced Transition
+    | _ ->
+        let blockContent = head.TrimStart() // Transition ignores indenting
+        if blockContent.StartsWith "!" then // guard against forced action
+            None
+        elif blockContent.StartsWith ">" then // forced transition
+            let text = blockContent.Substring(1).TrimStart()
+            Some(true, { Text = text; Length = head.Length + NewLineLength * 2 + offset; Offset = head.IndexOf(text) + NewLineLength }, rest)
+        elif blockContent.EndsWith "TO:" then // non-forced transition
+            // check for all uppercase
+            if blockContent.ToCharArray() |> Seq.exists (fun c -> Char.IsLower(c)) then
+              None
+            else
+              let text = blockContent.TrimStart()
+              Some(false, { Text = text; Length = head.Length + NewLineLength * 2 + offset; Offset = head.IndexOf(text) + offset },  rest)
         else
-          let text = blockContent.TrimStart()
-          Some(false, { Text = text; Length = head.Length + NewLineLength * 2 + offset; Offset = head.IndexOf(text) + offset },  rest)
-    else
-        None
+            None
 
   // Has to be preceded by and followed by an empty line
   match ctx.LastParsedBlock with
@@ -480,8 +488,8 @@ let (|Transition|_|) (ctx:ParsingContext) (input:string list) =
 
 let (|Dialogue|_|) (ctx:ParsingContext) (input:string list) =
   match ctx.LastParsedBlock with
-  | Some (FountainSharp.Parse.Character(_)) 
-  | Some (FountainSharp.Parse.Parenthetical(_)) ->
+  | Some (FountainSharp.Character(_)) 
+  | Some (FountainSharp.Parenthetical(_)) ->
      // Dialogue starts after Character or Character (parenthetical)
      // look ahead and keep matching while it's none of these.
      match List.partitionWhileLookahead (function
@@ -523,11 +531,19 @@ let (|Dialogue|_|) (ctx:ParsingContext) (input:string list) =
                     let lengthInc = if rest.IsEmpty then 0 else NewLineLength
                     addLines (head :: acc) (accLength + head.Length + lengthInc) []
             | [] ->
-                Some(List.rev acc, accLength, rest) // traversed all the lines
+                if accLength = 0 then
+                  None
+                else
+                  Some(List.rev acc, accLength, rest) // traversed all the lines
 
           let lines = addLines [] 0 matching
           match lines with
-          | Some([], _, _) -> None // no lines found
+          | Some([], length, rest) ->
+            match rest with
+            | EmptyLine :: tail ->
+              // starts with empty line (this is treated as dialogue)
+              Some({ Text = Environment.NewLine; Length = NewLineLength; Offset = 0 }, tail)
+            | _ -> None  // no lines found
           | Some(body, length, rest) ->
               //let body = body |> List.map(fun line -> line.Trim())
               let result = String.asSingleString(body, Environment.NewLine, false)
@@ -599,7 +615,7 @@ let (|DualDialogue|_|) (ctx: ParsingContext) (input:string list) =
   match parse (ctx, input, []) with
   | Some([], _) -> None // no (Character, Dialogue) blocks found
   | Some(list, rest) ->
-    let length = list |> List.map(fun block -> block.GetLength()) |> List.sum
+    let length = list |> List.map(fun block -> block.Range.Length) |> List.sum
     if List.tryFind isPrimary list <> None &&  List.tryFind isSecondary list <> None then
        Some(list, length, rest)
     else
@@ -611,7 +627,7 @@ let (|DualDialogue|_|) (ctx: ParsingContext) (input:string list) =
 //==== Action
 
 let (|Action|_|) (ctx:ParsingContext) input =
-  let ctxForLookAhead = ctx.WithLastParsedBlock(Some(FountainSharp.Parse.Action(false, [], Range.empty)))
+  let ctxForLookAhead = ctx.WithLastParsedBlock(Some(FountainSharp.Action(false, [], Range.empty)))
   // look ahead and keep matching while it's none of these.
   match List.partitionWhileLookahead (function
     | SceneHeading ctxForLookAhead _ -> false //note: it's decomposing the match and the rest and discarding the rest: `SceneHeading _` 

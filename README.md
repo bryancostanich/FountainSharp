@@ -2,7 +2,7 @@
 
 [![Build Status](https://www.bitrise.io/app/45c89db89673e862.svg?token=HAU9M6A-HNZGe6rCJ4lnIw)](https://www.bitrise.io/app/45c89db89673e862)
 
-An F# based [Fountain Markdown](http://fountain.io) processor for use via .NET/Xamarin projects. FoutainSharp parses Fountain-formatted scripts and loads them into model that can be transformed or used for WYSIWYG editing. 
+An F# based [Fountain Markdown](http://fountain.io) processor for use via .NET/Xamarin projects. FoutainSharp parses Fountain-formatted scripts and loads them into model that can be transformed or used for WYSIWYG editing.
 
 It ships with a sample transformation engine that transforms Fountain markdown into HTML:
 
@@ -60,12 +60,12 @@ using (var stream = Resource.FromPath (scriptResource)) {
 
 }
 
-protected async void UpdateHtml ()
+protected void UpdateHtml ()
 {
-	await System.Threading.Tasks.Task.Run (() => {
-		
+	System.Threading.Tasks.Task.Run (() => {
+
 		InvokeOnMainThread (()=>{
-			this.MainWebView.MainFrame.LoadHtmlString (FountainSharp.Parse.Fountain.TransformHtml (this.MainTextView.Value), NSUrl.FromString (""));
+			this.MainWebView.MainFrame.LoadHtmlString (HtmlFormatter.TransformHtml (this.MainTextView.Value), NSUrl.FromString (""));
 		});
 	});
 }
@@ -89,7 +89,7 @@ A `FountainDocument` is an in-memory representation of a parsed fountain documen
   * Boneyard
   * DualDialogue
   * TitlePage
-  
+
 Most blocks contain a `List<FountainSpanElement>` which represent inline formatting inside a block. This can be literal (with text), various formattings such as:
 
   * Literal
@@ -98,7 +98,7 @@ Most blocks contain a `List<FountainSpanElement>` which represent inline formatt
   * Underline
   * Note
   * HardLineBreak
-  
+
 Note that many `FountainSpanElement` objects can actually contain span elements.  
 
 ## TODO
@@ -106,7 +106,7 @@ Note that many `FountainSpanElement` objects can actually contain span elements.
 This project is a work in progress. For a detailed list of outstanding tasks, see the [TODO](Source/FountainSharp/FountainSharp.Parse/ToDo.md), however, in general the following major items are outstanding:
 
  * **Custom HTML CSS** - HTML transformation is largely done, but custom CSS templates should be allowed.
- 
+
 
 ## Contributing
 
@@ -114,7 +114,7 @@ For contributing, please see the [Source Documentation](Source/FountainSharp.Par
 
 ## License
 
-FountainSharp is made available via the [MIT License](License.md). 
+FountainSharp is made available via the [MIT License](License.md).
 
 
 ## People

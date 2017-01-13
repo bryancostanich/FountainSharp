@@ -1,19 +1,55 @@
-﻿namespace FountainSharp.Parse
+﻿namespace FountainSharp
 
 open System
 open System.IO
 open System.Collections.Generic
 
-[<Struct>]
-type Range(location:int,length:int) = 
-  member this.Location = location
-  member this.Length = length
+type Range =
+  val mutable private _location : int
+  val mutable private _length : int
+  
+  new(location:int,length:int) = { _location = location; _length = length }
+  
+  member this.Location with get() = this._location and set(l) = this._location <- l
+  member this.Length with get() = this._length
 
+  member this.EndLocation
+    with get() =
+      if this.Length = 0 then this.Location
+      else this.Location + this.Length - 1
+  
+  /// Offsets the location
   member this.Offset(offset) =
-    new Range(this.Location + offset, this.Length)
+    this._location <- this._location + offset
+    ()
+  
+  /// Returns a new Range instance offset from r
+  static member Offset(r:Range, offset) =
+    new Range(r.Location + offset, r.Length)
+
+  /// Returns true, position is inside
+  member this.Contains(position) =
+    if position >= this.Location && position < this.Location + this.Length then true
+    else false
+  /// Determines whether the this contains range
+  member this.Contains(range:Range) =
+      this.Contains(range.Location) && this.Contains(range.EndLocation)
+  /// Determines whether this has intersection with range
+  member this.HasIntersectionWith(range:Range) =
+      this.Contains(range.Location) || this.Contains(range.EndLocation) ||
+      range.Contains(this.Location) || range.Contains(this.EndLocation)
 
   override this.ToString() =
     sprintf "Location: %d; Length: %d" this.Location this.Length
+  
+  override this.GetHashCode() =
+    hash(this.Location, this.Length)
+
+  // override equality check to be structural instead of reference comparison
+  override this.Equals(obj) =
+    match obj with
+    | :? Range as r -> (this.Location, this.Length) = (r.Location, r.Length)
+    | _ -> false
 
   static member empty = new Range(0, 0)
 
@@ -32,30 +68,29 @@ type FountainSpanElement =
   | Note of FountainSpans * Range// [[this is my note]]
   | HardLineBreak of Range
 
-  //let range:Range = new Range(0,0)
-
-  //member fs.Range =
-  //  with get () = range
-  //  and set (value) = range <- value
-
-  // Sigh, if F# allowed lets in DUs, we could cache the length. :(
-  //let mutable length = -1
-
-  member fs.GetLength() : int =
+  // TODO: make Range available for all types without pattern matching
+  member fs.Range
+    with get() =
+        match fs with
+        | Bold(_, r)
+        | Italic(_, r)
+        | Underline(_, r)
+        | Note(_, r) -> r
+        | Literal(_, r) -> r
+        | HardLineBreak(r) -> r
+  
+  /// Offsets the range of the span (including inner spans)
+  member fs.OffsetRange(offset) =
     match fs with
     | Bold(spans, r)
     | Italic(spans, r)
     | Underline(spans, r)
     | Note(spans, r) ->
-      spans
-      |> List.map( fun span -> span.GetLength() )
-      |> List.sum
-    | HardLineBreak(r) -> 1
-    | Literal(str, r) -> str.Length
-  
-  member fs.GetRange(start:int):Range =
-    new Range(start, fs.GetLength() + start)
-
+      for span in spans do
+        span.OffsetRange(offset)
+      r.Offset(offset)
+    | Literal(_, r) -> r.Offset(offset)
+    | HardLineBreak(r) -> r.Offset(offset)
 
 /// A type alias for a list of `FountainSpan` values
 and FountainSpans = list<FountainSpanElement>
@@ -78,13 +113,13 @@ type FountainBlockElement =
   | DualDialogue of FountainBlocks * Range
   | TitlePage of (TitlePageKey * FountainSpans) list * Range
 
-  member fb.GetLength() : int =
+  member fb.Range : Range =
     match fb with
-    | Character(_, _, _, r) -> r.Length
+    | Character(_, _, _, r) -> r
     | Action(_, _, r)
     | SceneHeading(_, _, r)
     | Section(_, _, r)
-    | Transition(_, _, r) -> r.Length
+    | Transition(_, _, r) -> r
     | Dialogue(_, r)
     | Parenthetical(_, r)
     | Synopses (_, r)
@@ -92,11 +127,43 @@ type FountainBlockElement =
     | Boneyard(_, r)
     | TitlePage(_, r)
     | DualDialogue(_, r)
-    | Centered(_, r) -> r.Length
-    | PageBreak(r) -> r.Length
+    | Centered(_, r) -> r
+    | PageBreak(r) -> r
+  
+  /// Offsets the range of the block (including inner blocks and spans)
+  member fb.OffsetRange(offset) =
+    let offsetSpans (spans:FountainSpans) offset =
+      for span in spans do
+        span.OffsetRange(offset)
+    match fb with
+    | Character(_, _, spans, r) ->
+      offsetSpans spans offset
+      r.Offset(offset)
+    | Action(_, spans, r)
+    | SceneHeading(_, spans, r)
+    | Section(_, spans, r)
+    | Transition(_, spans, r) ->
+      offsetSpans spans offset
+      r.Offset(offset)
+    | Dialogue(spans, r)
+    | Parenthetical(spans, r)
+    | Synopses (spans, r)
+    | Lyrics(spans, r)
+    | Centered(spans, r) ->
+      offsetSpans spans offset
+      r.Offset(offset)
+    | DualDialogue(blocks, r) ->
+      for block in blocks do block.OffsetRange(offset)
+    | Boneyard(_, r)
+    | PageBreak(r) -> r.Offset(offset)
+    | TitlePage(blocks, r) ->
+      for (key, spans) in blocks do
+        offsetSpans spans offset
+        r.Offset(offset)
+
 
 /// A type alias for a list of blocks
-and FountainBlocks = list<FountainBlockElement>
+and FountainBlocks = FountainBlockElement list
 and TitlePageKey = string * Range // range contains the trailing ":", but the string not
 and TitlePageBlock = FountainSpans * Range 
 

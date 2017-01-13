@@ -40,8 +40,8 @@
     <Compile Include="FountainHelper.fs" />
     <Compile Include="Utils.fs" />
     <Compile Include="FountainParser.fs" />
+    <Compile Include="FountainDocument.fs" />
     <Compile Include="HtmlFormatting.fs" />
-    <Compile Include="Fountain.fs" />
     <None Include="Test_Script.txt" />
     <None Include="FountainWorkingScript.fsx" />
     <None Include="FountainSyntaxDefinition.md" />

@@ -34,8 +34,8 @@ Setup((c) =>
 	c.Information("\tSolution: {0}", solution);
 	c.Information("\tSolution directory: {0}", solutionDir);
 
-    // Executed BEFORE the first task.
-    settings.Display(c);
+  // Executed BEFORE the first task.
+  settings.Display(c);
 	versionInfo.Display(c);
 });
 
@@ -63,7 +63,11 @@ Task("Restore")
 			// Restore .NET Core projects with CLI
 			var netCoreProjectPath = System.IO.Path.Combine(solutionDir, netCoreProject);
 			Information($"Restoring {netCoreProject} from {netCoreProjectPath} ...");
-			DotNetCoreRestore(netCoreProjectPath);
+			var netCoreRestoreSettings = new DotNetCoreRestoreSettings
+			{
+				Verbose = true
+			};
+			DotNetCoreRestore(netCoreProjectPath, netCoreRestoreSettings);
 		}
 });
 
