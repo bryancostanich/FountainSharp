@@ -57,7 +57,7 @@ type FountainDocument(blocks : FountainBlocks, ?text : string) =
         let length = min range.Length (doc.Text.Length - range.Location)
         doc.Text.Substring(range.Location, length)
 
-  /// Check blocks intersecting each other
+  /// Check whether blocks intersecting each other
   member doc.CheckIntersections() =
       let rec hasIntersectionWith (blocks:FountainBlocks) (blocks2:FountainBlocks) =
           match blocks with
@@ -90,7 +90,6 @@ type FountainDocument(blocks : FountainBlocks, ?text : string) =
            else true
        let getLength startLocation endLocation =
            if endLocation < startLocation then 0
-           elif startLocation = endLocation then 1
            else endLocation - startLocation + 1
 
        let rec getTouchedBlocks (accTouchedBlocks, accNotTouchedBlocks) (blocks: FountainBlocks) =
@@ -109,25 +108,37 @@ type FountainDocument(blocks : FountainBlocks, ?text : string) =
                | FountainSharp.Action(_, _, _) -> (List.rev accTouchedBlocks, List.rev accNotTouchedBlocks)
                | _ -> getTouchedBlocks (head :: accTouchedBlocks, accNotTouchedBlocks) tail
 
+       /// determine the min, max position and the length of range occupied by the blocks       
+       let lengthOfBlocks (blocks:FountainBlocks) =
+         let mutable minLocation =
+           if blocks.IsEmpty then location
+           else blocks |> List.map(fun block -> block.Range.Location) |> List.min
+         let maxLocation =
+           if blocks.IsEmpty then location
+           else blocks |> List.map(fun block -> block.Range.EndLocation) |> List.max
+         (minLocation, maxLocation, getLength minLocation maxLocation)
+
        // build the new text
        let newTextBuilder = new StringBuilder(doc.Text.Remove(location, length))
        newTextBuilder.Insert(location, replaceText) |> ignore
        let newText = newTextBuilder.ToString()
 
        let lengthChange = replaceText.Length - length
-       // determine blocks touched by the deletion
+       // determine blocks touched and not touched by the text modification
        let (touchedBlocks, notTouchedBlocks) = getTouchedBlocks ([],[]) doc.Blocks
-       // determine the first and last position of touched blocks
-       let mutable minTouchLocation =
-         if touchedBlocks.IsEmpty then location
-         else touchedBlocks |> List.map(fun block -> block.Range.Location) |> List.min
-       let maxTouchLocation =
-         if touchedBlocks.IsEmpty then location
-         else touchedBlocks |> List.map(fun block -> block.Range.EndLocation) |> List.max
-       let touchLength = getLength minTouchLocation maxTouchLocation
+       let (minTouchLocation, maxTouchLocation, touchLength) = lengthOfBlocks touchedBlocks
        
        // idea: let's parse from the last non touched block
-       let prevBlocks = doc.Blocks |> List.map (fun block -> (block, block.Range.EndLocation)) |> List.where (fun (block, l) -> l < location) |> List.sortBy(fun (block, location) -> -location)
+       let isSimpleBlock (block:FountainBlockElement) =
+         // true if the block type is not affected by surrounding change
+         // false, if the surrounding change can change the block itself
+         // e.g.: Dialogue, DualDialogue
+         match block with
+         | FountainSharp.Character(_, _, _, _)
+         | FountainSharp.Dialogue(_, _) -> false
+         | _ -> true
+
+       let prevBlocks = doc.Blocks |> List.map (fun block -> (block, block.Range.EndLocation)) |> List.where (fun (block, l) -> l < location && isSimpleBlock block) |> List.sortBy(fun (block, location) -> -location)
        // let's determine the last valid block to look back - the second to last one it is.
        let lastParsedBlock =
          if prevBlocks.Length < 2 then None
@@ -155,3 +166,7 @@ type FountainDocument(blocks : FountainBlocks, ?text : string) =
            |> List.sortBy (fun block -> block.Range.Location)
        _blocks <- finalBlocks
        _text <- newText // finalize text change
+    
+    /// Append text to the end of the document
+    member doc.AppendText(text) =
+        doc.ReplaceText(_text.Length, 0, text)

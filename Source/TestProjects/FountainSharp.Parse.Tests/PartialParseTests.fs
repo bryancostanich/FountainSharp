@@ -59,6 +59,14 @@ let ``Appending Dialogue after Character`` () =
    |> should equal [ Character (false, true, [Literal ("LINDSEY", new Range(NewLineLength, 7))], new Range(0, 7 + NewLineLength * 2)); Dialogue ([Literal ("Hello, friend.", new Range(7 + NewLineLength * 2, 14))], new Range(7 + NewLineLength * 2, 14))]
 
 [<Test>]
+let ``Dual Dialogue`` () =
+   let doc = properNewLines "\r\nBRICK\r\nScrew retirement.\r\n" |> FountainDocument.Parse
+   doc.AppendText(properNewLines "\r\nSTEEL ^\r\nScrew retirement.")
+   doc.Blocks
+   |> should equal [DualDialogue([Character (false, true, [Literal ("BRICK", new Range(NewLineLength, 5))], new Range(0, 5 + NewLineLength * 2)); Dialogue ([Literal ("Screw retirement.", new Range(5 + NewLineLength * 2, 17))], new Range(5 + NewLineLength * 2, 17 + NewLineLength)); Character (false, false, [Literal ("STEEL", new Range(22 + NewLineLength * 4, 5))], new Range(22 + NewLineLength * 3, 7 + NewLineLength * 2)); Dialogue ([Literal ("Screw retirement.", new Range(29 + NewLineLength * 5, 17))], new Range(29 + NewLineLength * 5, 17))], new Range(0, 46 + NewLineLength * 5))]
+
+
+[<Test>]
 let ``#Bugfix - Appending new line to Character`` () =
    let doc = properNewLines "\r\nCUT TO:\r\n\r\nLINDSEYHello, friend." |> FountainDocument.Parse
    doc.ReplaceText(14 + NewLineLength * 3, 0, properNewLines "\r\n")
