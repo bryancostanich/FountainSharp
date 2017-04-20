@@ -33,6 +33,6 @@
     <!-- .NET Standard 1.1 -->
     <!--<file src="../Source/FountainSharp.Parse.MobilePCL/bin/Release/FountainSharp.Parse.MobilePCL.dll" target="lib/netstandard1.1" />-->
     <!-- PCL -->
-    <file src="../Source/FountainSharp.Parse.MobilePCL/bin/Release/FountainSharp.Parse.MobilePCL.dll" target="lib/portable-net45+win8+wpa81+wp8" />
+    <file src="../Source/FountainSharp.Parse.MobilePCL/bin/Release/FountainSharp.Parse.dll" target="lib/portable-net45+win8+wpa81+wp8" />
   </files>
 </package>

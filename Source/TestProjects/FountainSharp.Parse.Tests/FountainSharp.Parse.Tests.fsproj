@@ -1,5 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+﻿<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
@@ -16,23 +15,21 @@
     <DefineConstants>DEBUG</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <Externalconsole>true</Externalconsole>
-    <PlatformTarget>
-    </PlatformTarget>
+    <PlatformTarget></PlatformTarget>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugSymbols>false</DebugSymbols>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release</OutputPath>
-    <DefineConstants>
-    </DefineConstants>
+    <DefineConstants></DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <Externalconsole>true</Externalconsole>
     <GenerateTailCalls>true</GenerateTailCalls>
-    <PlatformTarget>
-    </PlatformTarget>
+    <PlatformTarget></PlatformTarget>
   </PropertyGroup>
   <Import Project="$(MSBuildExtensionsPath32)\..\Microsoft SDKs\F#\4.0\Framework\v4.0\Microsoft.FSharp.Targets" />
   <ItemGroup>
+    <Compile Include="Resources.fs" />
     <Compile Include="ActionTests.fs" />
     <Compile Include="FountainTests.fs" />
     <Compile Include="BoneyardTests.fs" />
@@ -47,10 +44,9 @@
     <Compile Include="TransitionTests.fs" />
     <Compile Include="Bugfixes.fs" />
     <Compile Include="AssemblyInfo.fs" />
-    <Compile Include="Resources.fs" />
     <Compile Include="Exec.fs" />
     <Compile Include="Program.fs" />
-    <EmbeddedResource Include="TestFiles\SimpleTest.fountain" />
+    <EmbeddedResource Include="TestFiles\Brick_and_Steel.fountain" />
     <None Include="packages.config" />
     <Content Include="App.config" />
     <None Include="TestScript.fsx" />

@@ -15,7 +15,8 @@
         "../FountainSharp.Parse/FountainDocument.fs",
         "../FountainSharp.Parse/HtmlFormatting.fs"
       ]
-    }
+    },
+    "outputName": "FountainSharp.Parse"
   },
   "tools": {
     "dotnet-compile-fsc": "1.0.0-preview2-*"

@@ -1,6 +1,5 @@
 ﻿namespace FountainSharp.Parse
 
-open System
 open FountainSharp.Parse.Helper
 
 type Utils =
