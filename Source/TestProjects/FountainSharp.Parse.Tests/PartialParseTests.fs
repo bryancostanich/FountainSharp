@@ -6,6 +6,7 @@ open NUnit.Framework
 open FountainSharp
 open FountainSharp.Parse
 open FountainSharp.Parse.Helper
+open ResourceUtils
 
 //===== Partial parsing
 
@@ -101,3 +102,12 @@ let ``#Bugfix - Starting dialogue`` () =
    doc.Blocks
    |> should equal [ Character(false, true, [Literal("STEEL", new Range(NewLineLength, 5))], new Range(0, 5 + NewLineLength * 2)); Dialogue([ Literal("T", new Range(5 + NewLineLength * 2, 1)); createHardLineBreak(6 + NewLineLength * 2); ], new Range(5 + NewLineLength * 2, 1 + NewLineLength)) ]
 
+[<Test>]
+let ``#Bugfix - Brick & Steel blocks disappear`` () =
+    let script = readFromResource "Brick_and_Steel.fountain"
+    let doc = script |> FountainDocument.Parse
+    let numOfBlocks = doc.Blocks.Length
+    numOfBlocks |> should greaterThan 80
+    doc.ReplaceText(30, 0, "very") // insert some text into the first Action block
+    // we must not lose blocks, however a lot of them disappeared
+    doc.Blocks.Length |> should equal numOfBlocks

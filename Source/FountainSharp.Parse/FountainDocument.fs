@@ -92,21 +92,27 @@ type FountainDocument(blocks : FountainBlocks, ?text : string) =
            if endLocation < startLocation then 0
            else endLocation - startLocation + 1
 
-       let rec getTouchedBlocks (accTouchedBlocks, accNotTouchedBlocks) (blocks: FountainBlocks) =
+       let getTouchedBlocks (accTouchedBlocks, accNotTouchedBlocks) (blocks: FountainBlocks) =
+         let rec getTouchedBlocksInternal (accTouchedBlocks, accNotTouchedBlocks) (blocks: FountainBlocks) pastTouch =
            match blocks with
            | [] -> (List.rev accTouchedBlocks, List.rev accNotTouchedBlocks)
            | head :: tail ->
-             if head.Range.EndLocation < location then
-               // haven't reached the modified range yet
-               getTouchedBlocks (accTouchedBlocks, head :: accNotTouchedBlocks) tail
-             else if predicateContains(head) then
-               // inside the modified range
-               getTouchedBlocks (head :: accTouchedBlocks, accNotTouchedBlocks) tail
+             if pastTouch then
+                 // after touch range, every block is considered as not touched
+                 getTouchedBlocksInternal (accTouchedBlocks, head:: accNotTouchedBlocks) tail true
              else
-               // after the modified range we consider blocks touched until an Action block
-               match head with
-               | FountainSharp.Action(_, _, _) -> (List.rev accTouchedBlocks, List.rev accNotTouchedBlocks)
-               | _ -> getTouchedBlocks (head :: accTouchedBlocks, accNotTouchedBlocks) tail
+                 if head.Range.EndLocation < location then
+                   // haven't reached the modified range yet
+                   getTouchedBlocksInternal (accTouchedBlocks, head :: accNotTouchedBlocks) tail false
+                 else if predicateContains(head) then
+                   // inside the modified range
+                   getTouchedBlocksInternal (head :: accTouchedBlocks, accNotTouchedBlocks) tail false
+                 else
+                   // after the modified range we consider blocks touched until an Action block
+                   match head with
+                   | FountainSharp.Action(_, _, _) -> getTouchedBlocksInternal (accTouchedBlocks, head:: accNotTouchedBlocks) tail true
+                   | _ -> getTouchedBlocksInternal (head :: accTouchedBlocks, accNotTouchedBlocks) tail pastTouch
+         getTouchedBlocksInternal (accTouchedBlocks, accNotTouchedBlocks) blocks false
 
        /// determine the min, max position and the length of range occupied by the blocks       
        let lengthOfBlocks (blocks:FountainBlocks) =

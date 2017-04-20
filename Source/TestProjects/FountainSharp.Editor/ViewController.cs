@@ -47,7 +47,6 @@ namespace FountainSharp.Editor
 		{
 			Task.Run(() =>
 			{
-
 				InvokeOnMainThread(() =>
 			   {
 				   MainWebView.MainFrame.LoadHtmlString(HtmlFormatter.TransformHtml(MainTextView.Value), NSUrl.FromString(""));
