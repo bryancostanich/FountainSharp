@@ -23,6 +23,10 @@ Scripts should keep a running tally of page breaks, both manual, and automatic (
 
 Implementing a new feature has to come with unit test(s) and has to be documented in the source code as well.
 
+## Export
+
+Should provide an interface for export. Now only HTML export is implemented in FountainSharp. We should review the HTML export code and make some parts public to make it easier for clients to write exporters of various file formats.
+
 ## Bugfixes
 
 If a bug turns up and you'd fix it, please add a new test for it into **Bugfixes.fs** in the **FountainSharp.Tests** project. With this test project you can check your changes don't mess up anything.
