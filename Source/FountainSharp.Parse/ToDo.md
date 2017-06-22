@@ -1,77 +1,35 @@
 # Remaining Work/TODO
 
-## Add positional support to the parser.
+## Partial parser
 
-The parser is all right on its own, but to be best used from an editor, each formatted
-document element (`FountainSpanElement` and `FountainBlockElement`) should also contain
-its positional/range information, i.e.: `start` and `length` of the element with in the
-doc.
-
-Range can be:
-
-```FSharp
-[<Struct>]
-type Range(location:int,length:int) =
-  member this.Location = location
-  member this.Length = length
-```
-
-Both `FountainSpanElement` and `FountainBlockElement` should probably inherit from a
-base class that is the Range, or has the Range or something. We can't put it directly
-on those classes because they're discriminated unions. See:
-
-* [SO Article 1](http://stackoverflow.com/questions/10959335/how-add-setter-to-to-discriminated-unions-in-f)
-* [SO 2](http://stackoverflow.com/questions/1332299/discriminated-union-let-binding)
-
-However, I have some temporary working code checked in right now that has the Range
-directly on them, but it should be removed, see:
-
-`FountainSyntax.fs`
-```FSharp
-type FountainSpanElement =
-  | Literal of string * Range // some text
-  | Strong of FountainSpans * Range // **some bold text**
-...
-
-type FountainBlockElement =
-  | Action of bool * FountainSpans * Range
-  | Character of bool * FountainSpans * Range
-...
-```
-
-### Calculating the Range
-
-Because of the nature of parsing routine, it would be very difficult to calculate the
-range during each element's parsing. Therefore, it probably needs to be calculated at
-the end of the parsing. This means that the Range necessarily needs to be mutable.
-
-I'm open to ideas here, though. Maybe someone smarter than me can do this during
-parsing.
-
-### Unit Tests + Documentation
-
-Along with the actual range calculation and class modifications, unit tests should be
-created that validate the ranges for all elements. Additionally, the class
-modifications themselves should be documented at the class level.
+The parser seems all right, although it could be further optimized (
+see the implementation in `FountainDocument.ReplaceText`).
 
 ## Remaining Syntax Support
 
-See [Syntax Definition](FountainSyntaxDefinition.md). Several outstanding syntax
-items need to be added and/or modified:
-
+See [Syntax Definition](FountainSyntaxDefinition.md).
+#### Known issues
  * **Boneyard/Comments** - Only recognized when /\* and \*/ stand alone in their lines.
-
-Each one of these also need associated unit tests for parsing, as well as HTML
-transformation.
 
 ## Custom CSS Styling
 
 The HTML transformation works well, but it would be nice to allow developers to pass in their own custom css stylesheet that was embedded into the html output. We may even consider allowing a URL to a style sheet.
 
-
 ## Pagination Support
 
 Scripts should keep a running tally of page breaks, both manual, and automatic (based on number of lines on a page and such). HTML transformation should also respect this and show pages.
+
+## Unit Tests + Documentation
+
+Implementing a new feature has to come with unit test(s) and has to be documented in the source code as well.
+
+## Export
+
+Should provide an interface for export. Now only HTML export is implemented in FountainSharp. We should review the HTML export code and make some parts public to make it easier for clients to write exporters of various file formats.
+
+## Bugfixes
+
+If a bug turns up and you'd fix it, please add a new test for it into **Bugfixes.fs** in the **FountainSharp.Tests** project. With this test project you can check your changes don't mess up anything.
 
 ## Developer Documentation
 
