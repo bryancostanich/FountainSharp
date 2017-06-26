@@ -679,16 +679,13 @@ let (|TitlePage|_|) (ctx:ParsingContext) (input: string list) =
     
     // TODO: spare conversion from list to string and back to list of the remaining text!
     let inputAsSingleString = String.asSingleString(input, NewLine(1), false) // treat input as one string
-    // an empty line has to be present after the Title Page
+    // when an empty line is present, only assume Title Page until that
     let indexOfEmptyLine = inputAsSingleString.IndexOf(NewLine(2))
-    if indexOfEmptyLine = -1 then
-        None
-    else
-        let titlePageText = inputAsSingleString.Substring(0, indexOfEmptyLine + Environment.NewLine.Length) // text before the empty line (Environment.NewLine) at the end
-        match matchAndRemove [] 0 titlePageText with
-        | ([], _) -> None
-        | (keyValuePairs, rest) ->
-            Some(keyValuePairs, titlePageText.Length + Environment.NewLine.Length, String.asStringList(inputAsSingleString.Substring(indexOfEmptyLine + Environment.NewLine.Length * 2), NewLine(1)))
+    let titlePageText = if indexOfEmptyLine = -1 then inputAsSingleString else inputAsSingleString.Substring(0, indexOfEmptyLine + Environment.NewLine.Length)
+    match matchAndRemove [] 0 titlePageText with
+    | ([], _) -> None
+    | (keyValuePairs, rest) ->
+        Some(keyValuePairs, titlePageText.Length + Environment.NewLine.Length, String.asStringList(inputAsSingleString.Substring(indexOfEmptyLine + Environment.NewLine.Length * 2), NewLine(1)))
 
 //==== /TitlePage
 
