@@ -1,4 +1,4 @@
-#tool nuget:?package=NUnit.ConsoleRunner&version=3.4.0
+#tool nuget:?package=NUnit.ConsoleRunner
 
 #l "settingsUtils.cake"
 #l "versionUtils.cake"

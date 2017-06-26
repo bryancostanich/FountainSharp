@@ -3,11 +3,11 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.26430.14
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{f2a71f9b-5d33-465a-a702-920d77279786}") = "FountainSharp.Parse", "FountainSharp.Parse\FountainSharp.Parse.fsproj", "{5C25E5F6-6E91-4497-9DA0-CC5F6A1083B7}"
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "FountainSharp.Parse", "FountainSharp.Parse\FountainSharp.Parse.fsproj", "{5C25E5F6-6E91-4497-9DA0-CC5F6A1083B7}"
 EndProject
-Project("{f2a71f9b-5d33-465a-a702-920d77279786}") = "FountainSharp.Parse.Tests", "TestProjects\FountainSharp.Parse.Tests\FountainSharp.Parse.Tests.fsproj", "{53A87A1F-1756-43C3-BF8A-BB1696439DC7}"
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "FountainSharp.Parse.Tests", "TestProjects\FountainSharp.Parse.Tests\FountainSharp.Parse.Tests.fsproj", "{53A87A1F-1756-43C3-BF8A-BB1696439DC7}"
 EndProject
-Project("{f2a71f9b-5d33-465a-a702-920d77279786}") = "FountainSharp.Parse.MobilePCL", "FountainSharp.Parse.MobilePCL\FountainSharp.Parse.MobilePCL.fsproj", "{EF7FFC79-964B-41EC-A90F-BBDE329D2DFD}"
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "FountainSharp.Parse.MobilePCL", "FountainSharp.Parse.MobilePCL\FountainSharp.Parse.MobilePCL.fsproj", "{EF7FFC79-964B-41EC-A90F-BBDE329D2DFD}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".nuget", ".nuget", "{232C3296-28F7-4490-96E9-1655FA2E9043}"
 	ProjectSection(SolutionItems) = preProject
@@ -16,7 +16,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".nuget", ".nuget", "{232C32
 		.nuget\NuGet.targets = .nuget\NuGet.targets
 	EndProjectSection
 EndProject
-Project("{f2a71f9b-5d33-465a-a702-920d77279786}") = "FountainSharp.Parse.NetStandard", "FountainSharp.Parse.NetStandard\FountainSharp.Parse.NetStandard.fsproj", "{E24337CB-A328-4132-8855-83B5FAFA4165}"
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "FountainSharp.Parse.NetStandard", "FountainSharp.Parse.NetStandard\FountainSharp.Parse.NetStandard.fsproj", "{E040A0AC-E0DE-498D-980F-FE7F876C2580}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -36,14 +36,12 @@ Global
 		{EF7FFC79-964B-41EC-A90F-BBDE329D2DFD}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{EF7FFC79-964B-41EC-A90F-BBDE329D2DFD}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{EF7FFC79-964B-41EC-A90F-BBDE329D2DFD}.Release|Any CPU.Build.0 = Release|Any CPU
-		{E24337CB-A328-4132-8855-83B5FAFA4165}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{E24337CB-A328-4132-8855-83B5FAFA4165}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{E24337CB-A328-4132-8855-83B5FAFA4165}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{E24337CB-A328-4132-8855-83B5FAFA4165}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E040A0AC-E0DE-498D-980F-FE7F876C2580}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E040A0AC-E0DE-498D-980F-FE7F876C2580}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E040A0AC-E0DE-498D-980F-FE7F876C2580}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E040A0AC-E0DE-498D-980F-FE7F876C2580}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
-	EndGlobalSection
-	GlobalSection(NestedProjects) = preSolution
 	EndGlobalSection
 EndGlobal
