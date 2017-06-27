@@ -16,7 +16,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".nuget", ".nuget", "{232C32
 		.nuget\NuGet.targets = .nuget\NuGet.targets
 	EndProjectSection
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "FountainSharp.Parse.NetStandard", "FountainSharp.Parse.NetStandard\FountainSharp.Parse.NetStandard.fsproj", "{81F81E90-FC2F-49AD-BE38-79799B4A6166}"
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "FountainSharp.Parse.NetStandard", "FountainSharp.Parse.NetStandard\FountainSharp.Parse.NetStandard.fsproj", "{DF7D6257-DCCB-46CB-A295-609EEC063D0B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -36,10 +36,9 @@ Global
 		{EF7FFC79-964B-41EC-A90F-BBDE329D2DFD}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{EF7FFC79-964B-41EC-A90F-BBDE329D2DFD}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{EF7FFC79-964B-41EC-A90F-BBDE329D2DFD}.Release|Any CPU.Build.0 = Release|Any CPU
-		{81F81E90-FC2F-49AD-BE38-79799B4A6166}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{81F81E90-FC2F-49AD-BE38-79799B4A6166}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{81F81E90-FC2F-49AD-BE38-79799B4A6166}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{81F81E90-FC2F-49AD-BE38-79799B4A6166}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DF7D6257-DCCB-46CB-A295-609EEC063D0B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DF7D6257-DCCB-46CB-A295-609EEC063D0B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DF7D6257-DCCB-46CB-A295-609EEC063D0B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
