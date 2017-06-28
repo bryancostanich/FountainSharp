@@ -63,3 +63,9 @@ let ``#Bugfix - Title recognized as Action without empty line`` () =
    | _ -> fail()
 //   doc.Blocks
 //   |> should equal [TitlePage ([("Title", [Underline ([Bold ([Literal("BRICK and STEEL", new Range(3, 15))], new Range(1, 19))], new Range(0, 21)); HardLineBreak(new Range(21, NewLineLength)); Underline([ Bold ([Literal("FULL RETIRED", new Range(24 + NewLineLength, 12))], new Range(22 + NewLineLength, 16))], new Range(21 + NewLineLength, 18))]); ("Credit", [Literal("Written by", new Range(0, 10))])], new Range(0, text.Length - 24 - NewLineLength)); SceneHeading(false, [Literal("EXT. BRICK'S PATIO - DAY", new Range(text.Length - 24 - NewLineLength, 24))], new Range(text.Length - 24 - NewLineLength, 24 + NewLineLength * 2))]
+
+[<Test>]
+let ``#Bugfix - Scene Heading at the end`` () =
+   let doc = properNewLines "\r\nEXT. BRICK'S PATIO - DAY\r\n" |> FountainDocument.Parse
+   doc.Blocks
+   |> should equal  [SceneHeading (false, [Literal ("EXT. BRICK'S PATIO - DAY", new Range(NewLineLength, 24))], new Range(0, 24 + NewLineLength * 2)) ]
