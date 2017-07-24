@@ -275,14 +275,15 @@ let (|Boneyard|_|) input =
     | _ -> None
 
 let (|SceneHeading|_|) (ctx:ParsingContext) (input:string list) =
-  let parseSceneHeading (first:string) tail offset =
+  let parseSceneHeading (first:string) (tail:string list) offset =
     let head = first.TrimStart()
+    let length = if tail.IsEmpty then NewLineLength else NewLineLength * 2 // check whether there is an empty line after the scene heading text
     match head with
     // look for normal heading
     | String.StartsWithAnyCaseInsensitive [ "INT"; "EXT"; "EST"; "INT./EXT."; "INT/EXT"; "I/E" ] matching ->
       let result = {
         Text = head;
-        Length = first.Length + NewLineLength * 2 + offset;
+        Length = first.Length + length + offset;
         Offset = first.IndexOf(head) + offset
       }
       Some(false, result, tail)
@@ -290,7 +291,7 @@ let (|SceneHeading|_|) (ctx:ParsingContext) (input:string list) =
     | String.StartsWith "." matching ->
       let recognition = {
         Text = head.Substring(1);
-        Length = first.Length + NewLineLength * 2 + offset;
+        Length = first.Length + length + offset;
         Offset = first.IndexOf(head) + 1 + offset 
       }
       Some(true, recognition, tail)
@@ -679,16 +680,13 @@ let (|TitlePage|_|) (ctx:ParsingContext) (input: string list) =
     
     // TODO: spare conversion from list to string and back to list of the remaining text!
     let inputAsSingleString = String.asSingleString(input, NewLine(1), false) // treat input as one string
-    // an empty line has to be present after the Title Page
+    // when an empty line is present, only assume Title Page until that
     let indexOfEmptyLine = inputAsSingleString.IndexOf(NewLine(2))
-    if indexOfEmptyLine = -1 then
-        None
-    else
-        let titlePageText = inputAsSingleString.Substring(0, indexOfEmptyLine + Environment.NewLine.Length) // text before the empty line (Environment.NewLine) at the end
-        match matchAndRemove [] 0 titlePageText with
-        | ([], _) -> None
-        | (keyValuePairs, rest) ->
-            Some(keyValuePairs, titlePageText.Length + Environment.NewLine.Length, String.asStringList(inputAsSingleString.Substring(indexOfEmptyLine + Environment.NewLine.Length * 2), NewLine(1)))
+    let titlePageText = if indexOfEmptyLine = -1 then inputAsSingleString else inputAsSingleString.Substring(0, indexOfEmptyLine + Environment.NewLine.Length)
+    match matchAndRemove [] 0 titlePageText with
+    | ([], _) -> None
+    | (keyValuePairs, rest) ->
+        Some(keyValuePairs, titlePageText.Length + Environment.NewLine.Length, String.asStringList(inputAsSingleString.Substring(indexOfEmptyLine + Environment.NewLine.Length * 2), NewLine(1)))
 
 //==== /TitlePage
 

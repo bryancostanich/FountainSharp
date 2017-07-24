@@ -7,7 +7,7 @@ open FountainSharp
 open FountainSharp.Parse
 open FountainSharp.Parse.Helper
 
-//===== Block Elements ==============================================================
+//===== Block Elements
 
 [<Test>]
 let ``Empty lines`` () =
@@ -16,17 +16,12 @@ let ``Empty lines`` () =
    |> should equal  [ Action(false, [ HardLineBreak(new Range(0, NewLineLength)); HardLineBreak(new Range(NewLineLength, NewLineLength)) ], new Range(0, NewLineLength * 2)) ]
 
 //===== Scene Headings
-[<Test>]
-let ``Basic Scene Heading`` () =
-   let doc = properNewLines "\r\nEXT. BRICK'S PATIO - DAY\r\n" |> FountainDocument.Parse
-   doc.Blocks 
-   |> should equal [ SceneHeading(false, [ Literal("EXT. BRICK'S PATIO - DAY", new Range(NewLineLength, 24)) ], new Range(0, 24 + NewLineLength * 3)) ]
 
 [<Test>]
 let ``Forced (".") Scene Heading`` () =
    let doc = properNewLines "\r\n.BINOCULARS A FORCED SCENE HEADING - LATER\r\n" |> FountainDocument.Parse
    doc.Blocks
-   |> should equal [ SceneHeading (true, [Literal ("BINOCULARS A FORCED SCENE HEADING - LATER", new Range(1 + NewLineLength, 41))], new Range(0, 42 + NewLineLength * 3)) ]
+   |> should equal [ SceneHeading (true, [Literal ("BINOCULARS A FORCED SCENE HEADING - LATER", new Range(1 + NewLineLength, 41))], new Range(0, 42 + NewLineLength * 2)) ]
 
 [<Test>]
 let ``Forced (".") Scene Heading with line breaks and action`` () =
@@ -52,43 +47,43 @@ let ``Forced (".") Scene Heading - No empty line after`` () =
 let ``Lowercase known scene heading`` () =
    let doc = properNewLines "\r\next. brick's pool - day\r\n" |> FountainDocument.Parse
    doc.Blocks
-   |> should equal [ SceneHeading (false, [Literal ("ext. brick's pool - day", new Range(NewLineLength, 23))], new Range(0, 23 + NewLineLength * 3)) ]
+   |> should equal [ SceneHeading (false, [Literal ("ext. brick's pool - day", new Range(NewLineLength, 23))], new Range(0, 23 + NewLineLength * 2)) ]
 
 [<Test>]
 let ``Known INT Scene Head`` () =
    let doc = properNewLines "\r\nINT DOGHOUSE - DAY\r\n" |> FountainDocument.Parse
    doc.Blocks
-   |> should equal [ SceneHeading (false, [Literal ("INT DOGHOUSE - DAY", new Range(NewLineLength, 18))], new Range(0, 18 + NewLineLength * 3))]
+   |> should equal [ SceneHeading (false, [Literal ("INT DOGHOUSE - DAY", new Range(NewLineLength, 18))], new Range(0, 18 + NewLineLength * 2))]
 
 [<Test>]
 let ``Known EXT Scene Head`` () =
    let doc = properNewLines "\r\nEXT DOGHOUSE - DAY\r\n" |> FountainDocument.Parse
    doc.Blocks
-   |> should equal [ SceneHeading (false, [Literal ("EXT DOGHOUSE - DAY", new Range(NewLineLength, 18))], new Range(0, 18 + NewLineLength * 3)) ]
+   |> should equal [ SceneHeading (false, [Literal ("EXT DOGHOUSE - DAY", new Range(NewLineLength, 18))], new Range(0, 18 + NewLineLength * 2)) ]
 
 [<Test>]
 let ``Known EST Scene Head`` () =
    let doc = properNewLines "\r\nEST DOGHOUSE - DAY\r\n" |> FountainDocument.Parse
    doc.Blocks
-   |> should equal [ SceneHeading (false, [Literal ("EST DOGHOUSE - DAY", new Range(NewLineLength, 18))], new Range(0, 18 + NewLineLength * 3)) ]
+   |> should equal [ SceneHeading (false, [Literal ("EST DOGHOUSE - DAY", new Range(NewLineLength, 18))], new Range(0, 18 + NewLineLength * 2)) ]
 
 [<Test>]
 let ``Known INT./EXT Scene Head`` () =
    let doc = properNewLines "\r\nINT./EXT DOGHOUSE - DAY\r\n" |> FountainDocument.Parse
    doc.Blocks
-   |> should equal [SceneHeading (false, [Literal ("INT./EXT DOGHOUSE - DAY", new Range(NewLineLength, 23))], new Range(0, 23 + NewLineLength * 3))]
+   |> should equal [SceneHeading (false, [Literal ("INT./EXT DOGHOUSE - DAY", new Range(NewLineLength, 23))], new Range(0, 23 + NewLineLength * 2))]
 
 [<Test>]
 let ``Known INT/EXT Scene Head`` () =
    let doc = properNewLines "\r\nINT/EXT DOGHOUSE - DAY\r\n" |> FountainDocument.Parse
    doc.Blocks
-   |> should equal [SceneHeading (false, [Literal ("INT/EXT DOGHOUSE - DAY", new Range(NewLineLength, 22))], new Range(0, 22 + NewLineLength * 3))]
+   |> should equal [SceneHeading (false, [Literal ("INT/EXT DOGHOUSE - DAY", new Range(NewLineLength, 22))], new Range(0, 22 + NewLineLength * 2))]
 
 [<Test>]
 let ``Known I/E Scene Head`` () =
    let doc = properNewLines "\r\nI/E DOGHOUSE - DAY\r\n" |> FountainDocument.Parse
    doc.Blocks
-   |> should equal [ SceneHeading (false, [Literal ("I/E DOGHOUSE - DAY", new Range(NewLineLength, 18))], new Range(0, 18 + NewLineLength * 3)) ]
+   |> should equal [ SceneHeading (false, [Literal ("I/E DOGHOUSE - DAY", new Range(NewLineLength, 18))], new Range(0, 18 + NewLineLength * 2)) ]
 
 [<Test>]
 let ``Scene Heading with line breaks and action`` () =
@@ -105,7 +100,7 @@ let ``Scene Heading with more line breaks and action`` () =
 [<Test>]
 let ``Scene Heading - No empty line after`` () =
    // this must not be recognized as scene heading
-   let text = "EXT. BRICK'S PATIO - DAY" + NewLine(1) + "Some Action"
+   let text = properNewLines "EXT. BRICK'S PATIO - DAY\r\nSome Action"
    let doc = text |> FountainDocument.Parse
    doc.Blocks
    |> should equal  [Action (false, [Literal ("EXT. BRICK'S PATIO - DAY", new Range(0, 24)); HardLineBreak(new Range(24, NewLineLength)); Literal ("Some Action", new Range(24 + NewLineLength, 11))], new Range(0, text.Length))]

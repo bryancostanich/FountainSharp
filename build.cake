@@ -1,4 +1,4 @@
-#tool nuget:?package=NUnit.ConsoleRunner&version=3.4.0
+#tool nuget:?package=NUnit.ConsoleRunner
 
 #l "settingsUtils.cake"
 #l "versionUtils.cake"
@@ -21,8 +21,6 @@ var solutionDir = System.IO.Path.GetDirectoryName(solution);
 
 var versionInfo = VersionUtils.LoadVersion(Context);
 var settings = SettingsUtils.LoadSettings(Context);
-
-var netCoreProjects = new [] { "FountainSharp.Parse.NetStandard" };
 
 //////////////////////////////////////////////////////////////////////
 // TASKS
@@ -55,45 +53,14 @@ Task("Restore")
 
     // Restore for projects using packages.config
     NuGetRestore(solution, new NuGetRestoreSettings { Verbosity = NuGetVerbosity.Detailed });
-
-    // Restore for projects using project.json
-		Information("Restoring .NET Core projects...");
-		foreach (var netCoreProject in netCoreProjects)
-		{
-			// Restore .NET Core projects with CLI
-			var netCoreProjectPath = System.IO.Path.Combine(solutionDir, netCoreProject);
-			Information($"Restoring {netCoreProject} from {netCoreProjectPath} ...");
-			var netCoreRestoreSettings = new DotNetCoreRestoreSettings
-			{
-				Verbose = true
-			};
-			DotNetCoreRestore(netCoreProjectPath, netCoreRestoreSettings);
-		}
 });
 
 Task("Build")
     .IsDependentOn("Restore")
     .Does(() =>
 {
-    if(IsRunningOnWindows())
-    {
-      // Use MSBuild
-      MSBuild(solution, buildSettings =>
-        buildSettings.SetConfiguration(configuration));
-    }
-    else
-    {
-      // Use XBuild
-      XBuild(solution, buildSettings =>
-        buildSettings.SetConfiguration(configuration));
-    }
-
-		foreach (var netCoreProject in netCoreProjects)
-		{
-      // Build .NET Core projects with CLI
-      DotNetCoreBuild(System.IO.Path.Combine(solutionDir, netCoreProject),
-			  new DotNetCoreBuildSettings { Configuration = "Release" });
-		}
+    // Use MSBuild
+    MSBuild(solution, buildSettings => buildSettings.SetConfiguration(configuration));
 });
 
 Task("Run-Unit-Tests")
@@ -163,7 +130,7 @@ Task("Publish")
 			Verbosity = NuGetVerbosity.Detailed
 		};
 
-        if (FileExists(settings.NuGet.NuGetConfig))
+    if (FileExists(settings.NuGet.NuGetConfig))
 			nugetSettings.ConfigFile = settings.NuGet.NuGetConfig;
 
 		if (!string.IsNullOrEmpty(settings.NuGet.FeedApiKey))

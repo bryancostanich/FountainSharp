@@ -19,7 +19,7 @@ if [ ! -x "$(command -v $NETCORE_SDK_CLI)" ]; then
   # Download .NET Core SDK if it does not exist.
   if [ ! -f "$NETCORE_SDK_INSTALLER_PKG" ]; then
     echo "Downloading .NET Core SDK..."
-    curl -Lsfo "$NETCORE_SDK_INSTALLER_PKG" https://go.microsoft.com/fwlink/?LinkID=831679
+    curl -Lsfo "$NETCORE_SDK_INSTALLER_PKG" https://go.microsoft.com/fwlink/?LinkID=848823
     if [ $? -ne 0 ]; then
         echo "An error occured while downloading .NET Core SDK."
         exit 1

@@ -22,7 +22,7 @@ let ``Deleting when more blocks are present`` () =
    let doc = properNewLines "Some action\r\n\r\nINT DOGHOUSE - DAY\r\n" |> FountainDocument.Parse
    doc.ReplaceText(0, 1, "")
    doc.Blocks
-   |> should equal [ Action (false, [Literal ("ome action", new Range(0, 10)); HardLineBreak(new Range(10, NewLineLength))], new Range(0, 10 + NewLineLength)); SceneHeading(false, [ Literal("INT DOGHOUSE - DAY", new Range(10 + NewLineLength * 2, 18)) ], new Range(10 + NewLineLength, 18 + NewLineLength * 3)) ]
+   |> should equal [ Action (false, [Literal ("ome action", new Range(0, 10)); HardLineBreak(new Range(10, NewLineLength))], new Range(0, 10 + NewLineLength)); SceneHeading(false, [ Literal("INT DOGHOUSE - DAY", new Range(10 + NewLineLength * 2, 18)) ], new Range(10 + NewLineLength, 18 + NewLineLength * 2)) ]
 
 [<Test>]
 let ``Inserting when empty`` () =
@@ -50,7 +50,7 @@ let ``Appending to Scene Heading`` () =
    let doc = properNewLines "\r\nEXT. BRICK'S PATIO - DAY" |> FountainDocument.Parse
    doc.ReplaceText(24 + NewLineLength, 0, properNewLines "\r\n")
    doc.Blocks 
-   |> should equal [ SceneHeading(false, [ Literal("EXT. BRICK'S PATIO - DAY", new Range(NewLineLength, 24)) ], new Range(0, 24 + NewLineLength * 3)) ]
+   |> should equal [ SceneHeading(false, [ Literal("EXT. BRICK'S PATIO - DAY", new Range(NewLineLength, 24)) ], new Range(0, 24 + NewLineLength * 2)) ]
 
 [<Test>]
 let ``Appending Dialogue after Character`` () =

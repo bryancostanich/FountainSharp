@@ -1,0 +1,23 @@
+
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2012
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FountainSharp.Editor", "TestProjects\FountainSharp.Editor\FountainSharp.Editor.csproj", "{0C9A4857-67C8-4D9C-A7D0-80E83F0CDDAE}"
+EndProject
+Project("{f2a71f9b-5d33-465a-a702-920d77279786}") = "FountainSharp.Parse", "FountainSharp.Parse\FountainSharp.Parse.fsproj", "{5C25E5F6-6E91-4497-9DA0-CC5F6A1083B7}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{0C9A4857-67C8-4D9C-A7D0-80E83F0CDDAE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0C9A4857-67C8-4D9C-A7D0-80E83F0CDDAE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0C9A4857-67C8-4D9C-A7D0-80E83F0CDDAE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0C9A4857-67C8-4D9C-A7D0-80E83F0CDDAE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5C25E5F6-6E91-4497-9DA0-CC5F6A1083B7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5C25E5F6-6E91-4497-9DA0-CC5F6A1083B7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5C25E5F6-6E91-4497-9DA0-CC5F6A1083B7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5C25E5F6-6E91-4497-9DA0-CC5F6A1083B7}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
