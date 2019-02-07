@@ -198,3 +198,8 @@ FakesAssemblies/
 # Visual Studio 6 workspace options file
 *.opt
 tools
+
+*.mfractor
+
+
+.DS_Store
