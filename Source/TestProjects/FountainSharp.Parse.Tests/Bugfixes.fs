@@ -69,3 +69,11 @@ let ``#Bugfix - Scene Heading at the end`` () =
    let doc = properNewLines "\r\nEXT. BRICK'S PATIO - DAY\r\n" |> FountainDocument.Parse
    doc.Blocks
    |> should equal  [SceneHeading (false, [Literal ("EXT. BRICK'S PATIO - DAY", new Range(NewLineLength, 24))], new Range(0, 24 + NewLineLength * 2)) ]
+
+//===== Html Formatter
+[<Test>]
+let ``#Bugfix - Html Spans should wrap correctly on all browsers`` () =
+   let doc = properNewLines "\r\n.BINOCULARS A FORCED SCENE HEADING - LATER\r\n" |> HtmlFormatter.TransformHtml
+   doc |>
+   should contain "white-space: pre-wrap; word-break: keep-all;"
+

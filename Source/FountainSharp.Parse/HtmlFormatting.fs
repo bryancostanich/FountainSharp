@@ -80,7 +80,7 @@ module private Html =
     let rec formatSpan (ctx:FormattingContext) = function
       | Literal(str, range) ->
           // preserve white spaces - Action possibly have those
-          ctx.Writer.Write("""<span style="white-space: pre;">""")
+          ctx.Writer.Write("""<span style="white-space: pre-wrap; word-break: keep-all;">""")
           ctx.Writer.Write(if ctx.PreserveWhiteSpace then str else str.Trim())
           ctx.Writer.Write("</span>");
       | HardLineBreak (range) -> ctx.Writer.Write("<br />")

@@ -1,4 +1,4 @@
-﻿module FountainSharp.Parse.Tests.Unsorted
+module FountainSharp.Parse.Tests.Unsorted
 
 open System
 open FsUnit
