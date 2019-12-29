@@ -18,7 +18,7 @@ type FountainDocument(blocks : FountainBlocks, ?text : string) =
   /// inline HTML (etc.) will be stored using the specified string.
   static let parse(text : string, ctx:ParsingContext) =
     let text = properNewLines text
-    let lines = text.Split([|Environment.NewLine|], StringSplitOptions.None) |> List.ofArray
+    let lines = text.Split([|ctx.NewLine|], StringSplitOptions.None) |> List.ofArray
 
     let blocks = 
       lines 
